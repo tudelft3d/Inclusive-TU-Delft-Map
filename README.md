@@ -1,1 +1,3 @@
 # Inclusive-TU-Delft-Map
+Project summary: Inclusive 3D Campus Map
+The current TU Delft campus map is primarily designed for entrepreneurs and investors, therefore overlooking the daily users. As a result, there is a clear need for a new campus map. The proposed map is intended not only to support TU Delft students and staff, but is also specifically designed for individuals who experience the campus differently. This group, for example, includes people with visual, auditory, and motor impairments, chronic illnesses, or dyslexia. With community-driven design, CitizenVoice, and innovative technical solutions, our goal is to develop a functional map that facilitates everyone on campus, especially those with unique needs.
