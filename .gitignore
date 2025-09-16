@@ -1,0 +1,9 @@
+.vscode/
+**/.venv/
+data/
+**/node_modules/
+**/__pycache__/
+qgis/
+assets/
+threejs/dist/
+threejs/output

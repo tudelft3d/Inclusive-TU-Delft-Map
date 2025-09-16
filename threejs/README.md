@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You need to have cloned this repository and installed `npm`.
+You need to have cloned this repository and installed `npm`. `npm` can be installed on Ubuntu withe the [instructions from Nodesource](https://deb.nodesource.com/).
 
 ## Install and run
 

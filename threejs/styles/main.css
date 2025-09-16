@@ -1,37 +1,37 @@
 body {
-  /* remove margins and scroll bars */
+  /* Remove margins and scroll bars */
   margin: 0;
   overflow: hidden;
 
-  /* style text */
+  /* Style text */
   text-align: center;
   font-size: 12px;
   font-family: Sans-Serif;
 
-  /* color text */
+  /* Color text */
   color: #444;
 }
 
 h1 {
-  /* position the heading */
+  /* Position the heading */
   position: absolute;
   width: 100%;
 
-  /* make sure that the heading is drawn on top */
+  /* Make sure that the heading is drawn on top */
   z-index: 1;
 }
 
+/* Tell our scene container to take up the full page */
 #scene-container {
-  /* tell our scene container to take up the full page */
   position: absolute;
   width: 100%;
   height: 100%;
 }
 
+/* The three.js renderer */
 canvas {
-  /* the three.js renderer */
+  /* Removes scrollbars */
   display: block;
-  /* removes scrollbars */
 }
 
 #info-pane {
@@ -43,11 +43,11 @@ canvas {
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 4px;
+  /* Let mouse clicks pass through */
   pointer-events: none;
-  /* let mouse clicks pass through */
   font-size: 14px;
   line-height: 1.4;
+  /* Hidden until something is selected */
   opacity: 0;
-  /* hidden until something is selected */
   transition: opacity .2s ease;
 }
