@@ -1,0 +1,16 @@
+{
+  "name": "inclusive-campus-map",
+  "version": "0.1.0",
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.4"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:host": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}

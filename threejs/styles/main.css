@@ -1,0 +1,53 @@
+body {
+  /* remove margins and scroll bars */
+  margin: 0;
+  overflow: hidden;
+
+  /* style text */
+  text-align: center;
+  font-size: 12px;
+  font-family: Sans-Serif;
+
+  /* color text */
+  color: #444;
+}
+
+h1 {
+  /* position the heading */
+  position: absolute;
+  width: 100%;
+
+  /* make sure that the heading is drawn on top */
+  z-index: 1;
+}
+
+#scene-container {
+  /* tell our scene container to take up the full page */
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  /* the three.js renderer */
+  display: block;
+  /* removes scrollbars */
+}
+
+#info-pane {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  min-width: 180px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 4px;
+  pointer-events: none;
+  /* let mouse clicks pass through */
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0;
+  /* hidden until something is selected */
+  transition: opacity .2s ease;
+}
