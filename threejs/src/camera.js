@@ -1,12 +1,15 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { PerspectiveCamera } from 'three';
+import { OrthographicCamera } from 'three';
 import * as THREE from 'three';
 
 const fov = 75;
 const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
 const far = 10000;
+
+
 
 export class CamerasControls {
     // container: Element;
@@ -30,6 +33,9 @@ export class CamerasControls {
     _initCameras(position, startMap) {
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+        this.orthgraphicCamera = new THREE.OrthographicCamera( window.screen.width / - 2, window.screen.width / 2, window.screen.height / 2, window.screen.height / - 2, 1, 1000 );
+
         if (startMap) {
             this.camera = this.mapCamera;
             this.previousCamera = this.mapCamera;
@@ -78,6 +84,15 @@ export class CamerasControls {
 
         this.camera = this.orbitCamera;
         this.controls = this.orbitControls;
+        this._syncPositions(this.previousCamera);
+    }
+
+    swithToOrthographic() {
+        this.previousCamera = this.camera;
+        this.previousControls = this.controls;
+
+        this.camera = this.orthgraphicCamera;
+        this.controls = this.mapControls;
         this._syncPositions(this.previousCamera);
     }
 

@@ -159,3 +159,13 @@ canvas {
   cursor: pointer;
   z-index: 31;
 }
+#orthographic-toggle {
+  position: absolute;
+  top: 30%;
+  right: 20px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
+}
