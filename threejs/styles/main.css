@@ -75,7 +75,6 @@ canvas {
   right: 20px;
   top: 25%;
   z-index: 9;
-  pointer-events:
 }
 
 #basemap-btn {
