@@ -13,6 +13,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.addWMTSBasemap(aerialPDOK);
     // map.loadGLTF('output/campus/bbox/model.glb')
 
-    
+    document.getElementById('zoom-in').addEventListener('click', () => {
+        map.cameraManager.zoomIn();
+    });
+    document.getElementById('zoom-out').addEventListener('click', () => {
+        map.cameraManager.zoomOut();
+    });
+
+    const basemapBtn = document.getElementById('basemap-btn');
+    const basemapDropdown = document.getElementById('basemap-dropdown');
+
+    basemapBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (basemapDropdown.style.display === 'none' || basemapDropdown.style.display === '') {
+        basemapDropdown.style.display = 'block';
+    } else {
+        basemapDropdown.style.display = 'none';
+    }
+    });
+
+    document.addEventListener('click', () => {
+    basemapDropdown.style.display = 'none';
+    });
+
+
+    const thematicBtn = document.getElementById('thematic-btn');
+    const thematicDropdown = document.getElementById('thematic-dropdown');
+
+    thematicBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (thematicDropdown.style.display === 'none' || thematicDropdown.style.display === '') {
+        thematicDropdown.style.display = 'block';
+    } else {
+        thematicDropdown.style.display = 'none';
+    }
+    });
+
+    document.addEventListener('click', () => {
+        thematicDropdown.style.display = 'none';
+    });
 
 });
+
+

@@ -1,38 +1,37 @@
 body {
-  /* remove margins and scroll bars */
+  /* Remove margins and scroll bars */
   margin: 0;
   overflow: hidden;
 
-  /* style text */
+  /* Style text */
   text-align: center;
   font-size: 12px;
   font-family: Sans-Serif;
 
-  /* color text */
+  /* Color text */
   color: #444;
 }
 
 h1 {
-  /* position the heading */
+  /* Position the heading */
   position: absolute;
   width: 100%;
 
-  /* make sure that the heading is drawn on top */
+  /* Make sure that the heading is drawn on top */
   z-index: 1;
 }
 
+/* Tell our scene container to take up the full page */
 #scene-container {
-  /* tell our scene container to take up the full page */
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: 1;
 }
 
+/* The three.js renderer */
 canvas {
-  /* the three.js renderer */
+  /* Removes scrollbars */
   display: block;
-  /* removes scrollbars */
 }
 
 #info-pane {
@@ -44,19 +43,119 @@ canvas {
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 4px;
+  /* Let mouse clicks pass through */
   pointer-events: none;
-  /* let mouse clicks pass through */
   font-size: 14px;
   line-height: 1.4;
+  /* Hidden until something is selected */
   opacity: 0;
-  /* hidden until something is selected */
   transition: opacity .2s ease;
 }
 
-#basemap-aerial {
+#search-bar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity:0.5;
+  z-index: 10;
+}
+
+#search-bar input {
+  padding: 8px 12px;
+  font-size: 16px;
+  width: 600px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+#basemap-container {
+  position: fixed;
+  left: 10px;
+  top: 5%;
+  z-index: 9;
+}
+
+#basemap-btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#basemap-dropdown {
+  display: none;
   position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: auto;
-  pointer-events: none;
+  top: 100%;
+  left: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-align: left;
+  padding-left: 20px;
+  border-radius: 5px;
+  min-width: 160px;
+  z-index: inherit;
+}
+
+#basemap-dropdown a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+#thematic-container {
+  position: fixed;
+  left: 10px;
+  top: 10%;
+  z-index: 8;
+}
+
+#thematic-btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#thematic-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-align: left;
+  padding-left: 20px;
+  border-radius: 5px;
+  min-width: 160px;
+  z-index: 30;
+}
+
+#thematic-dropdown a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+#zoom-in {
+  position: absolute;
+  top: 10%;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
+}
+#zoom-out {
+  position: absolute;
+  top: 15%;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
 }

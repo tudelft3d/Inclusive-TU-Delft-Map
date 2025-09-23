@@ -87,24 +87,4 @@ export class CamerasControls {
         // const { x, y, z } = sourceCam.position;
         // this.camera.position.set(x, y, z);
     }
-
-    zoomIn(factor=1.1) {
-        if (this.controls._dollyIn) {
-            this.controls._dollyIn(factor);
-            this.controls.update();
-        } 
-        else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(1 / factor);
-        }
-    }
-
-    zoomOut(factor=1.1) {
-        if (this.controls._dollyOut) {
-            this.controls._dollyOut(factor);
-            this.controls.update();
-        } 
-        else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(factor);
-        }
-    }
 }
