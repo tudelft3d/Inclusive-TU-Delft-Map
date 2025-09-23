@@ -97,8 +97,8 @@ export class Map {
             3.36, 1.68, 0.84, 0.42, 0.21
         ];
         const matrixSet = "EPSG:28992";
-        // const wmtsBaseURL = "https://service.pdok.nl/lv/bgt/wmts/v1_0";
-        const wmtsBaseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0";
+        const wmtsBaseURL = "https://service.pdok.nl/lv/bgt/wmts/v1_0";
+        // const wmtsBaseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0";
 
         const zoom = 12;
         const resolution = resolutions[zoom];
@@ -125,27 +125,27 @@ export class Map {
         // try async?
         // add retry process
 
-        // for (let row = minRow; row <= maxRow; row++) {
-        //     for (let col = minCol; col <= maxCol; col++) {
-        //         const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
-        //             + `&LAYER=achtergrondvisualisatie`
-        //             + `&STYLE=default`
-        //             + `&FORMAT=image/png`
-        //             + `&TILEMATRIXSET=${matrixSet}`
-        //             + `&TILEMATRIX=${zoom}`
-        //             + `&TILEROW=${row}`
-        //             + `&TILECOL=${col}`;
-        
         for (let row = minRow; row <= maxRow; row++) {
             for (let col = minCol; col <= maxCol; col++) {
                 const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
-                    + `&LAYER=Actueel_orthoHR`
+                    + `&LAYER=achtergrondvisualisatie`
                     + `&STYLE=default`
                     + `&FORMAT=image/png`
                     + `&TILEMATRIXSET=${matrixSet}`
                     + `&TILEMATRIX=${zoom}`
                     + `&TILEROW=${row}`
                     + `&TILECOL=${col}`;
+
+                // for (let row = minRow; row <= maxRow; row++) {
+                //     for (let col = minCol; col <= maxCol; col++) {
+                //         const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
+                //             + `&LAYER=Actueel_orthoHR`
+                //             + `&STYLE=default`
+                //             + `&FORMAT=image/png`
+                //             + `&TILEMATRIXSET=${matrixSet}`
+                //             + `&TILEMATRIX=${zoom}`
+                //             + `&TILEROW=${row}`
+                //             + `&TILECOL=${col}`;
 
                 loader.load(url, (texture) => {
                     texture.minFilter = THREE.LinearFilter;
@@ -165,7 +165,7 @@ export class Map {
                     const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
                     planeMesh.rotateX(-Math.PI / 2);
-                    planeMesh.position.set(tileCenterX, 0, -tileCenterY); 
+                    planeMesh.position.set(tileCenterX, -1, -tileCenterY);
 
                     this.scene.add(planeMesh);
                 });
@@ -292,7 +292,6 @@ export class Map {
         // window.addEventListener('resize', () => this.render());
     }
 
-
     _resizeRenderer() {
         const { clientWidth: w, clientHeight: h } = this.canvas;
         this.renderer.setSize(w, h, false);
@@ -308,7 +307,6 @@ export class Map {
             objs.rotateX(-Math.PI / 2);
             // objs.translateX(loadGLTFTranslateX);
             // objs.translateY(loadGLTFTranslateY);
-            scene.add(objs);
 
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
@@ -319,6 +317,18 @@ export class Map {
             let cameraZ = maxDim / (2 * Math.tan(fov / 2));
 
             cameraZ *= 1.5; // add margin
+
+            // scene.add(objs);
+
+            objs.traverse((child) => {
+                console.log(child);
+                // if (child.name.startsWith("08")) child.visible = false;
+                // if (child.name != "08-lod_2") child.visible = false;
+                if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
+                    child.visible = true;
+                } else { child.visible = false; }
+            });
+            scene.add(objs);
 
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
@@ -332,7 +342,7 @@ export class Map {
 
     render(time) {
         this._resizeRenderer();
-        console.log(this.tweens);
+        // console.log(this.tweens);
         this.tweens.forEach(tween => tween.update(time));
         this.renderer.render(this.scene, this.cameraManager.camera);
         requestAnimationFrame(this.render);
