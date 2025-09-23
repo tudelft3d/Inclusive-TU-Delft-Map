@@ -65,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
             colorBlindDropdown.style.display = 'none';
         }
     });
+
+    document.getElementById('toggle-camera').addEventListener('click', () => {
+        map.cameraManager.switchToOrtho(map.model);
+    });
 });
 
 

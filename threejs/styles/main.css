@@ -202,3 +202,10 @@ canvas {
   cursor: pointer;
   z-index: 31;
 }
+
+#camera-toggle {
+  position: absolute;
+  top: 5%;
+  left: 20px;
+  z-index: 40;
+}

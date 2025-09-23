@@ -20,7 +20,6 @@ export class CamerasControls {
     // orbitControls: OrbitControls;
 
     constructor(container, position, lookAt, startMap = true) {
-
         this.container = container;
 
         this._initCameras(position, startMap);
@@ -28,8 +27,10 @@ export class CamerasControls {
     }
 
     _initCameras(position, startMap) {
+        console.log(position);
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
         if (startMap) {
             this.camera = this.mapCamera;
             this.previousCamera = this.mapCamera;
@@ -39,6 +40,7 @@ export class CamerasControls {
         }
         this.camera.position.set(position.x, position.y, position.z);
     }
+
 
     _initControls(lookAt, startMap) {
         this.mapControls = new MapControls(this.mapCamera, this.container);
@@ -88,23 +90,23 @@ export class CamerasControls {
         // this.camera.position.set(x, y, z);
     }
 
-    zoomIn(factor=1.1) {
+    zoomIn(factor = 1.1) {
         if (this.controls._dollyOut) {
             this.controls._dollyOut(factor);
             this.controls.update();
-        } 
+        }
         else if (this.camera.isPerspectiveCamera) {
             this.camera.position.multiplyScalar(factor);
         }
     }
 
-    zoomOut(factor=1.1) {
+    zoomOut(factor = 1.1) {
         if (this.controls._dollyIn) {
             this.controls._dollyIn(factor);
             this.controls.update();
-        } 
+        }
         else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(1/factor);
+            this.camera.position.multiplyScalar(1 / factor);
         }
     }
 }

@@ -4,9 +4,9 @@ import View from 'ol/View.js';
 import TileLayer from 'ol/layer/Tile.js';
 import WMTS from 'ol/source/WMTS.js';
 import WMTSTileGrid from 'ol/tilegrid/WMTS.js';
-import {getTopLeft} from 'ol/extent.js';
-import {register} from 'ol/proj/proj4.js';
-import {get as getProjection} from 'ol/proj.js';
+import { getTopLeft } from 'ol/extent.js';
+import { register } from 'ol/proj/proj4.js';
+import { get as getProjection } from 'ol/proj.js';
 import proj4 from 'proj4';
 
 export function createBasemap(targetID) {
@@ -21,7 +21,7 @@ export function createBasemap(targetID) {
   register(proj4);
 
   const projection = getProjection("EPSG:28992");
-  const extent = [84000, 443500, 87000, 448000]; 
+  const extent = [84000, 443500, 87000, 448000];
   projection.setExtent(extent);
 
   const tileGrid = new WMTSTileGrid({
@@ -31,7 +31,7 @@ export function createBasemap(targetID) {
       107.52, 53.76, 26.88, 13.44, 6.72,
       3.36, 1.68, 0.84, 0.42, 0.21
     ],
-    matrixIds: Array.from({length: 15}, (_, i) => i.toString())
+    matrixIds: Array.from({ length: 15 }, (_, i) => i.toString())
   });
 
   const wmtsLayer = new TileLayer({
