@@ -104,22 +104,22 @@ export class CamerasControls {
     }
 
     zoomIn(factor=1.1) {
-        if (this.controls._dollyIn) {
-            this.controls._dollyIn(factor);
-            this.controls.update();
-        } 
-        else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(1 / factor);
-        }
-    }
-
-    zoomOut(factor=1.1) {
         if (this.controls._dollyOut) {
             this.controls._dollyOut(factor);
             this.controls.update();
         } 
         else if (this.camera.isPerspectiveCamera) {
             this.camera.position.multiplyScalar(factor);
+        }
+    }
+
+    zoomOut(factor=1.1) {
+        if (this.controls._dollyIn) {
+            this.controls._dollyIn(factor);
+            this.controls.update();
+        } 
+        else if (this.camera.isPerspectiveCamera) {
+            this.camera.position.multiplyScalar(1/factor);
         }
     }
 }
