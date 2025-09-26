@@ -58,6 +58,17 @@ export class Map {
             'sky_gradient_sides.png',
         ]);
         this.scene.background = skyboxTexture;
+
+        // const geometry = new THREE.BoxGeometry(100, 100, 100);
+        // const material = new THREE.MeshBasicMaterial({
+        //   color: 0x00ff00,
+        //   wireframe: true,
+        // });
+
+        // const cube = new THREE.Mesh(geometry, material);
+        // const cube_2 = new THREE.Mesh(geometry, material);
+        // cube_2.position.y = 1000;
+        // this.scene.add(cube);
     }
 
     _initLights() {
@@ -158,6 +169,7 @@ export class Map {
                     const tileCenterY = (tileMaxY + tileMaxY - tileSpan) / 2;
 
                     const planeGeometry = new THREE.PlaneGeometry(tileSpan, tileSpan);
+
                     const planeMaterial = new THREE.MeshBasicMaterial({
                         map: texture,
                         side: THREE.DoubleSide
@@ -165,7 +177,9 @@ export class Map {
                     const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
                     planeMesh.rotateX(-Math.PI / 2);
-                    planeMesh.position.set(tileCenterX, 0, -tileCenterY); 
+                    planeMesh.position.set(tileCenterX, -1, -tileCenterY);
+
+                    planeMesh.renderOrder = -1;
 
                     this.scene.add(planeMesh);
                 });
@@ -182,13 +196,59 @@ export class Map {
         this._resizeRenderer();
     }
 
+    _zoomPerspective(pos, object) {
+        console.log("perspective");
+
+    }
+
+    _zoomOrthographic(pos, object) {
+        console.log("orthographic");
+
+        const margin = 10;
+
+        // Bounding sphere
+        const sphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        const center = sphere.center;
+        const radius = sphere.radius;
+
+        // Compute distance based on fov
+        // Doesn't work for ortho, fov is NaN.
+        // Will have to figure something out with zoom
+        const fov = this.cameraManager.camera.fov * (Math.PI / 180);
+        const distance = radius / Math.tan(fov / 2) * margin;
+
+        console.log(fov, distance, center, this.cameraManager.camera.position);
+
+        this.cameraManager.camera.position.x = center.x;
+        this.cameraManager.camera.position.z = center.z;
+
+        this.cameraManager.camera.lookAt(center);
+        this.cameraManager.camera.updateProjectionMatrix();
+
+        this.cameraManager.controls.target.copy(center);
+        this.cameraManager.controls.update();
+
+    }
+
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
         const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
         if (foundObject) {
+
             // Orbit around the found object
             const object = this.picker.picked;
+
+            if (this.cameraManager.orthographic) {
+                this._zoomOrthographic(pos, object);
+                return;
+            } else {
+                this._zoomPerspective(pos, object);
+            }
+
+            console.log(object);
+
             this.controlsManager.activateOrbit();
 
             const margin = 1.2;
@@ -251,15 +311,20 @@ export class Map {
 
         }
         else {
-            // Go back to the main map view
-            this.controlsManager.activateMap();
 
-            const { x, y, z } = this.cameraManager.previousCamera.position;
-            this.cameraManager.camera.position.set(x, y, z);
-            this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
-            this.cameraManager.controls.update();
+            // console.log("flag 1");
+            // console.log(this.cameraManager.orthographic);
+
+            // this.controlsManager.activateMap();
+
+            // const { x, y, z } = this.cameraManager.previousCamera.position;
+            // this.cameraManager.camera.position.set(x, y, z);
+            // this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
+            // this.cameraManager.controls.update();
         }
     }
+
+
 
     _attachEvents() {
         // // mouse move → hover
@@ -308,6 +373,9 @@ export class Map {
             objs.rotateX(-Math.PI / 2);
             // objs.translateX(loadGLTFTranslateX);
             // objs.translateY(loadGLTFTranslateY);
+
+            objs.renderOrder = 0;
+
             scene.add(objs);
 
             const box = new THREE.Box3().setFromObject(objs);
@@ -332,7 +400,6 @@ export class Map {
 
     render(time) {
         this._resizeRenderer();
-        console.log(this.tweens);
         this.tweens.forEach(tween => tween.update(time));
         this.renderer.render(this.scene, this.cameraManager.camera);
         requestAnimationFrame(this.render);

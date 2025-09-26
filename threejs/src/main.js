@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.zoomOut();
     });
 
+    document.getElementById('orthographic-toggle').addEventListener('click', () => {
+        map.cameraManager.switchToOrthographic();
+    });
+
     const basemapBtn = document.getElementById('basemap-btn');
     const basemapDropdown = document.getElementById('basemap-dropdown');
 
