@@ -1,28 +1,19 @@
 import { CamerasControls } from "./camera";
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Group, Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
-// import { MapView, MapProvider, UnitsUtils } from 'geo-three'
-
-// import 'ol/ol.css';
-// import MapOl from 'ol/Map.js';
-// import View from 'ol/View.js';
-// import TileLayer from 'ol/layer/Tile.js';
-// import WMTS from 'ol/source/WMTS.js';
-// import WMTSTileGrid from 'ol/tilegrid/WMTS.js';
-// import {getTopLeft} from 'ol/extent.js';
-// import {register} from 'ol/proj/proj4.js';
-// import {get as getProjection} from 'ol/proj.js';
-// import proj4 from 'proj4';
+import { addBasemap } from "./basemap";
+// import { lodVis } from "./utils";
+// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
 
 export class Map {
     constructor(container) {
         this.container = container;
+        this.activeBasemap = null;
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -37,7 +28,7 @@ export class Map {
 
         this._initScene();
         this._initLights();
-        this._initPlane();
+        this.setBasemap();
         this._initRenderer();
         this._attachEvents();
 
@@ -88,105 +79,12 @@ export class Map {
         this.scene.add(light2);
     }
 
-    // _initPlane() {
-    //     const planeSizeX = 2000;
-    //     const planeSizeY = 3000;
-    //     const planeGeometry = new THREE.PlaneGeometry(planeSizeX, planeSizeY);
-    //     const planeMaterial = new THREE.MeshPhongMaterial({ emissive: 0xFFFFFF });
-    //     const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-    //     planeMesh.rotateX(-Math.PI / 2);
-    //     planeMesh.position.set(planeSizeX / 2, 0, -planeSizeY / 2);
-    //     this.scene.add(planeMesh);
-    // }
-
-    _initPlane() {
-        // --- Configuration ---
-        const tileSize = 256; // WMTS standard tile size in pixels
-        const resolutions = [
-            3440.64, 1720.32, 860.16, 430.08, 215.04,
-            107.52, 53.76, 26.88, 13.44, 6.72,
-            3.36, 1.68, 0.84, 0.42, 0.21
-        ];
-        const matrixSet = "EPSG:28992";
-        // const wmtsBaseURL = "https://service.pdok.nl/lv/bgt/wmts/v1_0";
-        const wmtsBaseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0";
-
-        const zoom = 12;
-        const resolution = resolutions[zoom];
-
-        // better option: to change query bbox to camera view
-        const minX = 84500;
-        const minY = 444000;
-        const maxX = 87000;
-        const maxY = 447500;
-
-        const originX = -285401.92;
-        const originY = 903401.92;
-
-        const tileSpan = tileSize * resolution;
-
-        const minCol = Math.floor((minX - originX) / tileSpan);
-        const maxCol = Math.floor((maxX - originX) / tileSpan);
-        const minRow = Math.floor((originY - maxY) / tileSpan);
-        const maxRow = Math.floor((originY - minY) / tileSpan);
-
-        const loader = new THREE.TextureLoader();
-        loader.crossOrigin = "anonymous";
-
-        // try async?
-        // add retry process
-
-        // for (let row = minRow; row <= maxRow; row++) {
-        //     for (let col = minCol; col <= maxCol; col++) {
-        //         const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
-        //             + `&LAYER=achtergrondvisualisatie`
-        //             + `&STYLE=default`
-        //             + `&FORMAT=image/png`
-        //             + `&TILEMATRIXSET=${matrixSet}`
-        //             + `&TILEMATRIX=${zoom}`
-        //             + `&TILEROW=${row}`
-        //             + `&TILECOL=${col}`;
-        
-        for (let row = minRow; row <= maxRow; row++) {
-            for (let col = minCol; col <= maxCol; col++) {
-                const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
-                    + `&LAYER=Actueel_orthoHR`
-                    + `&STYLE=default`
-                    + `&FORMAT=image/png`
-                    + `&TILEMATRIXSET=${matrixSet}`
-                    + `&TILEMATRIX=${zoom}`
-                    + `&TILEROW=${row}`
-                    + `&TILECOL=${col}`;
-
-                loader.load(url, (texture) => {
-                    texture.minFilter = THREE.LinearFilter;
-
-                    // Compute real-world RD New coords of this tile
-                    const tileMinX = originX + col * tileSpan;
-                    const tileMaxY = originY - row * tileSpan;
-
-                    const tileCenterX = (tileMinX + tileMinX + tileSpan) / 2;
-                    const tileCenterY = (tileMaxY + tileMaxY - tileSpan) / 2;
-
-                    const planeGeometry = new THREE.PlaneGeometry(tileSpan, tileSpan);
-
-                    const planeMaterial = new THREE.MeshBasicMaterial({
-                        map: texture,
-                        side: THREE.DoubleSide
-                    });
-                    const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-
-                    planeMesh.rotateX(-Math.PI / 2);
-                    planeMesh.position.set(tileCenterX, -1, -tileCenterY);
-
-                    planeMesh.renderOrder = -1;
-
-                    this.scene.add(planeMesh);
-                });
-            }
+    setBasemap(url, layer) {
+        if (this.activeBasemap) {
+            this.scene.remove(this.activeBasemap);
         }
+        this.activeBasemap = addBasemap(this.scene, url, layer);
     }
-
 
     _initRenderer() {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -357,7 +255,6 @@ export class Map {
         // window.addEventListener('resize', () => this.render());
     }
 
-
     _resizeRenderer() {
         const { clientWidth: w, clientHeight: h } = this.canvas;
         this.renderer.setSize(w, h, false);
@@ -374,10 +271,6 @@ export class Map {
             // objs.translateX(loadGLTFTranslateX);
             // objs.translateY(loadGLTFTranslateY);
 
-            objs.renderOrder = 0;
-
-            scene.add(objs);
-
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
@@ -388,10 +281,21 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
+
+            // load only lod2 on startup
+            this.model = objs;
+            this.lodVis();
+            scene.add(objs);
+
+            // if (child.name.startsWith("08")) child.visible = false;
+            // if (child.name != "08-lod_2") child.visible = false;
+            // if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
+            //     child.visible = true;
+            // } else { child.visible = false; }
+            // });
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
-
         }, undefined, function (error) {
             console.error(error);
         });
@@ -404,34 +308,29 @@ export class Map {
         this.renderer.render(this.scene, this.cameraManager.camera);
         requestAnimationFrame(this.render);
     }
+
+    lodToggle(level) {
+        this.lodVis(level);
+    }
+
+    lodVis(lod = 'lod_2') {
+        this.model.traverse((child) => {
+            child.visible = false;
+            if (child.isMesh) {
+                child.material.side = THREE.DoubleSide;
+            }
+            if (child.name.includes(lod)) {
+                child.visible = true;
+                var vis = child.parent;
+                while (vis) {
+                    vis.visible = true;
+                    vis = vis.parent;
+                    if (vis.type == 'Group') {
+                        vis.visible = true;
+                        break;
+                    }
+                }
+            }
+        });
+    }
 }
-
-
-
-// export class PDOKProvider extends MapProvider
-// {
-//     constructor() {
-//         super();
-//         this.layer = 'Actueel_ortho25';
-//         this.matrixSet = 'EPSG:3857';
-//         this.format = 'image/png';
-//         this.style = 'default';
-//         this.baseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/";
-//     }
-
-//     fetchTile(zoom, x, y) {
-//         const url = `${this.baseURL}?service=WMTS&request=GetTile&version=1.0.0&layer=${this.layer}&style=${this.style}&tilematrixset=${this.matrixSet}&format=${this.format}&tilematrix=${zoom}&tilecol=${x}&tilerow=${y}`;
-// 	        return new Promise((resolve, reject) => {
-// 	            const image = document.createElement('img');
-// 	            image.onload = function () {
-// 	                resolve(image);
-// 	            };
-// 	            image.onerror = function () {
-// 	                reject();
-// 	            };
-// 	            image.crossOrigin = 'Anonymous';
-// 	            image.src = url;
-// 	        });
-// 	    }
-
-// }
