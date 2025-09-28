@@ -53,6 +53,7 @@ export class CamerasControls {
 
         this.orthographicCamera = new THREE.OrthographicCamera((frustrumSize * aspect) / - 2, (frustrumSize * aspect) / 2, frustrumSize / 2, frustrumSize / - 2, 0, 100000);
         
+
         // this.orthographicCamera.position.set(0, 1000, 0);
 
         if (startMap) {
@@ -102,6 +103,8 @@ export class CamerasControls {
     switchToMap() {
 
         if (this.orthographic){
+
+            this.mapControls.maxPolarAngle = 0.49 * Math.PI;
 
             const y = this.mapCamera.position.y;
             this.mapCamera.position.copy(this.orthographicCamera.position);
@@ -168,6 +171,8 @@ export class CamerasControls {
 
             this.orthographicCamera.lookAt(this.controls.target);
             // this.orthographicCamera.lookAt(this.orthographicCamera.position.x, 1, this.orthographicCamera.position.z);
+
+            this.mapControls.maxPolarAngle = 0 * Math.PI;
 
             this.orthographicCamera.updateProjectionMatrix();
 

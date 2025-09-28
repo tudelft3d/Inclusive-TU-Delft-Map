@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.zoomOut();
     });
 
-    document.getElementById('orthographic-toggle').addEventListener('click', () => {
+    document.getElementById('orthographic-btn').addEventListener('click', () => {
         map.cameraManager.switchToOrthographic();
     });
 
@@ -78,9 +78,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('toggle-camera').addEventListener('click', () => {
-        map.cameraManager.switchToOrtho(map.model);
+
+    const lodBtn = document.getElementById('lod-btn');
+    const lodDropdown = document.getElementById('lod-dropdown');
+    lodBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
+            lodDropdown.style.display = 'block';
+        } else {
+            lodDropdown.style.display = 'none';
+        }
     });
+
+    document.addEventListener('click', () => {
+        lodDropdown.style.display = 'none';
+    });
+
+    lodDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const lod = item.dataset.lod;
+            map.lodVis(lod);
+            lodDropdown.style.display = 'none';
+        });
+    });
+
 });
 
 

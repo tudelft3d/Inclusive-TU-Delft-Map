@@ -70,12 +70,42 @@ canvas {
   border: 1px solid #ccc;
 }
 
-#basemap-container {
+/* Sidebar flex container for all right-side controls */
+#right-sidebar-controls {
   position: fixed;
+  top: 10%;
   right: 20px;
-  top: 25%;
-  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Adjust this value for spacing between all controls */
+  z-index: 30;
 }
+
+#basemap-container,
+#thematic-container,
+#colorBlind-container,
+#zoom-controls,
+#orthographic-controls,
+#lod-container {
+  position: static; /* Remove fixed positioning */
+  z-index: inherit;
+  /* Remove any top/right values here */
+}
+
+#basemap-btn,
+#thematic-btn,
+#colorBlind-btn,
+#zoom-in,
+#zoom-out,
+#orthographic-btn,
+#lod-btn{
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+
 
 #basemap-btn {
   width: 40px;
@@ -105,12 +135,6 @@ canvas {
   color: black;
 }
 
-#thematic-container {
-  position: fixed;
-  right: 20px;
-  top: 20%;
-  z-index: 30;
-}
 
 #thematic-btn {
   width: 40px;
@@ -142,13 +166,6 @@ canvas {
   z-index: inherit;
 }
 
-#colorBlind-container {
-  position: fixed;
-  right: 20px;
-  top: 30%;
-  z-index: 30;
-}
-
 #colorBlind-btn {
   width: 40px;
   height: 40px;
@@ -159,7 +176,7 @@ canvas {
 
 #colorBlind-dropdown {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 100%;
   right: 0;
   background: white;
@@ -179,22 +196,16 @@ canvas {
   z-index: inherit;
 }
 
-#zoom-in {
-  position: absolute;
-  top: 10%;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 31;
+#zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; 
+
 }
 
+#zoom-in,
 #zoom-out {
-  position: absolute;
-  top: 15%;
-  right: 20px;
+  position: static;
   width: 40px;
   height: 40px;
   font-size: 20px;
@@ -203,15 +214,52 @@ canvas {
   z-index: 31;
 }
 
-#orthographic-toggle {
-  position: absolute;
-  top: 30%;
-  right: 20px;
+#orthographic-btn {
+  position: static;
+  width: 40px;
   height: 40px;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   z-index: 31;
+}
+
+/*#lod-container {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  z-index: 9;
+}*/
+
+#lod-btn {
+  position: static;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
+}
+
+#lod-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  padding-left: 20px;
+  border-radius: 5px;
+  min-width: 160px;
+  z-index: inherit;
+}
+
+#lod-dropdown a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
 }
 
 /*#camera-toggle {
@@ -220,3 +268,4 @@ canvas {
   left: 20px;
   z-index: 40;
 }*/
+
