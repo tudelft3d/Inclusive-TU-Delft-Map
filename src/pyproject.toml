@@ -1,0 +1,17 @@
+[project]
+name = "src"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "cjio>=0.10.1",
+    "networkx>=3.5",
+    "numpy>=2.3.3",
+    "pyglet<2",
+    "rtree>=1.4.1",       # Necessary for trimesh
+    "scipy>=1.16.2",      # Necessary for trimesh
+    "shapely>=2.1.1",
+    "tqdm>=4.67.1",
+    "triangle>=20250106",
+    "trimesh>=4.8.1",
+    "typer>=0.19.2",
+]
