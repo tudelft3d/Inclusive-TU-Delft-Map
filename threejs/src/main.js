@@ -1,7 +1,5 @@
 import { Scene } from "three/src/Three.Core.js";
 import { Map } from "./app";
-import { createBasemap } from "./basemap";
-
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -10,8 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const map = new Map(container);
     // map.loadGLTF('assets/campus/geom/model.glb');
     map.loadGLTF('assets/campus/geom/geometry.glb');
-    // createBasemap('basemap-aerial');
-    // map.addWMTSBasemap(aerialPDOK);
     // map.loadGLTF('output/campus/bbox/model.glb')
 
     document.getElementById('zoom-in').addEventListener('click', () => {
@@ -35,6 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', () => {
         basemapDropdown.style.display = 'none';
+    });
+
+    basemapDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = item.dataset.url;
+            const layer = item.dataset.layer;
+            map.setBasemap(url, layer);
+            basemapDropdown.style.display = 'none';
+        });
     });
 
 
