@@ -3,17 +3,19 @@ import { Map } from "./app";
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
-    // const aerialPDOK = new PDOKProvider();
 
     const map = new Map(container);
     // map.loadGLTF('assets/campus/geom/model.glb');
     map.loadGLTF('assets/campus/geom/geometry.glb');
-    // map.loadGLTF('output/campus/bbox/model.glb')
+    // map.lodToggle('lod_0');
 
-    document.getElementById('zoom-in').addEventListener('click', () => {
+    document.getElementById('zoom-in').addEventListener('click', (event) => {
+        event.stopPropagation();
+        event.preventDefault;
         map.cameraManager.zoomIn();
     });
-    document.getElementById('zoom-out').addEventListener('click', () => {
+    document.getElementById('zoom-out').addEventListener('click', (event) => {
+        event.stopPropagation();
         map.cameraManager.zoomOut();
     });
 

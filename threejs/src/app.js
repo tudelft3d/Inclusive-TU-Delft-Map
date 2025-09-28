@@ -1,12 +1,13 @@
 import { CamerasControls } from "./camera";
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Group, Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
+// import { lodVis } from "./utils";
+// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
 
 export class Map {
@@ -207,7 +208,6 @@ export class Map {
             objs.rotateX(-Math.PI / 2);
             // objs.translateX(loadGLTFTranslateX);
             // objs.translateY(loadGLTFTranslateY);
-
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
@@ -218,22 +218,21 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
-            // scene.add(objs);
 
-            objs.traverse((child) => {
-                console.log(child);
-                // if (child.name.startsWith("08")) child.visible = false;
-                // if (child.name != "08-lod_2") child.visible = false;
-                if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
-                    child.visible = true;
-                } else { child.visible = false; }
-            });
+            // load only lod2 on startup
+            this.model = objs;
+            this.lodVis();
             scene.add(objs);
 
+            // if (child.name.startsWith("08")) child.visible = false;
+            // if (child.name != "08-lod_2") child.visible = false;
+            // if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
+            //     child.visible = true;
+            // } else { child.visible = false; }
+            // });
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
-
         }, undefined, function (error) {
             console.error(error);
         });
@@ -247,34 +246,29 @@ export class Map {
         this.renderer.render(this.scene, this.cameraManager.camera);
         requestAnimationFrame(this.render);
     }
+
+    lodToggle(level) {
+        this.lodVis(level);
+    }
+
+    lodVis(lod = 'lod_2') {
+        this.model.traverse((child) => {
+            child.visible = false;
+            if (child.isMesh) {
+                child.material.side = THREE.DoubleSide;
+            }
+            if (child.name.includes(lod)) {
+                child.visible = true;
+                var vis = child.parent;
+                while (vis) {
+                    vis.visible = true;
+                    vis = vis.parent;
+                    if (vis.type == 'Group') {
+                        vis.visible = true;
+                        break;
+                    }
+                }
+            }
+        });
+    }
 }
-
-
-
-// export class PDOKProvider extends MapProvider
-// {
-//     constructor() {
-//         super();
-//         this.layer = 'Actueel_ortho25';
-//         this.matrixSet = 'EPSG:3857';
-//         this.format = 'image/png';
-//         this.style = 'default';
-//         this.baseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/";
-//     }
-
-//     fetchTile(zoom, x, y) {
-//         const url = `${this.baseURL}?service=WMTS&request=GetTile&version=1.0.0&layer=${this.layer}&style=${this.style}&tilematrixset=${this.matrixSet}&format=${this.format}&tilematrix=${zoom}&tilecol=${x}&tilerow=${y}`;
-// 	        return new Promise((resolve, reject) => {
-// 	            const image = document.createElement('img');
-// 	            image.onload = function () {
-// 	                resolve(image);
-// 	            };
-// 	            image.onerror = function () {
-// 	                reject();
-// 	            };
-// 	            image.crossOrigin = 'Anonymous';
-// 	            image.src = url;
-// 	        });
-// 	    }
-
-// }
