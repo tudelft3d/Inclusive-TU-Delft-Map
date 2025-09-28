@@ -95,12 +95,12 @@ export class Map {
     }
 
     _zoomPerspective(pos, object) {
-        console.log("perspective");
+        // console.log("perspective");
 
     }
 
     _zoomOrthographic(pos, object) {
-        console.log("orthographic");
+        // console.log("orthographic");
 
         const margin = 10;
 
@@ -115,8 +115,6 @@ export class Map {
         // Will have to figure something out with zoom
         const fov = this.cameraManager.camera.fov * (Math.PI / 180);
         const distance = radius / Math.tan(fov / 2) * margin;
-
-        console.log(fov, distance, center, this.cameraManager.camera.position);
 
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;
@@ -145,7 +143,7 @@ export class Map {
                 this._zoomPerspective(pos, object);
             }
 
-            console.log(object);
+            console.log(object.name);
 
             this.controlsManager.activateOrbit();
 

@@ -148,6 +148,8 @@ export class CamerasControls {
 
         if (this.orthographic == false){
 
+            this.mapControls.maxPolarAngle = 0 * Math.PI;
+
             this.previousCamera = this.camera;
             this.previousControls = this.controls;
 
@@ -175,6 +177,8 @@ export class CamerasControls {
             this.mapControls.maxPolarAngle = 0 * Math.PI;
 
             this.orthographicCamera.updateProjectionMatrix();
+
+            this.controls = this.mapControls;
 
             this.camera = this.orthographicCamera;
             this.controls.object = this.orthographicCamera;

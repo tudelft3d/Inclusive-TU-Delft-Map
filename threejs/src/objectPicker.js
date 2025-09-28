@@ -81,7 +81,21 @@ export class ObjectPicker {
         if (!hits.length) { return false; }
 
         // Pick the first object. It's the closest one
-        const mesh = hits[0].object;
+
+        var object_count = hits.length;
+
+        let mesh;
+
+        for (var i = 0; i < object_count; i++) {
+
+            if (hits[i].object.visible) {
+                mesh = hits[i].object;
+                break;
+            }
+
+        }
+
+        // const mesh = hits[0].object;
 
         // To skip the background
         if (!mesh.name) { return false; }
