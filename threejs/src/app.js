@@ -208,15 +208,19 @@ export class Map {
         }
         else {
 
+            if (!this.cameraManager.orthographic) {
+                
+                this.controlsManager.activateMap();
+
+                const { x, y, z } = this.cameraManager.previousCamera.position;
+                this.cameraManager.camera.position.set(x, y, z);
+                this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
+                this.cameraManager.controls.update();
+            } 
+
             // console.log("flag 1");
             // console.log(this.cameraManager.orthographic);
 
-            // this.controlsManager.activateMap();
-
-            // const { x, y, z } = this.cameraManager.previousCamera.position;
-            // this.cameraManager.camera.position.set(x, y, z);
-            // this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
-            // this.cameraManager.controls.update();
         }
     }
 
