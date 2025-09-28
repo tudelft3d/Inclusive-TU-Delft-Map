@@ -12,3 +12,8 @@ documents/.DS_Store
 threejs/node_modules/
 threejs/assets/
 
+# Folder for local stuff
+local/
+
+# 3DCityDB stuff
+database/citydb-tool*/
