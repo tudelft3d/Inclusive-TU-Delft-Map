@@ -39,7 +39,7 @@ export class Map {
     _initScene() {
         this.scene = new THREE.Scene();
         const loader = new THREE.CubeTextureLoader();
-        loader.setPath('assets/graphics/');
+        loader.setPath('assets/threejs/graphics/');
         const skyboxTexture = loader.load([
             'sky_gradient_sides.png',
             'sky_gradient_sides.png',

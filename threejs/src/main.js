@@ -1,4 +1,3 @@
-import { Scene } from "three/src/Three.Core.js";
 import { Map } from "./app";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -6,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = new Map(container);
     // map.loadGLTF('assets/campus/geom/model.glb');
-    map.loadGLTF('assets/campus/geom/geometry.glb');
+    // map.loadGLTF('assets/campus/geom/geometry.glb');
+    map.loadGLTF('assets/threejs/buildings/geometry.glb');
     // map.lodToggle('lod_0');
 
     document.getElementById('zoom-in').addEventListener('click', (event) => {
