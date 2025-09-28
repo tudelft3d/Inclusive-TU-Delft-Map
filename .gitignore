@@ -7,3 +7,8 @@ qgis/
 assets/
 threejs/dist/
 threejs/output
+.DS_Store
+documents/.DS_Store
+threejs/node_modules/
+threejs/assets/
+

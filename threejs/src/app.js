@@ -1,15 +1,19 @@
 import { CamerasControls } from "./camera";
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Group, Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
+import { addBasemap } from "./basemap";
+// import { lodVis } from "./utils";
+// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
+
 
 export class Map {
     constructor(container) {
         this.container = container;
+        this.activeBasemap = null;
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -24,7 +28,7 @@ export class Map {
 
         this._initScene();
         this._initLights();
-        this._initPlane();
+        this.setBasemap();
         this._initRenderer();
         this._attachEvents();
 
@@ -45,6 +49,17 @@ export class Map {
             'sky_gradient_sides.png',
         ]);
         this.scene.background = skyboxTexture;
+
+        // const geometry = new THREE.BoxGeometry(100, 100, 100);
+        // const material = new THREE.MeshBasicMaterial({
+        //   color: 0x00ff00,
+        //   wireframe: true,
+        // });
+
+        // const cube = new THREE.Mesh(geometry, material);
+        // const cube_2 = new THREE.Mesh(geometry, material);
+        // cube_2.position.y = 1000;
+        // this.scene.add(cube);
     }
 
     _initLights() {
@@ -64,15 +79,11 @@ export class Map {
         this.scene.add(light2);
     }
 
-    _initPlane() {
-        const planeSizeX = 2000;
-        const planeSizeY = 3000;
-        const planeGeometry = new THREE.PlaneGeometry(planeSizeX, planeSizeY);
-        const planeMaterial = new THREE.MeshPhongMaterial({ emissive: 0xFFFFFF });
-        const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-        planeMesh.rotateX(-Math.PI / 2);
-        planeMesh.position.set(planeSizeX / 2, 0, -planeSizeY / 2);
-        this.scene.add(planeMesh);
+    setBasemap(url, layer) {
+        if (this.activeBasemap) {
+            this.scene.remove(this.activeBasemap);
+        }
+        this.activeBasemap = addBasemap(this.scene, url, layer);
     }
 
     _initRenderer() {
@@ -83,13 +94,59 @@ export class Map {
         this._resizeRenderer();
     }
 
+    _zoomPerspective(pos, object) {
+        console.log("perspective");
+
+    }
+
+    _zoomOrthographic(pos, object) {
+        console.log("orthographic");
+
+        const margin = 10;
+
+        // Bounding sphere
+        const sphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        const center = sphere.center;
+        const radius = sphere.radius;
+
+        // Compute distance based on fov
+        // Doesn't work for ortho, fov is NaN.
+        // Will have to figure something out with zoom
+        const fov = this.cameraManager.camera.fov * (Math.PI / 180);
+        const distance = radius / Math.tan(fov / 2) * margin;
+
+        console.log(fov, distance, center, this.cameraManager.camera.position);
+
+        this.cameraManager.camera.position.x = center.x;
+        this.cameraManager.camera.position.z = center.z;
+
+        this.cameraManager.camera.lookAt(center);
+        this.cameraManager.camera.updateProjectionMatrix();
+
+        this.cameraManager.controls.target.copy(center);
+        this.cameraManager.controls.update();
+
+    }
+
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
         const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
         if (foundObject) {
+
             // Orbit around the found object
             const object = this.picker.picked;
+
+            if (this.cameraManager.orthographic) {
+                this._zoomOrthographic(pos, object);
+                return;
+            } else {
+                this._zoomPerspective(pos, object);
+            }
+
+            console.log(object);
+
             this.controlsManager.activateOrbit();
 
             const margin = 1.2;
@@ -152,15 +209,20 @@ export class Map {
 
         }
         else {
-            // Go back to the main map view
-            this.controlsManager.activateMap();
 
-            const { x, y, z } = this.cameraManager.previousCamera.position;
-            this.cameraManager.camera.position.set(x, y, z);
-            this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
-            this.cameraManager.controls.update();
+            // console.log("flag 1");
+            // console.log(this.cameraManager.orthographic);
+
+            // this.controlsManager.activateMap();
+
+            // const { x, y, z } = this.cameraManager.previousCamera.position;
+            // this.cameraManager.camera.position.set(x, y, z);
+            // this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
+            // this.cameraManager.controls.update();
         }
     }
+
+
 
     _attachEvents() {
         // // mouse move → hover
@@ -193,7 +255,6 @@ export class Map {
         // window.addEventListener('resize', () => this.render());
     }
 
-
     _resizeRenderer() {
         const { clientWidth: w, clientHeight: h } = this.canvas;
         this.renderer.setSize(w, h, false);
@@ -207,9 +268,34 @@ export class Map {
         loader.load(path, (gltf) => {
             let objs = gltf.scene;
             objs.rotateX(-Math.PI / 2);
-            objs.translateX(loadGLTFTranslateX);
-            objs.translateY(loadGLTFTranslateY);
+            // objs.translateX(loadGLTFTranslateX);
+            // objs.translateY(loadGLTFTranslateY);
+
+            const box = new THREE.Box3().setFromObject(objs);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = this.cameraManager.camera.fov * (Math.PI / 180);
+            let cameraZ = maxDim / (2 * Math.tan(fov / 2));
+
+            cameraZ *= 1.5; // add margin
+
+
+            // load only lod2 on startup
+            this.model = objs;
+            this.lodVis();
             scene.add(objs);
+
+            // if (child.name.startsWith("08")) child.visible = false;
+            // if (child.name != "08-lod_2") child.visible = false;
+            // if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
+            //     child.visible = true;
+            // } else { child.visible = false; }
+            // });
+            this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
+            this.cameraManager.controls.target.copy(center);
+            this.cameraManager.controls.update();
         }, undefined, function (error) {
             console.error(error);
         });
@@ -218,9 +304,33 @@ export class Map {
 
     render(time) {
         this._resizeRenderer();
-        console.log(this.tweens);
         this.tweens.forEach(tween => tween.update(time));
         this.renderer.render(this.scene, this.cameraManager.camera);
         requestAnimationFrame(this.render);
+    }
+
+    lodToggle(level) {
+        this.lodVis(level);
+    }
+
+    lodVis(lod = 'lod_2') {
+        this.model.traverse((child) => {
+            child.visible = false;
+            if (child.isMesh) {
+                child.material.side = THREE.DoubleSide;
+            }
+            if (child.name.includes(lod)) {
+                child.visible = true;
+                var vis = child.parent;
+                while (vis) {
+                    vis.visible = true;
+                    vis = vis.parent;
+                    if (vis.type == 'Group') {
+                        vis.visible = true;
+                        break;
+                    }
+                }
+            }
+        });
     }
 }
