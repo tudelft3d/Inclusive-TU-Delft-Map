@@ -20,15 +20,22 @@
     <div id="search-bar">
         <input type="text" placeholder="Search for building, room or facility..." />
     </div>
+
     <div id="right-sidebar-controls">
+
         <div id="basemap-container">
-            <button id="basemap-btn"><i class="fa-solid fa-layer-group"></i></button>
+            <button id="basemap-btn"><i class="fa-solid fa-layer-group" alt="basemap"></i></button>
+
             <div id="basemap-dropdown">
-                <a href="#">2D Basemap</a>
-                <a href="#">3D Buildings</a>
-                <a href="#">2.5D (?)</a>
+                <a href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
+                    data-layer="Actueel_orthoHR">Satellite Imagery</a>
+                <a href="#" data-url="https://service.pdok.nl/lv/bgt/wmts/v1_0" data-layer="achtergrondvisualisatie">BGT
+                    Colour</a>
+                <a href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0" data-layer="grijs">BGT
+                    Grayscale</a>
             </div>
         </div>
+
         <div id="thematic-container">
             <button id="thematic-btn"><i class="fa-solid fa-bars"></i></button>
             <div id="thematic-dropdown">
@@ -37,24 +44,41 @@
                 <a href="#">Theme 3</a>
             </div>
         </div>
+
         <div id="colorBlind-container">
-            <button id="colorBlind-btn"><img src="assets/graphics/accessibility_icon.svg" alt="menu" /></button>
+            <button id="colorBlind-btn"><img src="assets/threejs/graphics/accessibility_icon.svg" alt="menu" /></button>
             <div id="colorBlind-dropdown">
                 <a href="#">Red-Green</a>
                 <a href="#">Mode 2</a>
                 <a href="#">Mode 3</a>
             </div>
         </div>
+
         <div id="zoom-controls">
             <button id="zoom-in">+</button>
             <button id="zoom-out">−</button>
         </div>
+
+        <div id="orthographic-controls">
+            <button id="orthographic-btn"><i class="fa-solid fa-street-view"></i></i></button>
+        </div>
+
+        <div id="lod-container">
+            <button id="lod-btn"><i class="fa-solid fa-circle-info" alt="LoD"></i></button>
+            <div id="lod-dropdown">
+                <a href="#" data-lod='lod_2'>LoD 2</a>
+                <a href="#" data-lod='lod_1'>LoD 1</a>
+                <a href="#" data-lod='lod_0'>LoD 0</a>
+            </div>
+        </div>
+
     </div>
 
     <div id="scene-container">
         <div id="info-pane"></div>
         <!-- Our <canvas> will be inserted here -->
     </div>
+
     <div id="basemap-aerial"></div>
 </body>
 

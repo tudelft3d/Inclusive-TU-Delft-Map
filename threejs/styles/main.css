@@ -84,7 +84,9 @@ canvas {
 #basemap-container,
 #thematic-container,
 #colorBlind-container,
-#zoom-controls {
+#zoom-controls,
+#orthographic-controls,
+#lod-container {
   position: static; /* Remove fixed positioning */
   z-index: inherit;
   /* Remove any top/right values here */
@@ -94,7 +96,9 @@ canvas {
 #thematic-btn,
 #colorBlind-btn,
 #zoom-in,
-#zoom-out {
+#zoom-out,
+#orthographic-btn,
+#lod-btn{
   width: 40px;
   height: 40px;
   font-size: 20px;
@@ -207,4 +211,61 @@ canvas {
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
+  z-index: 31;
 }
+
+#orthographic-btn {
+  position: static;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
+}
+
+/*#lod-container {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  z-index: 9;
+}*/
+
+#lod-btn {
+  position: static;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 31;
+}
+
+#lod-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  padding-left: 20px;
+  border-radius: 5px;
+  min-width: 160px;
+  z-index: inherit;
+}
+
+#lod-dropdown a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+/*#camera-toggle {
+  position: absolute;
+  top: 5%;
+  left: 20px;
+  z-index: 40;
+}*/
+

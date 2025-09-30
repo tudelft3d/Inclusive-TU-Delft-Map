@@ -1,24 +1,26 @@
-import { Scene } from "three/src/Three.Core.js";
 import { Map } from "./app";
-import { createBasemap } from "./basemap";
-
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
-    // const aerialPDOK = new PDOKProvider();
 
     const map = new Map(container);
     // map.loadGLTF('assets/campus/geom/model.glb');
-    map.loadGLTF('assets/campus/geom/geometry.glb');
-    // createBasemap('basemap-aerial');
-    // map.addWMTSBasemap(aerialPDOK);
-    // map.loadGLTF('output/campus/bbox/model.glb')
+    // map.loadGLTF('assets/campus/geom/geometry.glb');
+    map.loadGLTF('assets/threejs/buildings/geometry.glb');
+    // map.lodToggle('lod_0');
 
-    document.getElementById('zoom-in').addEventListener('click', () => {
+    document.getElementById('zoom-in').addEventListener('click', (event) => {
+        event.stopPropagation();
+        event.preventDefault;
         map.cameraManager.zoomIn();
     });
-    document.getElementById('zoom-out').addEventListener('click', () => {
+    document.getElementById('zoom-out').addEventListener('click', (event) => {
+        event.stopPropagation();
         map.cameraManager.zoomOut();
+    });
+
+    document.getElementById('orthographic-btn').addEventListener('click', () => {
+        map.cameraManager.switchToOrthographic();
     });
 
     const basemapBtn = document.getElementById('basemap-btn');
@@ -35,6 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', () => {
         basemapDropdown.style.display = 'none';
+    });
+
+    basemapDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = item.dataset.url;
+            const layer = item.dataset.layer;
+            map.setBasemap(url, layer);
+            basemapDropdown.style.display = 'none';
+        });
     });
 
 
@@ -65,6 +77,32 @@ document.addEventListener('DOMContentLoaded', () => {
             colorBlindDropdown.style.display = 'none';
         }
     });
+
+
+    const lodBtn = document.getElementById('lod-btn');
+    const lodDropdown = document.getElementById('lod-dropdown');
+    lodBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
+            lodDropdown.style.display = 'block';
+        } else {
+            lodDropdown.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', () => {
+        lodDropdown.style.display = 'none';
+    });
+
+    lodDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const lod = item.dataset.lod;
+            map.lodVis(lod);
+            lodDropdown.style.display = 'none';
+        });
+    });
+
 });
 
 

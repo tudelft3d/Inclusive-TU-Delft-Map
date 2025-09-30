@@ -35,6 +35,10 @@ export class ControlsManager {
         // this._listenForChanges();
     }
 
+    activateOrthographic() {
+        this.camManager.switchToOrthographic();
+    }
+
     /** Helper for the UI layer to reset the “drag” flag */
     resetTouchState() {
         this.cameraMovedDuringTouch = false;
