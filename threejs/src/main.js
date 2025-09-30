@@ -1,10 +1,14 @@
 import { Scene } from "three/src/Three.Core.js";
 import { Map } from "./app";
+import { Searcher } from "./search";
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
+    const searcher = new Searcher();
+
+
     // map.loadGLTF('assets/campus/geom/model.glb');
     map.loadGLTF('assets/campus/geom/geometry.glb');
     // map.lodToggle('lod_0');
@@ -21,6 +25,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('orthographic-btn').addEventListener('click', () => {
         map.cameraManager.switchToOrthographic();
+    });
+
+    const searchBar = document.getElementById('search');
+
+    searchBar.addEventListener('keypress', (event) => {
+
+        console.log(map);
+
+        if (event.key === "Enter") {
+
+            let value = event.target.value;
+
+            if (value && value.trim().length > 0){
+                console.log(value);
+            }
+
+            console.log(searcher.searchPattern(value, map));
+        }
+
     });
 
     const basemapBtn = document.getElementById('basemap-btn');

@@ -110,11 +110,22 @@ export class Map {
         const center = sphere.center;
         const radius = sphere.radius;
 
-        // Compute distance based on fov
-        // Doesn't work for ortho, fov is NaN.
-        // Will have to figure something out with zoom
-        const fov = this.cameraManager.camera.fov * (Math.PI / 180);
-        const distance = radius / Math.tan(fov / 2) * margin;
+        console.log(this.cameraManager.camera.zoom);
+        console.log(this.cameraManager.controls.getDistance(center));
+        
+        // this.orthographicCamera.top = halfHeight;
+        // this.orthographicCamera.bottom = -halfHeight;
+        // this.orthographicCamera.right = halfWidth;
+        // this.orthographicCamera.left = -halfWidth;
+
+        // this.orthographicCamera.zoom = 1;
+
+        // this.orthographicCamera.lookAt(this.controls.target);
+
+        // this.mapControls.maxPolarAngle = 0 * Math.PI;
+
+        // this.orthographicCamera.updateProjectionMatrix();
+
 
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;
@@ -127,8 +138,12 @@ export class Map {
 
     }
 
-    _pickEvent(pos) {
+    pickEvent(pos) {
+
         if (this.controlsManager.cameraMovedDuringTouch) { return }
+
+        console.log(pos);
+
         const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
         if (foundObject) {
@@ -240,14 +255,14 @@ export class Map {
         });
         window.addEventListener('mouseup', (e) => {
             const pos = getCanvasRelativePosition(e, this.canvas);
-            this._pickEvent(pos);
+            this.pickEvent(pos);
         });
 
         // touch handling (mirrors the mouse logic)
         window.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
-            this._pickEvent(pos);
+            this.pickEvent(pos);
         });
 
         // // control change → re‑render
