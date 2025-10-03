@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * -------------------------------------------------------------- */
   const CONFIG = {
     // Change this when you move to production (or proxy via Nginx)
-    endpoint: 'http://localhost:3001/api/feedback',
+    endpoint: 'https://inclusivecampusmap.bk.tudelft.nl/api/feedback',
     // Timeout for auto‑hiding success messages (ms)
     successHideDelay: 6000
   };
