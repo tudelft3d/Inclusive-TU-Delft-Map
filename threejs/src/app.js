@@ -34,6 +34,7 @@ export class Map {
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
+
     }
 
     _initScene() {
@@ -94,12 +95,76 @@ export class Map {
         this._resizeRenderer();
     }
 
-    _zoomPerspective(pos, object) {
+    _zoom_perspective(object) {
         // console.log("perspective");
+
+        this.controlsManager.activateOrbit();
+
+        const margin = 1.2;
+
+        // Bounding sphere
+        const sphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        const center = sphere.center;
+        const radius = sphere.radius;
+
+        // Compute distance based on fov
+        const fov = this.cameraManager.camera.fov * (Math.PI / 180);
+        const distance = radius / Math.tan(fov / 2) * margin;
+
+        // Set camera position & orientation
+        const direction = new THREE.Vector3()
+            .subVectors(this.cameraManager.previousCamera.position, center)
+            .normalize();
+        const cameraPosition = center.clone().addScaledVector(direction, distance);
+
+        // Transition to the new position and target
+        const initPosition = this.cameraManager.previousCamera.position.clone();
+        var currentPosition = initPosition;
+        const finalPosition = cameraPosition
+
+        if (finalPosition.y < radius* 2) {
+            finalPosition.y = radius * 2;
+        }
+
+        const initTarget = this.cameraManager.previousControls.target.clone();
+        var currentTarget = initTarget;
+        const finalTarget = center;
+
+        this.cameraManager.camera.position.copy(initPosition);
+        this.cameraManager.camera.lookAt(initTarget);
+        this.cameraManager.controls.target.copy(initTarget);
+        this.cameraManager.controls.update();
+
+        const currentValues = { position: currentPosition, target: currentTarget }
+
+        const tweenCamera = new Tween(currentValues, false)
+            .to({
+                position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
+                target: { x: finalTarget.x, y: finalTarget.y, z: finalTarget.z },
+            }, 1000)
+            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
+            .onUpdate(() => {
+                this.cameraManager.camera.position.copy(currentValues.position);
+                this.cameraManager.camera.lookAt(currentValues.target);
+                this.cameraManager.controls.target.copy(currentValues.target);
+                this.cameraManager.controls.update();
+            })
+            .onComplete(() => {
+                this.cameraManager.controls.minDistance = distance * 0.5;
+                this.cameraManager.controls.maxDistance = distance * 3;
+
+                // Remove from the list of tween when completed
+                const idx = this.tweens.indexOf(tweenCamera);
+                if (idx !== -1) this.tweens.splice(idx, 1);
+            })
+            .start()
+
+        this.tweens.push(tweenCamera);
 
     }
 
-    _zoomOrthographic(pos, object) {
+    _zoom_orthographic(object) {
         // console.log("orthographic");
 
         const margin = 10;
@@ -138,90 +203,29 @@ export class Map {
 
     }
 
-    pickEvent(pos) {
+     zoom_on_object(object) {
 
+        if (this.cameraManager.orthographic) {
+                this._zoom_orthographic(object);
+                return;
+            } else {
+                this._zoom_perspective(object);
+        }
+
+     }
+
+    _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
-
-        console.log(pos);
 
         const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
         if (foundObject) {
 
-            // Orbit around the found object
             const object = this.picker.picked;
 
-            if (this.cameraManager.orthographic) {
-                this._zoomOrthographic(pos, object);
-                return;
-            } else {
-                this._zoomPerspective(pos, object);
-            }
+            this.zoom_on_object(object);
 
-            console.log(object.name);
-
-            this.controlsManager.activateOrbit();
-
-            const margin = 1.2;
-
-            // Bounding sphere
-            const sphere = new THREE.Sphere();
-            new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
-            const center = sphere.center;
-            const radius = sphere.radius;
-
-            // Compute distance based on fov
-            const fov = this.cameraManager.camera.fov * (Math.PI / 180);
-            const distance = radius / Math.tan(fov / 2) * margin;
-
-            // Set camera position & orientation
-            const direction = new THREE.Vector3()
-                .subVectors(this.cameraManager.previousCamera.position, center)
-                .normalize();
-            const cameraPosition = center.clone().addScaledVector(direction, distance);
-
-            // Transition to the new position and target
-            const initPosition = this.cameraManager.previousCamera.position.clone();
-            var currentPosition = initPosition;
-            const finalPosition = cameraPosition
-
-            const initTarget = this.cameraManager.previousControls.target.clone();
-            var currentTarget = initTarget;
-            const finalTarget = center;
-
-            this.cameraManager.camera.position.copy(initPosition);
-            this.cameraManager.camera.lookAt(initTarget);
-            this.cameraManager.controls.target.copy(initTarget);
-            this.cameraManager.controls.update();
-
-            const currentValues = { position: currentPosition, target: currentTarget }
-
-            const tweenCamera = new Tween(currentValues, false)
-                .to({
-                    position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
-                    target: { x: finalTarget.x, y: finalTarget.y, z: finalTarget.z },
-                }, 1000)
-                .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
-                .onUpdate(() => {
-                    this.cameraManager.camera.position.copy(currentValues.position);
-                    this.cameraManager.camera.lookAt(currentValues.target);
-                    this.cameraManager.controls.target.copy(currentValues.target);
-                    this.cameraManager.controls.update();
-                })
-                .onComplete(() => {
-                    this.cameraManager.controls.minDistance = distance * 0.5;
-                    this.cameraManager.controls.maxDistance = distance * 3;
-
-                    // Remove from the list of tween when completed
-                    const idx = this.tweens.indexOf(tweenCamera);
-                    if (idx !== -1) this.tweens.splice(idx, 1);
-                })
-                .start()
-
-            this.tweens.push(tweenCamera);
-
-        }
-        else {
+        } else {
 
             if (!this.cameraManager.orthographic) {
                 
@@ -232,14 +236,8 @@ export class Map {
                 this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
                 this.cameraManager.controls.update();
             } 
-
-            // console.log("flag 1");
-            // console.log(this.cameraManager.orthographic);
-
         }
     }
-
-
 
     _attachEvents() {
         // // mouse move → hover
@@ -255,14 +253,14 @@ export class Map {
         });
         window.addEventListener('mouseup', (e) => {
             const pos = getCanvasRelativePosition(e, this.canvas);
-            this.pickEvent(pos);
+            this._pickEvent(pos);
         });
 
         // touch handling (mirrors the mouse logic)
         window.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
-            this.pickEvent(pos);
+            this._pickEvent(pos);
         });
 
         // // control change → re‑render
@@ -298,6 +296,7 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
+            console.log("gltf", gltf);
 
             // load only lod2 on startup
             this.model = objs;

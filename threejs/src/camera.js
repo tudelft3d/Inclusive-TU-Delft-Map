@@ -102,6 +102,8 @@ export class CamerasControls {
     /** Swith to map view */
     switchToMap() {
 
+        console.log("Switching to map");
+
         if (this.orthographic){
 
             this.mapControls.maxPolarAngle = 0.49 * Math.PI;
@@ -129,10 +131,14 @@ export class CamerasControls {
     /** Switch to orbit view */
     switchToOrbit() {
 
+        
+
         if (this.orthographic){
             this.orthographic = false;
             this.switchToMap();
         }
+
+        console.log("Switching to orbit");
 
         this.previousCamera = this.camera;
         this.previousControls = this.controls;
@@ -144,9 +150,11 @@ export class CamerasControls {
 
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
 
-    switchToOrthographic() {
+    switch_to_orthographic() {
 
         if (this.orthographic == false){
+
+            console.log("Switching to orthographic");
 
             this.mapControls.maxPolarAngle = 0 * Math.PI;
 
@@ -201,48 +209,14 @@ export class CamerasControls {
         }
     }
 
-    switchToOrthographicBasic() {
+    toggle_orthographic() {
 
-        console.log(this.controls.target);
-        console.log(this.controls.object);
-        console.log(this.camera.position);
-
-        if (this.ortho == false){
-            this.previousCamera = this.camera;
-            this.previousControls = this.controls;
-
-            this.camera = this.mapCamera;
-            this.controls = this.mapControls;
-            this._syncPositions(this.previousCamera);
-
-            this.camera.fov = 5;
-
-            this.mapControls.maxPolarAngle = 0 * Math.PI;
-
-            this.mapControls.update();
-
-            this.ortho = true;
-
+        if (this.orthographic == false) {
+            this.switch_to_orthographic();
         } else {
-
-            this.previousCamera = this.camera;
-            this.previousControls = this.controls;
-
-            this.camera = this.mapCamera;
-            this.controls = this.mapControls;
-            this._syncPositions(this.previousCamera);
-
-            this.camera.fov = 75;
-
-            this.mapControls.maxPolarAngle = Math.PI;
-
-            this.mapControls.update();
-
-            this.ortho = false;
-
+            this.switchToMap();
         }
 
-        
     }
 
     /** Keep the visual position when swapping cameras */

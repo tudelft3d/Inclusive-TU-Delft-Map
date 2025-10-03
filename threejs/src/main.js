@@ -24,14 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('orthographic-btn').addEventListener('click', () => {
-        map.cameraManager.switchToOrthographic();
+        map.cameraManager.toggle_orthographic();
     });
 
     const searchBar = document.getElementById('search');
 
     searchBar.addEventListener('keypress', (event) => {
-
-        console.log(map);
 
         if (event.key === "Enter") {
 
@@ -41,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(value);
             }
 
-            console.log(searcher.searchPattern(value, map));
+            console.log(searcher.search_pattern(value, map));
         }
 
     });

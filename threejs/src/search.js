@@ -10,17 +10,23 @@ export class Searcher {
 
 	constructor() {
 
-		this.processed_json = this.process_json(cityjson);
+		// what to do when searching for a room type that will have multiple instances?
+		// Highlight all bathrooms?
+
+		// Can also search within arrays <- use for nicknames
+
+		this.processed_json = this._process_json(cityjson);
         
 		this.searches = [];
 
 		this.fuseOptions = {keys: ["attributes.room_str_id", "attributes.Campus Map Number", "attributes.Stipl Name"]};
 
-		this.fuse = new Fuse(this.processed_json, this.fuseOptions);
+		this.attribute_searcher = new Fuse(this.processed_json, this.fuseOptions);
+		this.geometry_searcher = new Fuse();
 
     }
 
-    process_json(json) {
+    _process_json(json) {
     	json = json["CityObjects"];
 
     	var object_attribute_list = [];
@@ -33,31 +39,27 @@ export class Searcher {
     	return object_attribute_list;
     }
 
-    searchPattern(pattern, map) {
+    search_pattern(pattern, map) {
 
-    	console.log(map);
-
-    	const result = this.fuse.search(pattern);
+    	const result = this.attribute_searcher.search(pattern);
 
     	const top_result = result[0];
 
-    	const coords = top_result.item.geographicalExtent;
+    	if (typeof top_result == 'undefined') {
+    		return "No results";
+    	}
 
-    	const box = new THREE.Box3(
-    		new THREE.Vector3(coords[0], coords[1], coords[2]),
-    		new THREE.Vector3(coords[3], coords[4], coords[5]),
-    	);
+    	var object_name;
 
-    	var position = box.getCenter(new THREE.Vector3());
+    	if (top_result.item.type == "Building") {
+    		object_name = top_result.item.attributes["Campus Map Number"].split('.').join("").concat("-lod_2");
+    	} else if (top_result.item.type == "BuildingRoom")  {
+    		object_name = top_result.item.attributes["room_str_id"].split('.').join("").concat("-lod_0");
+    	}
 
-    	position.x += loadGLTFTranslateX;
-    	position.y += loadGLTFTranslateY;
+    	const threejs_object = map.scene.getObjectByName(object_name);
 
-    	const pos2D = new THREE.Vector2(position.x, position.y);
-
-    	console.log(position, pos2D);
-
-    	map.pickEvent(pos2D);
+    	map.zoom_on_object(threejs_object);
 
     	return top_result;
 
