@@ -17,12 +17,13 @@ const PORT = process.env.PORT || 3001;
 // These are the exact origins your front‑end will run from during dev.
 // Add more strings if you have additional dev URLs, or replace with '*'.
 const allowedOrigins = [
+    'https://inclusivecampusmap.bk.tudelft.nl/',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ];
 
 // Path to the log file (JSON‑Lines)
-const LOG_FILE = 'feedback/feedback.log';
+const LOG_FILE = 'feedback.log';
 
 // -------------------- Middleware --------------------
 app.use(express.json());
