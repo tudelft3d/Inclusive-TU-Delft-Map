@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,48 +13,50 @@
     <script type="module" src="./src/feedback.js" defer></script>
     <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous" defer></script>
 </head>
+
 <body>
     <!-- Feedback form -->
-  <main>
-      <section class="feedback-card" role="region" aria-labelledby="feedback_title">
-          <div class="card-inner">
-              <h1 id="feedback_title">Map Feedback &amp; Suggestions</h1>
-              <p class="lead">Help us improve our map by sharing your insights and ideas. Your feedback makes a difference!</p>
+    <main>
+        <section class="feedback-card" role="region" aria-labelledby="feedback_title">
+            <div class="card-inner">
+                <h1 id="feedback_title">Map Feedback &amp; Suggestions</h1>
+                <p class="lead">Help us improve our map by sharing your insights and ideas. Your feedback makes a
+                    difference!</p>
 
-              <form id="feedback_form" onsubmit="return validate();" novalidate>
-                  <div id="status_message" role="status" aria-live="polite"></div>
-                  <div id="error_message" role="status" aria-live="polite"></div>
+                <form id="feedback_form">
+                    <div id="status_message" role="status" aria-live="polite"></div>
+                    <div id="error_message" role="status" aria-live="polite"></div>
 
-                  <label for="suggestion" class="field-label">Your Suggestion</label>
-                  <textarea id="suggestion" name="suggestion" class="field-input" placeholder="Please describe your suggestion in detail" rows="5" required></textarea>
+                    <label for="suggestion" class="field-label">Your Suggestion</label>
+                    <textarea id="suggestion" name="suggestion" class="field-input"
+                        placeholder="Please describe your suggestion in detail" rows="5" required></textarea>
 
-                  <label for="type" class="field-label">Type of Suggestion</label>
-                  <select id="type" name="type" class="field-input">
-                      <option>Incorrect Information</option>
-                      <option>Wrong Geometry/Location</option>
-                      <option>Missing Item</option>
-                      <option>User-Interface Feedback</option>
-                      <option>New Functionality</option>
-                      <option>Other</option>
-                  </select>
+                    <label for="type" class="field-label">Type of Suggestion</label>
+                    <select id="type" name="type" class="field-input">
+                        <option>Incorrect Information</option>
+                        <option>Wrong Geometry/Location</option>
+                        <option>Missing Item</option>
+                        <option>User-Interface Feedback</option>
+                        <option>New Functionality</option>
+                        <option>Other</option>
+                    </select>
 
-                  <label for="location" class="field-label">Location</label>
-                  <input id="location" name="location" type="text" class="field-input" placeholder="e.g., Echo Hall A">
+                    <label for="location" class="field-label">Location</label>
+                    <input id="location" name="location" type="text" class="field-input"
+                        placeholder="e.g., Echo Hall A">
 
-                  <label for="email" class="field-label">Email (required)</label>
-                  <input id="email" name="email" type="email" class="field-input" placeholder="your.name@example.com" required aria-required="true">
+                    <label for="email" class="field-label">Email (required)</label>
+                    <input id="email" name="email" type="email" class="field-input" placeholder="your.name@example.com"
+                        required aria-required="true">
 
-                  <button type="submit" class="submit-btn">
-                      <i class="fa-solid fa-paper-plane"></i>
-                      <span>Submit Feedback</span>
-                  </button>
-              </form>
-          </div>
-      </section>
-  </main>
+                    <button type="submit" class="submit-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Submit Feedback</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
 </body>
+
 </html>
-
-
-
-

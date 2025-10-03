@@ -18,6 +18,7 @@ assets/
 threejs/node_modules/
 threejs/assets/
 threejs/dist/
+threejs/feedback/
 
 # 3DCityDB stuff
 database/citydb-tool*/

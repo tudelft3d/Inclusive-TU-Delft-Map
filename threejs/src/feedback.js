@@ -1,130 +1,161 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('feedback_form');
-  const suggestionEl = document.getElementById('suggestion');
-  const typeEl = document.getElementById('type');
-  const locationEl = document.getElementById('location');
-  const emailEl = document.getElementById('email');
-  const statusEl = document.getElementById('status_message');
-  const errorEl = document.getElementById('error_message');
+  /* --------------------------------------------------------------
+   *  DOM references – keep them together for easy maintenance
+   * -------------------------------------------------------------- */
+  const refs = {
+    form: document.getElementById('feedback_form'),
+    suggestion: document.getElementById('suggestion'),
+    type: document.getElementById('type'),
+    location: document.getElementById('location'),
+    email: document.getElementById('email'),
+    statusMsg: document.getElementById('status_message'),
+    errorMsg: document.getElementById('error_message')
+  };
 
-  const endpoint = 'https://webhook.site/7103eebf-d50b-4c3d-a95a-fa3f15fca084'; // needs to be change, not sure to what yet
-  function setSubmitting(isSubmitting) {
-    const btn = form?.querySelector('button[type="submit"]');
-    if (!btn) return;
-    btn.disabled = isSubmitting;
-    btn.setAttribute('aria-busy', String(isSubmitting));
-    if (isSubmitting) btn.dataset.orig = btn.innerHTML;
-    else if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
-  }
+  /* --------------------------------------------------------------
+   *  Configuration
+   * -------------------------------------------------------------- */
+  const CONFIG = {
+    // Change this when you move to production (or proxy via Nginx)
+    endpoint: 'http://localhost:3001/api/feedback',
+    // Timeout for auto‑hiding success messages (ms)
+    successHideDelay: 6000
+  };
 
-  function showStatus(message, kind = 'success', autoHide = true) {
-    if (!statusEl) return;
-    statusEl.textContent = message;
-    statusEl.className = kind === 'success' ? 'status-success' : 'status-error';
-    if (autoHide && kind === 'success') {
-      setTimeout(() => {
-        statusEl.textContent = '';
-        statusEl.className = '';
-      }, 6000);
+  /* --------------------------------------------------------------
+   *  UI helpers – tiny, pure‑function style
+   * -------------------------------------------------------------- */
+  const ui = {
+    /** Enable/disable the submit button and toggle aria‑busy */
+    setSubmitting(isSubmitting) {
+      const btn = refs.form?.querySelector('button[type="submit"]');
+      if (!btn) return;
+      btn.disabled = isSubmitting;
+      btn.setAttribute('aria-busy', String(isSubmitting));
+      if (isSubmitting) btn.dataset.orig = btn.innerHTML;
+      else if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
+    },
+
+    /** Show a transient status (green) or persistent error (red) */
+    showMessage(msg, kind = 'success', autoHide = true) {
+      const el = kind === 'error' ? refs.errorMsg : refs.statusMsg;
+      if (!el) return;
+      el.textContent = msg;
+      el.className = kind === 'success' ? 'status-success' : 'status-error';
+
+      // Auto‑hide only success messages (optional)
+      if (autoHide && kind === 'success') {
+        setTimeout(() => {
+          el.textContent = '';
+          el.className = '';
+        }, CONFIG.successHideDelay);
+      }
+    },
+
+    /** Clear both status and error containers */
+    clearAll() {
+      [refs.statusMsg, refs.errorMsg].forEach(el => {
+        if (el) {
+          el.textContent = '';
+          el.className = '';
+        }
+      });
     }
-  }
+  };
 
-  function showError(message) {
-    if (errorEl) {
-      errorEl.textContent = message;
-    } else {
-      showStatus(message, 'error', false);
+  /* --------------------------------------------------------------
+   *  Validation helpers
+   * -------------------------------------------------------------- */
+  const validators = {
+    /** Very small email regex – good enough for UI validation */
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    },
+
+    /** Gather and validate the form fields, returning either
+     *  an object { ok: true, payload } or { ok: false, message }   */
+    buildPayload() {
+      const suggestion = refs.suggestion?.value?.trim() ?? '';
+      const type = refs.type?.value ?? '';
+      const location = refs.location?.value?.trim() ?? '';
+      const email = refs.email?.value?.trim() ?? '';
+
+      if (!suggestion) {
+        return { ok: false, message: 'Please enter your suggestion.', focus: refs.suggestion };
+      }
+      if (!email) {
+        return { ok: false, message: 'Please enter your email address.', focus: refs.email };
+      }
+      if (!validators.isValidEmail(email)) {
+        return { ok: false, message: 'Please enter a valid email address.', focus: refs.email };
+      }
+
+      const payload = {
+        suggestion,
+        type: type || null,
+        location: location || null,
+        email: email || null,
+        submittedAt: new Date().toISOString()
+      };
+      return { ok: true, payload };
     }
-  }
+  };
 
-  function clearMessages() {
-    if (statusEl) { statusEl.textContent = ''; statusEl.className = ''; }
-    if (errorEl) { errorEl.textContent = ''; }
-  }
-
-  function isValidEmail(email) {
-    // email is mandatory now: must be non-empty and match a simple email regex
-    if (!email) return false;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  }
-
+  /* --------------------------------------------------------------
+   *  Network layer – isolated so you can swap fetch for axios, etc.
+   * -------------------------------------------------------------- */
   async function postFeedback(payload) {
-    // try sending to configured endpoint; caller handles UI
     try {
-      setSubmitting(true);
-      const res = await fetch(endpoint, {
+      ui.setSubmitting(true);
+      const response = await fetch(CONFIG.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
-      if (!res.ok) {
-        const text = await res.text().catch(() => res.statusText);
-        throw new Error(text || `Server responded ${res.status}`);
+
+      if (!response.ok) {
+        const txt = await response.text().catch(() => response.statusText);
+        throw new Error(txt || `Server responded ${response.status}`);
       }
       return true;
     } catch (err) {
-      // network or server error
-      console.error('Feedback submit failed:', err);
+      console.error('[Feedback] submit error:', err);
       return false;
     } finally {
-      setSubmitting(false);
+      ui.setSubmitting(false);
     }
   }
 
-  // exported so onsubmit="return validate();" works
-  window.validate = async function validate(event) {
-    if (event instanceof Event) event.preventDefault();
-    clearMessages();
+  /* --------------------------------------------------------------
+   *  Main submit handler – bound once to the form element
+   * -------------------------------------------------------------- */
+  async function handleSubmit(event) {
+    event?.preventDefault();          // stop native navigation
+    ui.clearAll();
 
-    const suggestion = suggestionEl?.value?.trim() ?? '';
-    const type = typeEl?.value ?? '';
-    const location = locationEl?.value?.trim() ?? '';
-    const email = emailEl?.value?.trim() ?? '';
-
-    if (!suggestion) {
-      showError('Please enter your suggestion.');
-      suggestionEl?.focus();
-      return false;
-    }
-    // require email
-    if (!email) {
-      showError('Please enter your email address.');
-      emailEl?.focus();
-      return false;
-    }
-    if (!isValidEmail(email)) {
-      showError('Please enter a valid email address.');
-      emailEl?.focus();
-      return false;
+    const validation = validators.buildPayload();
+    if (!validation.ok) {
+      ui.showMessage(validation.message, 'error', false);
+      validation.focus?.focus();
+      return;
     }
 
-    const payload = {
-      suggestion,
-      type: type || null,
-      location: location || null,
-      email: email || null,
-      submittedAt: new Date().toISOString(),
-    };
+    ui.showMessage('Sending feedback…', 'success', false);
+    const success = await postFeedback(validation.payload);
 
-    // submit
-    showStatus('Sending feedback...', 'success', false);
-
-    const sent = await postFeedback(payload);
-    if (sent) {
-      showStatus('Thank you! Our team will review your feedback shortly.', 'success', true);
-      form.reset();
+    if (success) {
+      ui.showMessage(
+        'Thank you! Our team will review your feedback shortly.',
+        'success',
+        true
+      );
+      refs.form.reset();
     } else {
-      showError('Failed to submit feedback. Please try again later.');
+      ui.showMessage('Failed to submit feedback. Please try again later.', 'error', false);
     }
+  }
 
-    return false; // prevent default form submit
-  };
-
-  // attach event listener
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      // call the same validate function
-      window.validate(e);
-    });
+  if (refs.form) {
+    refs.form.addEventListener('submit', handleSubmit);
   }
 });
