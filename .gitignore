@@ -20,6 +20,10 @@ threejs/assets/
 threejs/dist/
 threejs/feedback/
 
+# Feedback server stuff
+feedback/node_modules/
+feedback/dist/
+
 # 3DCityDB stuff
 database/citydb-tool*/
 
