@@ -1,0 +1,50 @@
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl ipv6only=on;   # managed by Certbot
+
+    ssl_certificate     /etc/letsencrypt/live/inclusivecampusmap.bk.tudelft.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/inclusivecampusmap.bk.tudelft.nl/privkey.pem;
+    include              /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam          /etc/letsencrypt/ssl-dhparams.pem;
+
+    server_name inclusivecampusmap.bk.tudelft.nl;
+
+    root /var/www/last_version/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    location / {
+        # Try to serve a file, then a directory; otherwise 404
+        try_files $uri $uri/ =404;
+    }
+
+    location ~* \.(js|css|png|jpe?g|svg|gif|webp|woff2?)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /api/feedback {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout    10s;
+        proxy_read_timeout    10s;
+    }
+}
+
+server {
+    if ($host = inclusivecampusmap.bk.tudelft.nl) {
+        return 301 https://$host$request_uri;
+    }   # managed by Certbot
+
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name inclusivecampusmap.bk.tudelft.nl;
+
+    return 404;   # managed by Certbot
+}
