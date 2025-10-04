@@ -53,7 +53,7 @@ To set up a user from the server:
 ### DBeaver
 
 > [!NOTE]
-> All the commands in this section can be run from the any laptop that followed the [instructions to connect to the server](#server-connection).
+> All the commands in this section can be run from the any laptop that followed the [instructions to connect to the server](../server/README.md#server-connection).
 
 To connect to the database with DBeaver:
 
@@ -73,7 +73,7 @@ To connect to the database with DBeaver:
 5. Click on `Test tunnel configuration`.
     If everything was set up correctly, you should see `Connected!`.
     Otherwise, make sure that everything you entered in the previous steps is correct (especially the paths to the SSH keys).
-    If it still does not work, make sure that you followed properly the [instructions to connect to the server](#server-connection).
+    If it still does not work, make sure that you followed properly the [instructions to connect to the server](../server/README.md#server-connection).
 6. Go back to the tab called `Main` and set:
     - `Host`: `127.0.0.1` instead of `localhost`
     - `Port`: `5432`
