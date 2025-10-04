@@ -16,6 +16,7 @@
     "dev:frontend": "vite",
     "dev:frontend:host": "vite --host",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:host": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:host\"",
     "build": "vite build"
   }
 }
