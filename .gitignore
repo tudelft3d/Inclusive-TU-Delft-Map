@@ -14,8 +14,10 @@ qgis/
 # Data
 assets/
 
-# three.js stuff
-threejs/node_modules/
+# JavaScript stuff
+**/node_modules/
+
+# App stuff
 threejs/assets/
 threejs/dist/
 threejs/feedback/
