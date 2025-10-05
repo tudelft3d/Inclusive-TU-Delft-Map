@@ -1,6 +1,6 @@
 :root{
-  --bg: #FAFAFBFF;
-  --card-bg: #fdfffff8;
+  --bg: #e9e9e9;
+  --card-bg: #fafafa94;
   --muted: #5b5b5b;
   --border: #d7d7d7;
   --accent: #067283;
@@ -24,7 +24,7 @@ body{
 }
 
 /* Main / card */
-main{ padding: 48px 20px 96px; display:flex; justify-content:center; }
+main{ padding: 60px 20px 96px; display:flex; justify-content:center; }
 .feedback-card{
   width:100%;
   max-width: var(--card-w);
@@ -35,7 +35,7 @@ main{ padding: 48px 20px 96px; display:flex; justify-content:center; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
-  box-shadow: 0 6px 14px #668a95be;
+  box-shadow: 0 6px 10px #668a95be;
 }
 
 /* Title & lead */
@@ -43,7 +43,7 @@ main{ padding: 48px 20px 96px; display:flex; justify-content:center; }
   margin: 0;
   font-size: 24px;
   text-align:center;
-  font-weight: 600;
+  font-weight:500;
   letter-spacing: -0.2px;
 }
 .lead{
@@ -61,6 +61,7 @@ form{ width:100%; }
   margin-bottom: 8px;
   color: var(--danger);
   font-size:13px;
+  text-align: center;
 }
 #status_message {
   min-height: 20px;
@@ -144,15 +145,23 @@ select.field-input{
   color: #064e48;
   background: rgba(6,114,131,0.08);
   border: 1px solid rgba(6,114,131,0.12);
-  padding: 8px 12px;
+  padding: 10px 16px;
   border-radius: 8px;
+  justify-content:center;
+  font-size: 14px;
+  align-items:center;
+  justify-content:center;
 }
 .status-error {
   color: #7b0b0b;
   background: rgba(197,63,63,0.06);
   border: 1px solid rgba(197,63,63,0.12);
-  padding: 8px 12px;
+  padding: 10px 16px;
   border-radius: 8px;
+  justify-content:center;
+  font-size: 14px;
+  align-items:center;
+  justify-content:center;
 }
 
 /* Small screens - tried mobile version */

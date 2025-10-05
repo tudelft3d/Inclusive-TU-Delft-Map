@@ -108,10 +108,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       ui.setSubmitting(true);
       const response = await fetch(CONFIG.endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        ui.setSubmitting(true);
+        const response = await fetch(CONFIG.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         body: JSON.stringify(payload)
-      });
+        });
+
+        if(!response.ok) {
+          const txt = await response.text().catch(() => response.statusText);
+      throw new Error(txt || `Server responded ${response.status}`);
 
       if (!response.ok) {
         const txt = await response.text().catch(() => response.statusText);
@@ -120,8 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     } catch (err) {
       console.error('[Feedback] submit error:', err);
+      console.error('[Feedback] submit error:', err);
       return false;
     } finally {
+      ui.setSubmitting(false);
       ui.setSubmitting(false);
     }
   }
