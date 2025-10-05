@@ -8,6 +8,7 @@ export default defineConfig({
                 main: resolve(__dirname, 'index.html'),
                 about: resolve(__dirname, 'about.html'),
                 feedback: resolve(__dirname, 'feedback.html'),
+                404: resolve(__dirname, '404.html'),
             }
         }
     },

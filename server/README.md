@@ -101,13 +101,13 @@ For everything related to the database, see [/database/README.md](/database/READ
     This first step assumes that the local `threejs/assets/` contains the latest assets to use:
 
     ```bash
-    scp -r threejs/assets/ abry@inclusive-map:~/Inclusive-TU-Delft-Map/threejs/
+    scp -r threejs/assets/ abry@inclusivemap:~/Inclusive-TU-Delft-Map/threejs/
     ```
 
 2. Connect to the server:
 
     ```bash
-    ssh inclusive-map
+    ssh inclusivemap
     ```
 
 3. Create the new website content:
