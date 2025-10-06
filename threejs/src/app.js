@@ -175,8 +175,7 @@ export class Map {
         const center = sphere.center;
         const radius = sphere.radius;
 
-        console.log(this.cameraManager.camera.zoom);
-        console.log(this.cameraManager.controls.getDistance(center));
+        const rotation = this.cameraManager.camera.quaternion;
         
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
@@ -191,12 +190,18 @@ export class Map {
 
         // this.orthographicCamera.updateProjectionMatrix();
 
+        this.cameraManager.camera.autoRotate = true;
+
+        console.log(this.cameraManager.controls);
+
 
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;
 
         this.cameraManager.camera.lookAt(center);
-        this.cameraManager.camera.updateProjectionMatrix();
+        this.cameraManager.camera.applyQuaternion(rotation);
+
+        // this.cameraManager.camera.updateProjectionMatrix();
 
         this.cameraManager.controls.target.copy(center);
         this.cameraManager.controls.update();

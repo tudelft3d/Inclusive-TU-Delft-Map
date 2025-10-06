@@ -156,7 +156,8 @@ export class CamerasControls {
 
             console.log("Switching to orthographic");
 
-            this.mapControls.maxPolarAngle = 0 * Math.PI;
+            this.mapControls.maxPolarAngle = 0.01 * Math.PI;
+            this.mapControls.minPolarAngle = 0.01 * Math.PI;
 
             this.previousCamera = this.camera;
             this.previousControls = this.controls;
@@ -182,7 +183,8 @@ export class CamerasControls {
             this.orthographicCamera.lookAt(this.controls.target);
             // this.orthographicCamera.lookAt(this.orthographicCamera.position.x, 1, this.orthographicCamera.position.z);
 
-            this.mapControls.maxPolarAngle = 0 * Math.PI;
+            this.mapControls.maxPolarAngle = 0.01 * Math.PI;
+            this.mapControls.minPolarAngle = 0.01 * Math.PI;
 
             this.orthographicCamera.updateProjectionMatrix();
 
