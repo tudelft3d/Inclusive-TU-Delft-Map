@@ -1,6 +1,8 @@
 body {
-  /* Remove margins and scroll bars */
   margin: 0;
+  height: 100vh;               /* page a full-height flex column */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 
   /* Style text */
@@ -12,6 +14,24 @@ body {
   color: #444;
 }
 
+/* Header injected at the top in normal flow.
+   Scene-container now the flex box in a column layout below header.
+*/
+#scene-container {
+  position: relative;          
+  width: 100%;
+  flex: 1 1 auto;              /* grow and shrink as needed */
+  height: auto;                /* height driven by flex */
+  z-index: 1;
+}
+
+/* Make sure any canvas fills the scene container */
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 h1 {
   /* Position the heading */
   position: absolute;
@@ -21,7 +41,7 @@ h1 {
   z-index: 1;
 }
 
-/* Tell our scene container to take up the full page */
+/*scene container to take up the full page */
 #scene-container {
   position: absolute;
   width: 100%;
@@ -55,7 +75,7 @@ canvas {
 
 #search-bar {
   position: fixed;
-  top: 10px;
+  top: calc(var(--height, 64px) + 10px); /* push below the sticky header */
   left: 5px;
   transform: translateX(5%);
   opacity: 0.5;

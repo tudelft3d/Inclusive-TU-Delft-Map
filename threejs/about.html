@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About - TU Delft Inclusive Campus Map</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/about.css" rel="stylesheet" type="text/css">
+
+    <script type="module" src="./src/header.js" defer></script>
+    <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous" defer></script>
+</head>
+<body>
+    <!-- header injected here by src/header.js (same approach as feedback.html) -->
+    <div id="site-header"></div>
+
+    <main>
+        <section class="journey" aria-labelledby="journey_title">
+            <div class="container">
+                <div class="journey-text">
+                    <h1 id="journey_title">Our Journey towards Inclusive 3D Campus Map</h1>
+                    <p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin non nisl auctor, pellentesque erat sed, semper dolor. Cras lorem felis, euismod ac venenatis sit amet, tempus at ex.</p>
+
+                    <p>Phasellus risus ligula, sollicitudin id blandit eu, semper in nunc. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris facilisis rutrum risus, non suscipit est maximus vel.</p>
+                </div>
+
+                <div class="journey-image" aria-hidden="true">
+                    <!-- actual image -->
+                    <img src="./assets/threejs/graphics/Tu_Delft_Map3D_Logo.svg"
+                         alt="TU Delft 3D Map logo"
+                         class="about-image"
+                         role="img"
+                         aria-label="TU Delft 3D Map logo">
+                </div>
+            </div>
+        </section>
+
+        <section class="core-values" aria-labelledby="values_title">
+            <div class="container narrow">
+                <h2 id="values_title">Built on Principles: Our Core Values</h2>
+                <p class="sublead">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+                <div class="values-grid" role="list">
+                    <article class="value-card" role="listitem" aria-labelledby="v1_title">
+                        <div class="icon"><i class="fa-solid fa-person-walking"></i></div>
+                        <h3 id="v1_title">Diversity</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut.</p>
+                    </article>
+
+                    <article class="value-card" role="listitem" aria-labelledby="v2_title">
+                        <div class="icon"><i class="fa-solid fa-lightbulb"></i></div>
+                        <h3 id="v2_title">Equity</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut.</p>
+                    </article>
+
+                    <article class="value-card" role="listitem" aria-labelledby="v3_title">
+                        <div class="icon"><i class="fa-solid fa-users"></i></div>
+                        <h3 id="v3_title">Inclusion</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
