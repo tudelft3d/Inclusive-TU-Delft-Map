@@ -4,16 +4,22 @@
   "dependencies": {
     "fuse.js": "^7.1.0",
     "ol": "^10.6.1",
+    "express": "^5.1.0",
+    "joi": "^18.0.1",
+    "pm2": "^6.0.13",
     "proj4": "^2.19.10",
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "vite": "^7.1.4"
   },
   "scripts": {
-    "dev": "vite",
-    "dev:host": "vite --host",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev:backend": "node backend/index.js",
+    "dev:frontend": "vite",
+    "dev:frontend:host": "vite --host",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:host": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:host\"",
+    "build": "vite build"
   }
 }

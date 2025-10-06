@@ -1,11 +1,7 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MapControls } from 'three/addons/controls/MapControls.js';
-import { PerspectiveCamera } from 'three';
-import { OrthographicCamera } from 'three';
 
-import * as constants from'constants';
-
-import { Group, Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
+// import * as constants from 'constants';
 
 import * as THREE from 'three';
 
@@ -52,7 +48,7 @@ export class CamerasControls {
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
         this.orthographicCamera = new THREE.OrthographicCamera((frustrumSize * aspect) / - 2, (frustrumSize * aspect) / 2, frustrumSize / 2, frustrumSize / - 2, 0, 100000);
-        
+
 
         // this.orthographicCamera.position.set(0, 1000, 0);
 
@@ -104,7 +100,7 @@ export class CamerasControls {
 
         console.log("Switching to map");
 
-        if (this.orthographic){
+        if (this.orthographic) {
 
             this.mapControls.maxPolarAngle = 0.49 * Math.PI;
 
@@ -129,11 +125,10 @@ export class CamerasControls {
     }
 
     /** Switch to orbit view */
-    switchToOrbit() {
+    switchToOrbit() {   
 
-        
+        if (this.orthographic) {
 
-        if (this.orthographic){
             this.orthographic = false;
             this.switchToMap();
         }
@@ -152,7 +147,7 @@ export class CamerasControls {
 
     switch_to_orthographic() {
 
-        if (this.orthographic == false){
+        if (this.orthographic == false) {
 
             console.log("Switching to orthographic");
 
@@ -195,7 +190,7 @@ export class CamerasControls {
 
             this.orthographic = true;
 
-        }else{
+        } else {
 
             // this.orthographicCamera.position.copy(this.controls.target);
             // this.orthographicCamera.position.y = 1000

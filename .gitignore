@@ -1,14 +1,34 @@
+# VS Code stuff
 .vscode/
-**/.venv/
-data/
-**/node_modules/
-**/__pycache__/
-qgis/
-assets/
-threejs/dist/
-threejs/output
-.DS_Store
-documents/.DS_Store
-threejs/node_modules/
-threejs/assets/
 
+# Python virtual environments and cache
+**/.venv/
+**/__pycache__/
+
+# Folder for local stuff
+local/
+
+# QGIS projects
+qgis/
+
+# Data
+assets/
+
+# JavaScript stuff
+**/node_modules/
+
+# App stuff
+threejs/assets/
+threejs/dist/
+threejs/feedback/
+threejs/backend/feedback.log
+
+# 3DCityDB stuff
+database/citydb-tool*/
+
+# MACOS stuff
+.DS_Store
+**/.DS_Store
+
+# Folder for local stuff
+local/

@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
-import { Group, Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
+import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
@@ -40,7 +40,7 @@ export class Map {
     _initScene() {
         this.scene = new THREE.Scene();
         const loader = new THREE.CubeTextureLoader();
-        loader.setPath('assets/graphics/');
+        loader.setPath('assets/threejs/graphics/');
         const skyboxTexture = loader.load([
             'sky_gradient_sides.png',
             'sky_gradient_sides.png',
