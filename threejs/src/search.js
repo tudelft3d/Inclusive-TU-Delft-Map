@@ -4,7 +4,7 @@ import Fuse from "fuse.js";
 import * as THREE from 'three';
 import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
-import cityjson from "../assets/campus/geom/attributes.city.json" assert {type: "json"};
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
 export class Searcher {
 
