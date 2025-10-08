@@ -15,6 +15,8 @@ export class Searcher {
 
 		// Can also search within arrays <- use for nicknames
 
+		this.raw_json = cityjson;
+
 		this.processed_json = this._process_json(cityjson);
         
 		this.searches = [];
@@ -39,6 +41,12 @@ export class Searcher {
     	return object_attribute_list;
     }
 
+    _traverse_children(object) {
+
+
+
+    }
+
     search_pattern(pattern, map) {
 
     	const result = this.attribute_searcher.search(pattern);
@@ -47,6 +55,10 @@ export class Searcher {
 
     	if (typeof top_result == 'undefined') {
     		return "No results";
+    	}
+
+    	if ("children" in top_result.item) {
+    		console.log("has children");
     	}
 
     	var object_name;
