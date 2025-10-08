@@ -1,5 +1,6 @@
 import csv
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,8 @@ from cj_objects import (
     BuildingPart,
     BuildingRoom,
     BuildingStorey,
+    BuildingUnit,
+    BuildingUnitContainer,
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
@@ -119,6 +122,60 @@ def _geom_and_name_from_scene_id(
     return MultiSurface.from_mesh(lod=lod, mesh=mesh), name
 
 
+def _csv_format_type(value: Any, column_type: str) -> Any:
+    if column_type == "str":
+        return str(value)
+    elif column_type == "float":
+        if value == "":
+            return None
+        return float(value.replace(",", "."))
+    elif column_type == "int":
+        if value == "":
+            return None
+        return int(value)
+    elif column_type.startswith("list"):
+        if value == "":
+            return []
+        list_info = column_type[len("list") :]
+        separator = list_info[0]
+        other_type = list_info[1:]
+        return [
+            _csv_format_type(value=v, column_type=other_type)
+            for v in value.split(separator)
+        ]
+    else:
+        raise NotImplementedError(
+            f"Support for type '{column_type}' is not implemented yet."
+        )
+
+
+def _csv_get_row_value(row: dict[str, Any], column: str) -> tuple[str, Any]:
+    value = row[column]
+    column_split = column.split(" [")
+    if len(column_split) != 2:
+        raise RuntimeError(
+            f"The column name should look like this: '<Name> [<type>]', but it is '{column}'."
+        )
+    column_type = column_split[1][:-1]
+    column_name = column_split[0]
+    return column_name, _csv_format_type(value=value, column_type=column_type)
+
+
+def _unit_code_to_parent(code: str) -> str:
+    if code == BuildingUnitContainer.main_parent:
+        raise ValueError(f"BuildingUnitContainer.main_parent does not have a parent.")
+    elif len(code) == 1:
+        return BuildingUnitContainer.main_parent
+    elif len(code) == 2:
+        return code[:-1]
+    else:
+        return code[:-2]
+
+
+def _unit_code_to_id(code: str, prefix: str) -> str:
+    return f"{BuildingUnitContainer.type_name}-{prefix}-{code}"
+
+
 def load_attributes_from_csv(
     csv_path: Path, id_column: str
 ) -> dict[str, dict[str, Any]]:
@@ -130,13 +187,138 @@ def load_attributes_from_csv(
             if not any(cell != "" for cell in row.values()):
                 continue
             # Process the row
-            id_value = row[id_column]
+            col_name, id_value = _csv_get_row_value(row=row, column=id_column)
             if id_value in attributes:
                 raise RuntimeError(
                     f"Column {id_column} cannot be they key, because multiple rows share the same value (e.g. {id_value})."
                 )
-            attributes[id_value] = row
+            row_attributes = {}
+            for col_name_type in row.keys():
+                # Skip columns that don't have a type
+                if col_name_type.find(" [") == -1:
+                    continue
+                # Add the column and its value to the attributes
+                col_name, col_value = _csv_get_row_value(row=row, column=col_name_type)
+                if col_name in row_attributes:
+                    raise RuntimeError(
+                        f"Two columns have the same name '{col_name}' in {str(csv_path)}"
+                    )
+                row_attributes[col_name] = col_value
+
+            attributes[id_value] = row_attributes
     return attributes
+
+
+def load_units_from_csv(
+    cj_file: CityJSONFile,
+    csv_path: Path,
+    code_column: str,
+    spaces_column: str,
+) -> None:
+    root_pos = cj_file.get_root_position()
+    prefix_ids = cj_file.city_objects[root_pos].id.replace("-", "_")
+
+    all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
+
+    # Process the CSV file to find all the units
+    with open(csv_path, encoding="utf-8-sig") as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=";")
+        for row in reader:
+            # Skip empty rows
+            if not any(cell != "" for cell in row.values()):
+                continue
+            # Process the row
+            code_column_name, code_value = _csv_get_row_value(
+                row=row, column=code_column
+            )
+
+            unit_container_id = _unit_code_to_id(code=code_value, prefix=prefix_ids)
+            unit_id = f"{unit_container_id}@{len(all_units[code_value])}"
+
+            # Load the columns that contain a type as attributes
+            attributes = {}
+            for col_name_type in row.keys():
+                # Skip columns that don't have a type
+                if col_name_type.find(" [") == -1:
+                    continue
+                # Add the column and its value to the attributes
+                col_name, col_value = _csv_get_row_value(row=row, column=col_name_type)
+                # Rename the columns used specifically
+                if col_name_type == spaces_column:
+                    col_name = BuildingUnit.unit_children
+                elif col_name_type == code_column:
+                    col_name = CityJSONObject.unit_code
+                if col_name in attributes:
+                    raise RuntimeError(
+                        f"Two columns have the same name '{col_name}' in {str(csv_path)}"
+                    )
+                attributes[col_name] = col_value
+
+            bdg_unit = BuildingUnit(object_id=unit_id, attributes=attributes)
+            all_units[code_value].append(bdg_unit)
+
+    # Add the missing hierarchy in the codes
+    all_unit_containers: dict[str, BuildingUnitContainer] = {
+        BuildingUnitContainer.main_parent: BuildingUnitContainer(
+            object_id=f"{BuildingUnitContainer.main_parent}-{prefix_ids}",
+            attributes={CityJSONObject.unit_code: ""},
+        )
+    }
+    current_codes = list(all_units.keys())
+    for code in current_codes:
+        while code != BuildingUnitContainer.main_parent:
+            if not code in all_units.keys():
+                all_units[code] = []
+            if not code in all_unit_containers.keys():
+                obj_id = _unit_code_to_id(code=code, prefix=prefix_ids)
+                all_unit_containers[code] = BuildingUnitContainer(
+                    object_id=obj_id, attributes={CityJSONObject.unit_code: code}
+                )
+            code = _unit_code_to_parent(code=code)
+
+    # Extract all the spaces from the given CityJSON file
+    spaces_ids_to_pos = {}
+    for i, cj_obj in enumerate(cj_file.city_objects):
+        space_id = cj_obj.attributes[CityJSONObject.space_id]
+        spaces_ids_to_pos[space_id] = i
+
+    # Apply the parent-child relationships of unit containers
+    for code, unit_container in all_unit_containers.items():
+        if code == BuildingUnitContainer.main_parent:
+            CityJSONObject.add_parent_child(
+                parent=cj_file.city_objects[root_pos],
+                child=unit_container,
+            )
+            continue
+        parent_code = _unit_code_to_parent(code=code)
+        # Add the link to its parent
+        CityJSONObject.add_parent_child(
+            parent=all_unit_containers[parent_code], child=unit_container
+        )
+        # Add the link to its units
+        for unit in all_units[code]:
+            CityJSONObject.add_parent_child(parent=unit_container, child=unit)
+
+    # Add the links from spaces to the units they belong in
+    all_units_flattened = [unit for units in all_units.values() for unit in units]
+    for unit in all_units_flattened:
+        for space_id in unit.attributes[BuildingUnit.unit_children]:
+            cj_file_pos = spaces_ids_to_pos[space_id]
+            if (
+                BuildingUnit.space_parents
+                not in cj_file.city_objects[cj_file_pos].attributes
+            ):
+                cj_file.city_objects[cj_file_pos].add_attributes(
+                    {BuildingUnit.space_parents: []}
+                )
+            cj_file.city_objects[cj_file_pos].attributes[
+                BuildingUnit.space_parents
+            ].append(unit.id)
+
+    cj_file.add_cityjson_objects(all_unit_containers.values())
+    cj_file.add_cityjson_objects(
+        [unit for units in all_units.values() for unit in units]
+    )
 
 
 def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
@@ -184,23 +366,39 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
         hierarchy_level = name.count(".")
         if hierarchy_level == 0:
             obj_func = Building
+            obj_prefix = "Building-"
         elif hierarchy_level == 1:
             obj_func = BuildingPart
+            obj_prefix = "BuildingPart-"
         elif hierarchy_level == 2:
             obj_func = BuildingStorey
+            obj_prefix = "BuildingStorey-"
         elif hierarchy_level == 3:
             obj_func = BuildingRoom
+            obj_prefix = "BuildingRoom-"
         else:
             raise RuntimeError(f"Unexpected format for an object name: '{name}'")
-        all_objects_cj[name] = obj_func(object_id=name, geometries=geoms)
+
+        # Replace the dots in the name by hyphens
+        obj_id = name.replace(".", "-")
+
+        # Add the type to the object key
+        obj_id = f"{obj_prefix}{obj_id}"
+
+        # Store the initial key as an attribute
+        attributes = {CityJSONObject.space_id: name}
+
+        all_objects_cj[name] = obj_func(
+            object_id=obj_id, geometries=geoms, attributes=attributes
+        )
 
     # Apply the parent-child relationships
-    for obj_cj_id in all_objects_cj.keys():
-        last_dot_position = obj_cj_id.rfind(".")
+    for obj_name in all_objects_cj.keys():
+        last_dot_position = obj_name.rfind(".")
         if last_dot_position != -1:
-            obj_parent_id = obj_cj_id[:last_dot_position]
+            obj_parent_name = obj_name[:last_dot_position]
             CityJSONObject.add_parent_child(
-                parent=all_objects_cj[obj_parent_id], child=all_objects_cj[obj_cj_id]
+                parent=all_objects_cj[obj_parent_name], child=all_objects_cj[obj_name]
             )
 
     cj_file = CityJSONFile(

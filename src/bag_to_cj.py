@@ -133,15 +133,9 @@ class Bag2Cityjson(CityjsonLoader):
         def _process_bag_element(
             obj_id: str,
             bag_ids: list[str],
-            bdg_type: type,
             unprocessed_bag_ids: set[str] | None = None,
             skip: bool = False,
-        ) -> Building | BuildingPart | None:
-            if bdg_type not in [Building, BuildingPart]:
-                raise RuntimeError(
-                    f"Expected `bdg_type` to be either Building or BuildingPart"
-                )
-
+        ) -> list[MultiSurface] | None:
             logging.log(logging.DEBUG, f"Processing {obj_id}")
 
             # Check if the key is already used
@@ -166,7 +160,7 @@ class Bag2Cityjson(CityjsonLoader):
             if unprocessed_bag_ids is not None:
                 unprocessed_bag_ids -= set(processed_bag_ids)
 
-            return bdg_type(object_id=obj_id, geometries=all_geoms)
+            return all_geoms
 
         # Load the buildings attributes
         if bdgs_attr_path is None:
@@ -208,17 +202,18 @@ class Bag2Cityjson(CityjsonLoader):
 
             skip = row[skip_column] != ""
 
-            building = _process_bag_element(
+            geoms = _process_bag_element(
                 obj_id=obj_id,
                 bag_ids=all_bag_ids,
-                bdg_type=Building,
                 unprocessed_bag_ids=unprocessed_bag_ids,
                 skip=skip,
             )
 
-            if building is not None:
+            if geoms is not None:
+                obj_id_hyphens = obj_id.replace(".", "-")
+                building = Building(object_id=obj_id_hyphens, geometries=geoms)
                 building.add_attributes(row)
-                all_objects_cj[obj_id] = building
+                all_objects_cj[obj_id_hyphens] = building
 
         for row in tqdm(
             bdgs_sub_reader, desc="Processing the sub-buildings with attributes"
@@ -232,19 +227,21 @@ class Bag2Cityjson(CityjsonLoader):
 
             skip = row[skip_column] != ""
 
-            subdivision = _process_bag_element(
+            geoms = _process_bag_element(
                 obj_id=obj_id,
                 bag_ids=all_bag_ids,
-                bdg_type=BuildingPart,
                 unprocessed_bag_ids=unprocessed_bag_ids,
                 skip=skip,
             )
 
-            if subdivision is not None:
+            if geoms is not None:
+                obj_id_hyphens = obj_id.replace(".", "-")
+                subdivision = BuildingPart(object_id=obj_id_hyphens, geometries=geoms)
                 subdivision.add_attributes(row)
-                all_objects_cj[obj_id] = subdivision
+                all_objects_cj[obj_id_hyphens] = subdivision
                 # Connect to the parent Building
-                parent_obj = all_objects_cj[parent_id]
+                parent_id_hyphens = parent_id.replace(".", "-")
+                parent_obj = all_objects_cj[parent_id_hyphens]
                 CityJSONObject.add_parent_child(parent=parent_obj, child=subdivision)
 
         # Add the remaining buildings
@@ -255,14 +252,15 @@ class Bag2Cityjson(CityjsonLoader):
             if bag_2d_id[-2] == "-":
                 continue
 
-            building = _process_bag_element(
+            geoms = _process_bag_element(
                 obj_id=bag_2d_id,
                 bag_ids=[bag_2d_id],
-                bdg_type=Building,
             )
 
-            if building is not None:
-                all_objects_cj[bag_2d_id] = building
+            if geoms is not None:
+                bag_2d_id_hyphens = bag_2d_id.replace(".", "-")
+                building = Building(object_id=obj_id_hyphens, geometries=geoms)
+                all_objects_cj[bag_2d_id_hyphens] = building
 
         cj_file = CityJSONFile(
             scale=np.array([0.00001, 0.00001, 0.00001], dtype=np.float64),

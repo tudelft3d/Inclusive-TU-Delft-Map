@@ -6,8 +6,13 @@ from typing import Annotated, List, Optional
 import typer
 
 from bag_to_cj import Bag2Cityjson
+from cj_objects import CityJSONObject
 from cj_to_gltf import Cityjson2Gltf
-from gltf_to_cj import full_building_from_gltf, load_attributes_from_csv
+from gltf_to_cj import (
+    full_building_from_gltf,
+    load_attributes_from_csv,
+    load_units_from_csv,
+)
 
 app = typer.Typer()
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -101,8 +106,21 @@ def load_bag(
             help="The CSV column that specifies the parent of this building subdivision, referring to the id_column of the buildings attributes.",
         ),
     ] = None,
+    overwrite: Annotated[
+        bool,
+        typer.Option(
+            "-o",
+            "--overwrite",
+            help="Overwrite the output file if the file already exists.",
+        ),
+    ] = False,
     verbose: Annotated[int, typer.Option("--verbose", "-v", count=True)] = 0,
 ):
+    if output_cj_path.exists() and not overwrite:
+        raise ValueError(
+            f"There is already a file at {output_cj_path.absolute()}. Set `overwrite` to True to overwrite it."
+        )
+
     setup_logging(verbose=verbose)
     with logging_redirect_tqdm():
         if not output_cj_path.suffix == ".json":
@@ -133,6 +151,27 @@ def load_custom_building(
         ),
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
+    units_path: Annotated[
+        Path,
+        typer.Option(
+            "-u",
+            "--units",
+            help="Paths to building units in CSV format.",
+            exists=True,
+        ),
+    ],
+    units_code_column: Annotated[
+        str,
+        typer.Option(
+            help="Column storing the code associated to each unit.",
+        ),
+    ],
+    units_spaces_column: Annotated[
+        str,
+        typer.Option(
+            help="Column storing the spaces associated to each unit.",
+        ),
+    ],
     attributes_paths: Annotated[
         List[Path],
         typer.Option(
@@ -185,12 +224,24 @@ def load_custom_building(
                 load_attributes_from_csv(csv_path=path, id_column=id_col)
             )
 
+        # print(all_attributes)
+
         # Add the attributes to the CityJSON data
         for city_object in cj_file.city_objects:
             for attributes in all_attributes:
                 city_object.add_attributes(
-                    new_attributes=attributes.get(city_object.id, {})
+                    new_attributes=attributes.get(
+                        city_object.attributes[CityJSONObject.space_id], {}
+                    )
                 )
+
+        # Load the units
+        load_units_from_csv(
+            cj_file=cj_file,
+            csv_path=units_path,
+            code_column=units_code_column,
+            spaces_column=units_spaces_column,
+        )
 
         # Check the correctness of the hierarchy
         cj_file.check_objects_hierarchy()
