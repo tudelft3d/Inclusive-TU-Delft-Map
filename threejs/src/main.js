@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const map = new Map(container);
     const searcher = new Searcher();
 
+    // The amount of time the searchbar will wait before searcing in miliseconds
+    const search_delay = 500;
+
+    // The number of results that are returned for partials searches
+    const search_result_count = 10;
 
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
@@ -27,20 +32,67 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.toggle_orthographic();
     });
 
+
     const searchBar = document.getElementById('search');
 
-    searchBar.addEventListener('keypress', (event) => {
+    // general idea of "debouncing" from: https://dev.to/rowsanali/how-to-implement-a-search-functionality-using-javascript-1n1b
 
+    let timeout;
+
+    function debounce(func, wait) {
+
+        return function(...args) {
+
+            window.clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+
+    // Function that will have to handle the intermediate results
+    function show_intermediate_results(results) {
+        console.log(results);
+    }
+
+    searchBar.addEventListener('keyup', (event) => {
+
+        let value = event.target.value;
+
+        // If the key being released is enter, the user wants to search
+        // If the key being released is not enter, we show intermediate results
         if (event.key === "Enter") {
 
-            let value = event.target.value;
-
             if (value && value.trim().length > 0){
-                console.log(value);
+                searcher.search_and_zoom(value, map);
             }
 
-            console.log(searcher.search_pattern(value, map));
+        } else {
+
+            const debouncedSearch = debounce(() => {
+                const results = searcher.search_n_best_matches(value, search_result_count);
+                show_intermediate_results(results);
+            }, search_delay);
+
+            debouncedSearch();
+
         }
+
+        
+
+        // let value = event.target.value;
+
+        // if (value && value.trim().length > 0){
+        //     console.log(value);
+        // }
+
+        // if (event.key === "Enter") {
+
+        //     if (value && value.trim().length > 0){
+        //         console.log(value);
+        //     }
+
+        //     console.log(searcher.search_pattern(value, map));
+        // }
 
     });
 
