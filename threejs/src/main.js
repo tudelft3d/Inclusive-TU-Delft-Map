@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const searcher = new Searcher();
 
     // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 500;
+    const search_delay = 250;
 
     // The number of results that are returned for partials searches
-    const search_result_count = 10;
+    const search_result_count = 3;
 
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const searchBar = document.getElementById('search');
+    const intermediateResults = document.getElementById("intermediate_results");
 
     // general idea of "debouncing" from: https://dev.to/rowsanali/how-to-implement-a-search-functionality-using-javascript-1n1b
 
@@ -49,22 +50,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Function that will have to handle the intermediate results
-    function show_intermediate_results(results) {
-        console.log(results);
+    // Since we are adding html elements, we could in theory add entire subviews to the
+    // intermediate results, like a little picture of the result or other data.
+    function show_intermediate_results(search_results) {
+
+        console.log(search_results);
+
+        var ul = document.createElement("ul");
+        
+        intermediateResults.innerHTML = '';
+
+        search_results = search_results.map((element) => {return element.item.attributes["space_id"]});
+
+        for (let i=0; i<search_results.length; i++) {
+
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(search_results[i]));
+
+            // Example of how to engage with the intermediate result:
+            // li.addEventListener("mouseover", (event) => {
+            //     console.log("yeah that works");
+            // });
+
+            ul.appendChild(li);
+
+        }
+
+        intermediateResults.appendChild(ul);
     }
+
+    
 
     searchBar.addEventListener('keyup', (event) => {
 
         let value = event.target.value;
 
+        if (!value || value.trim().length <= 0){
+                return;
+        }
+
         // If the key being released is enter, the user wants to search
         // If the key being released is not enter, we show intermediate results
         if (event.key === "Enter") {
 
-            if (value && value.trim().length > 0){
-                searcher.search_and_zoom(value, map);
-            }
+            searcher.search_and_zoom(value, map);
 
         } else {
 
@@ -77,23 +106,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
 
-        
+    });
 
-        // let value = event.target.value;
+    intermediateResults.addEventListener("click", (event) => {
 
-        // if (value && value.trim().length > 0){
-        //     console.log(value);
-        // }
+        let value = event.target.textContent
 
-        // if (event.key === "Enter") {
+        searcher.search_and_zoom(value, map);
 
-        //     if (value && value.trim().length > 0){
-        //         console.log(value);
-        //     }
+    });
 
-        //     console.log(searcher.search_pattern(value, map));
-        // }
+    // These two make sure the suggestions are hidden,
+    // but they also cause the suggestions to disappear before they can be clicked
+    searchBar.addEventListener("focusout", (event) => { 
+        //intermediateResults.style.visibility = 'hidden';
+    });
 
+    searchBar.addEventListener("focusin", (event) => { 
+        //intermediateResults.style.visibility = 'visible';
     });
 
     const basemapBtn = document.getElementById('basemap-btn');

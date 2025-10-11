@@ -20,7 +20,7 @@ export class Searcher {
         
         this.searches = [];
 
-        this.fuseOptions = {keys: ["attributes.space_id", "attributes.room_str_id", "attributes.Campus Map Number", "attributes.Stipl Name"]};
+        this.fuseOptions = {keys: ["attributes.space_id", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"]};
 
         this.attribute_searcher = new Fuse(this.processed_json, this.fuseOptions);
         this.geometry_searcher = new Fuse();

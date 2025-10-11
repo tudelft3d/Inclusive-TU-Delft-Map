@@ -269,3 +269,19 @@ canvas {
   z-index: 40;
 }*/
 
+#intermediate_results {
+  border: 1px dotted #ccc;
+  padding: 3px;
+}
+#intermediate_results ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  float: left;
+}
+#intermediate_results ul li {
+  padding: 5px 0;
+}
+#intermediate_results ul li:hover {
+  background: #eee;
+}

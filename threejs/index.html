@@ -21,7 +21,11 @@
     <!-- <div id="site-header"></div> -->
 
     <div id= "search-bar" class="search-bar">
-        <input type="search" id="search" placeholder="Search for building, room or facility..." />
+        <form autocomplete="off" onsubmit="return false">
+            <input type="search" id="search" placeholder="Search for building, room or facility..." />
+            <div id="intermediate_results"></div>
+        </form>
+        
     </div>
 
     <div id="right-sidebar-controls">
