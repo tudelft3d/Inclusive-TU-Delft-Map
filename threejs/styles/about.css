@@ -1,10 +1,10 @@
 :root{
   --bg: #e9e9e9;
-  --card-bg: #f8fbfba3;
-  --muted: #6b7280;
+  --card-bg: #f1f1f1;
+  --muted: #4a4e55;
   --border: #d7d7d7;
-  --accent: #067283;
-  --accent-dark: #055f66;
+  --accent: #3097b7;
+  --accent-dark: #257188;
   --radius: 10px;
   --max-width: 1100px;
   --shadow: 0 6px 20px rgba(0,0,0,0.06);
@@ -23,22 +23,26 @@ body{
 .container{
   max-width: var(--max-width);
   margin:0 auto;
-  padding:48px 20px;
+  padding:60px 20px 60px 20px; 
   display:grid;
   grid-template-columns: 1fr 360px;
-  gap:40px;
+  gap:15px;
   align-items:start;
 }
 
 .container.narrow{
   grid-template-columns: 1fr;
-  padding: 20px 20px 80px; /* reduced top padding */
+  padding:10px 15px 10px; 
 }
 
 /* Journey text */
-.journey h1{ margin:0 0 32px; font-size:24px; } /* was 50px bottom margin */
-.journey .lead{ color:var(--muted); margin-bottom:18px; max-width:620px; }
-.journey-text p{ color:var(--muted); line-height:1.6; }
+.journey h1,
+.journey h2{
+  margin:0 0 18px;
+  font-size:24px;
+}  
+.journey .lead{ color:var(--muted); margin-bottom:12px; max-width:620px; } 
+.journey-text p{ color:var(--muted); line-height:1.6; margin:0 0 12px; } /* normalize paragraph spacing */
 
 /* Image section */
 .journey-image{
@@ -46,7 +50,6 @@ body{
   align-items:center;
   justify-content:center;
 }
-
 
 .journey-image .image-card{
   background: var(--card-bg);
@@ -66,14 +69,33 @@ body{
   display:block;
   width:100%;
   height:220px;
-  max-width:300px;
+  max-width:350px;
   object-fit:contain;
   background-color:transparent !important; /* image background transparent */
   box-shadow:none;
   border-radius:0;
 }
 
+/* Continuous text */
+.continuous-journey h1,
+.continuous-journey h2{
+  margin:0 0 12px; 
+  font-size:24px;
+}
+.continuous-journey .lead{
+  color:var(--muted);
+  margin-bottom:10px;
+  max-width:700px;
+}
+.continuous-journey p{ color:var(--muted); line-height:1.6; margin:0 0 12px; } /* normalize paragraph spacing */
+
+.journey .container {
+  padding-bottom: 15px;
+}
+
+
 /* Core values */
+.core-values h1,
 .core-values h2{
   margin: 0 0 0px;
   font-size: 20px;
@@ -83,6 +105,11 @@ body{
   color: var(--muted);
 }
 
+/* add extra bottom padding after core values to match top spacing */
+.core-values .container.narrow {
+  padding-bottom: 60px; /* matches .container top padding */
+}
+
 .values-grid{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
@@ -90,7 +117,7 @@ body{
 }
 
 .value-card{
-  background: #feffff5b;
+  background: var(--card-bg);
   padding:20px;
   border-radius:10px;
   box-shadow:var(--shadow);
@@ -98,15 +125,14 @@ body{
 }
 
 .value-card .icon{
-  color:#055f66;
   font-size:18px;
-  background:rgba(96,165,250,0.08);
-  width:36px;
-  height:36px;
+  background:#eff3f3;
+  width:40px;
+  height:40px;
   display:flex;
   align-items:center;
   justify-content:center;
-  border-radius:50%;
+  border-radius:20%;
   margin-bottom:12px;
 }
 
@@ -121,6 +147,6 @@ body{
 }
 
 /* responsive tweak */
-@media (max-width:980px){
-  .about-image{ height:200px; }
+@media (max-width: 700px){
+  .about-image{ height:200px; max-width:260px; }
 }

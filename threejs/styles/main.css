@@ -14,7 +14,7 @@ body {
   color: #444;
 }
 
-/* Header (injected at the top in normal flow.
+/* Header injected at the top in normal flow.
    Scene-container now the flex box in a column layout below header.
 */
 #scene-container {
@@ -75,7 +75,7 @@ canvas {
 
 #search-bar {
   position: fixed;
-  top: 10px;
+  top: calc(var(--height, 64px) + 10px); /* push below the sticky header */
   left: 5px;
   transform: translateX(5%);
   opacity: 0.5;
@@ -288,4 +288,3 @@ canvas {
   left: 20px;
   z-index: 40;
 }*/
-
