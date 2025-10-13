@@ -20,6 +20,7 @@ from cj_objects import (
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
+    CityJSONSpace,
     CityJSONSpaceSubclass,
 )
 from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
@@ -96,7 +97,7 @@ def load_units_from_csv(
         raise RuntimeError(
             f"The root of the `cj_file` should be a Building, not a {type(root)}"
         )
-    prefix = Building.space_number_to_id(number=root.space_id)
+    prefix = CityJSONSpace.space_number_to_prefix(number=root.space_id)
 
     all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
 

@@ -114,6 +114,7 @@ For everything related to the database, see [/database/README.md](/database/READ
 
     ```bash
     cd Inclusive-TU-Delft-Map/threejs
+    npm ci
     npm run build
     ```
 

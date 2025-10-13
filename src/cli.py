@@ -17,6 +17,8 @@ from gltf_to_cj import (
 app = typer.Typer()
 from tqdm.contrib.logging import logging_redirect_tqdm
 
+from gj_to_cj import load_geojson_icons
+
 
 @app.command(
     "split_cj",
@@ -251,6 +253,22 @@ def load_custom_building(
 
 
 @app.command(
+    "load_gj_icons",
+    help="Load custom geometries from glTF and combines it with given attributes to export a properly formatted CityJSON file to feed the database.",
+)
+def load_gj_icons(
+    input_gj_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Input GeoJSON file with icons.",
+            exists=True,
+        ),
+    ],
+):
+    load_geojson_icons(gj_path=input_gj_path)
+
+
+@app.command(
     "subset_cj",
     help="Create a subset of a CityJSON file based on a list of identifiers in the file.",
 )
@@ -289,7 +307,9 @@ def setup_logging(verbose: int):
         case 3:
             log_level = logging.DEBUG
         case _:
-            raise RuntimeError(f"Verbose has only 4 levels.")
+            raise RuntimeError(
+                f"Verbose values can only go from 0 to 3 (nothing, '-v', '-vv' or '-vvv')."
+            )
     logging.basicConfig(
         level=log_level,
         format="%(asctime)s - %(levelname)s - %(message)s",

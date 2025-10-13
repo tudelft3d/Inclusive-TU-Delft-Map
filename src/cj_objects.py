@@ -182,6 +182,11 @@ class CityJSONObject(ABC):
         self.parent_id = None
         self.children_ids: set[str] = set()
         self.geometries = list(geometries if geometries is not None else [])
+
+        # Add the key to the attributes
+        self.add_attributes({"key": self.id})
+
+        # Compute the icon position and add it to the attributes
         if icon_position is not None:
             self.icon_position = icon_position
         elif geometries is not None and len(geometries) > 0:
@@ -292,8 +297,7 @@ class CityJSONSpace(CityJSONObject):
     @classmethod
     def space_number_to_id(cls, number: str) -> str:
         prefix = cls.space_number_to_prefix(number=number)
-        number.replace(".", ":")
-        number.replace("-", "_")
+        number = number.replace(".", "_").replace("-", "_")
         return f"{prefix}-{cls.type_name}-{number}"
 
 
@@ -394,9 +398,8 @@ class BuildingUnitContainer(CityJSONObject):
 
     @classmethod
     def unit_code_to_id(cls, code: str, prefix: str) -> str:
-        code.replace(".", ":")
-        code.replace("-", "_")
-        prefix.replace("-", "_")
+        code = code.replace(".", "_").replace("-", "_")
+        prefix = prefix.replace("-", "_")
         return f"{prefix}-{cls.type_name}-{code}"
 
 
@@ -430,10 +433,10 @@ class BuildingUnit(BuildingUnitContainer):
 
     @classmethod
     def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
-        code.replace(".", ":")
-        code.replace("-", "_")
-        prefix.replace("-", "_")
-        return f"{prefix}-{cls.type_name}-{code}@{str(number)}"
+        number_str = str(number).replace(".", "_").replace("-", "_")
+        code = code.replace(".", "_").replace("-", "_")
+        prefix = prefix.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{code}@{number_str}"
 
 
 class BuildingRoot(CityJSONObject):

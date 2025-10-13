@@ -37,7 +37,9 @@ def flatten_trimesh(
         # TODO: understand the error better and fix it in a better way?
         flatten_path_2D: Path2D = mesh.projected(normal=(0, 0, 1), apad=0.001)
         logging.debug("Start triangulating")
-        vertices, faces = flatten_path_2D.triangulate(**{"engine": "triangle"})
+        vertices, faces = flatten_path_2D.triangulate(
+            **{"engine": "triangle", "triangle_args": "p"}
+        )
         flat_mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
         flat_mesh.vertices = np.hstack(
             (flat_mesh.vertices, np.full((flat_mesh.vertices.shape[0], 1), z_value))
