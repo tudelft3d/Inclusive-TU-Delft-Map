@@ -28,8 +28,8 @@ export class OutlineManager {
         this.outlinePass.edgeStrength = 5;
         this.outlinePass.edgeGlow = 0.25;
         this.outlinePass.edgeThickness = 0.3;
-        this.outlinePass.visibleEdgeColor.set('#ffffffff');
-        this.outlinePass.hiddenEdgeColor.set('#ffffffff');
+        this.outlinePass.visibleEdgeColor.set('#ffffff');
+        this.outlinePass.hiddenEdgeColor.set('#ffffff');
 
         this.composer.addPass(this.outlinePass);
 

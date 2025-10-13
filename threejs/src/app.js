@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition, cj2gltf } from "./utils";
-import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
@@ -548,4 +547,3 @@ export class Map {
 // Contemplation room	E1-8 - there are none in BK?
 // All-gender restroom	S1-3
 // Accessible toilet	S2
-}

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // The number of results that are returned for partials searches
     const search_result_count = 5;
 
-    document.getElementById('zoom-in').addEventListener('click', (event) => {
+    document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
         map.cameraManager.zoomIn();
