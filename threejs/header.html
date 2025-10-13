@@ -4,15 +4,22 @@
             <img src="assets/threejs/graphics/TUD_logo.svg" alt="TU Delft logo" />
         </a>
 
-        <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <nav id="main-nav" class="main-nav" role="navigation" aria-label="Main navigation">
             <ul>
                 <li><a href="index.html">Home</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="feedback.html">Feedback</a></li>
             </ul>
+
+            <div class="nav-lang" role="navigation" aria-label="Language switcher">
+              <button class="lang-btn" aria-label="Switch to Dutch">NL</button>
+              <button class="lang-btn active" aria-label="Switch to English">EN</button>
+            </div>
         </nav>
 
         <div class="header-actions">
+          <!-- menu toggle moved outside of the desktop lang-switch so it's visible on mobile -->
+          <button class="menu-toggle" aria-controls="main-nav" aria-expanded="false" aria-label="Open menu">Menu</button>
           <div class="lang-switch" role="navigation" aria-label="Language switcher">
             <button class="lang-btn" aria-label="Switch to Dutch">NL</button>
             <button class="lang-btn active" aria-label="Switch to English">EN</button>
