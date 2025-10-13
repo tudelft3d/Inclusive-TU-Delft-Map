@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition, cj2gltf } from "./utils";
+import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
@@ -19,6 +20,7 @@ export class Map {
         this.activeBasemap = null;
         this.userLocationMarker = null;
         this.cityjson = cityjson;
+        this.locationWatchId = null; // For tracking real-time location updates
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -36,11 +38,10 @@ export class Map {
         this.setBasemap();
         this._initRenderer();
         this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
-
         this._attachEvents();
-
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
+
     }
 
     _initScene() {
@@ -101,21 +102,17 @@ export class Map {
         this._resizeRenderer();
     }
 
-    /* Convert GPS coordinates (lat/lon) to map's local coordinates */
+    /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
     latLonToLocal(lat, lon) {
-        // Define coordinate systems
-        // WGS84 (GPS coordinates)
-        const wgs84 = 'EPSG:4326';
 
-        // RD New (Rijksdriehoek) - Dutch coordinate system
+        // WGS84 (GPS coordinates) & RD New (Rijksdriehoek)
+        const wgs84 = 'EPSG:4326';
         const rdNew = '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs';
 
         // Convert GPS to RD coordinates using proj4
         const [rdX, rdY] = proj4(wgs84, rdNew, [lon, lat]);
-
         console.log(`GPS (${lat}, ${lon}) -> RD (${rdX}, ${rdY})`);
 
-        // RD coordinates ARE the local model coordinates
         const x = rdX;
         const z = -rdY; // Negative Z because of coordinate system orientation
 
@@ -124,31 +121,42 @@ export class Map {
         return { x, z };
     }
 
-    /* Get user location and zoom to it */
+    /* Get user location and zoom to it with continuous tracking */
     getUserLocationAndZoom() {
         if (!navigator.geolocation) {
             alert('Geolocation is not supported by your browser');
             return;
         }
 
-        console.log('Requesting user location...');
+        console.log('Starting location tracking...');
 
-        navigator.geolocation.getCurrentPosition(
+        // Stop any existing tracking
+        if (this.locationWatchId !== null) {
+            navigator.geolocation.clearWatch(this.locationWatchId);
+        }
+
+        let firstUpdate = true;
+
+        // Use watchPosition for continuous updates
+        this.locationWatchId = navigator.geolocation.watchPosition(
             (position) => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
+                const accuracy = position.coords.accuracy; // in meters
 
-                console.log(`User location: ${lat}, ${lon} (accuracy: ${accuracy}m)`);
+                console.log(`Location update: ${lat}, ${lon} (accuracy: ${accuracy}m)`);
 
                 // Convert GPS to local coordinates
                 const local = this.latLonToLocal(lat, lon);
 
-                // Add a marker at the user's location
-                this.addUserLocationMarker(local.x, local.z);
+                // Update or create marker at the user's location
+                this.updateUserLocationMarker(local.x, local.z, accuracy);
 
-                // Zoom to the location
-                this.cameraManager.zoomToLocation(local.x, local.z);
+                // Only zoom on first update (aka button click)
+                if (firstUpdate) {
+                    this.cameraManager.zoomToLocation(local.x, local.z);
+                    firstUpdate = false;
+                }
             },
             (error) => {
                 let message = 'Unable to retrieve your location';
@@ -165,59 +173,84 @@ export class Map {
                 }
                 console.error('Geolocation error:', error);
                 alert(message);
+
+                // Stop tracking on error
+                if (this.locationWatchId !== null) {
+                    navigator.geolocation.clearWatch(this.locationWatchId);
+                    this.locationWatchId = null;
+                }
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 3000, // every 3 seconds
                 maximumAge: 0
             }
         );
     }
 
-    /* Add a visual marker at user's location */
-    addUserLocationMarker(x, z) {
+    /* Stop tracking user location */
+    stopLocationTracking() {
+        if (this.locationWatchId !== null) {
+            navigator.geolocation.clearWatch(this.locationWatchId);
+            this.locationWatchId = null;
+            console.log('Location tracking stopped');
+        }
+
+        // Remove the marker
+        if (this.userLocationMarker) {
+            this.scene.remove(this.userLocationMarker);
+            this.userLocationMarker = null;
+        }
+    }
+
+    /* Update or create user location marker with accuracy circle */
+    updateUserLocationMarker(x, z, accuracy) {
         // Remove previous marker if it exists
         if (this.userLocationMarker) {
             this.scene.remove(this.userLocationMarker);
         }
 
-        // Create a LARGE marker so it's easy to find for debugging
         const markerGroup = new THREE.Group();
 
-        // Inner dot - make it bigger
-        const dotGeometry = new THREE.SphereGeometry(20, 16, 16);
-        const dotMaterial = new THREE.MeshBasicMaterial({
-            color: 0xFF0000, // Changed to red for visibility
+        // Accuracy circle (transparent, sized to accuracy)
+        const circleGeometry = new THREE.CircleGeometry(accuracy, 64);
+        const circleMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4285F4,
+            side: THREE.DoubleSide,
             transparent: true,
-            opacity: 1
+            opacity: 0.2
         });
-        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-        markerGroup.add(dot);
+        const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+        circle.rotation.x = -Math.PI / 2; // Lay flat
+        markerGroup.add(circle);
 
-        // Outer ring (for pulsing effect)
-        const ringGeometry = new THREE.RingGeometry(25, 30, 32);
+        // Accuracy ring border
+        const ringGeometry = new THREE.RingGeometry(accuracy - 1, accuracy + 1, 64);
         const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0xFF0000, // Changed to red for visibility
+            color: 0x4285F4,
             side: THREE.DoubleSide,
             transparent: true,
             opacity: 0.5
         });
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = -Math.PI / 2; // Lay flat
+        ring.rotation.x = -Math.PI / 2;
         markerGroup.add(ring);
 
-        markerGroup.position.set(x, 1, z); // Position higher above ground
+        // Center dot (actual position)
+        const dotGeometry = new THREE.SphereGeometry(3, 16, 16);
+        const dotMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4285F4
+        });
+        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+        //dot.position.y = 1; // Slightly above the circle
+        markerGroup.add(dot);
+
+        markerGroup.position.set(x, 1, z); // Position just above ground
 
         this.userLocationMarker = markerGroup;
         this.scene.add(this.userLocationMarker);
 
-        console.log('====== USER LOCATION MARKER ======');
-        console.log(`Marker position: X=${x}, Z=${z}`);
-        console.log('===================================');
-
-        // Also log the current camera position for reference
-        console.log('Current camera position:', this.cameraManager.camera.position);
-        console.log('Current camera target:', this.cameraManager.controls.target);
+        console.log(`Location marker updated at (${x}, ${z}) with accuracy ${accuracy}m`);
     }
 
     _zoom_perspective(object) {
@@ -471,10 +504,10 @@ export class Map {
             if (child.isMesh) {
                 child.material.side = THREE.DoubleSide;
             }
-            
+
             if (child.name.includes(lod)) {
                 // can search by floor sections in cityjson?
-                // if (lod === 'lod_0') {      
+                // if (lod === 'lod_0') {
                 //  }
                 child.visible = true;
                 var vis = child.parent;
@@ -504,14 +537,15 @@ export class Map {
                     outlineObjects.push(child);
                 }
             });
-        }   
+        }
         console.log("selected objects for outlining:", outlineObjects);
         this.outlineManager.outlineObjects(outlineObjects);
     }
 }
 
 // sample thematic layers to add:
-// Lactation Room	E1-6 
+// Lactation Room	E1-6
 // Contemplation room	E1-8 - there are none in BK?
 // All-gender restroom	S1-3
-// Accessible toilet	S2 
+// Accessible toilet	S2
+}
