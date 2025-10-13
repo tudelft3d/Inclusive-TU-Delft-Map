@@ -167,7 +167,7 @@ export class CamerasControls {
 
             // Where we want to go
             this.orthographicCamera.position.copy(this.controls.target);
-            this.orthographicCamera.position.y = 1000
+            this.orthographicCamera.position.y = 1000;
 
             const distance = this.camera.position.distanceTo(this.controls.target);
             const halfHeight = frustrumHeight(this.camera, distance) / 2;

@@ -48,7 +48,7 @@ export class Searcher {
 
     // Perhaps make lod extractable from the map
     // Will have to change this if not all searchable objects have a space_id
-    _retrieve_threejs_objects(object_list, lod, map) {
+    _retrieve_threejs_objects(object_list, map, lod="infer") {
 
         const threejs_objects = [];
 
@@ -56,11 +56,19 @@ export class Searcher {
 
         	const current_object = object_list[i];
 
-        	console.log(current_object.item.attributes);
+            if (lod == "infer") {
+
+                if (current_object.item.type == "Building") {
+                    lod = "-lod_2";
+                } else if (current_object.item.type == "BuildingRoom")  {
+                    lod = "-lod_0";
+                }
+
+            }
 
         	let space_id = current_object.item.attributes["space_id"];
 
-        	const threejs_object_name = space_id.split('.').join("-").concat(lod);
+        	const threejs_object_name = space_id.split('.').join("").concat(lod);
             
         	threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
 
@@ -85,7 +93,7 @@ export class Searcher {
 
     	const result = this._search_pattern(pattern, 1);
 
-    	const threejs_object = this._retrieve_threejs_objects(result, "-lod_2", map)[0];
+    	const threejs_object = this._retrieve_threejs_objects(result, map)[0];
 
     	map.zoom_on_object(threejs_object);
 

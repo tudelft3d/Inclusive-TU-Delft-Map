@@ -2,11 +2,13 @@ import { CamerasControls } from "./camera";
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectPicker } from "./objectPicker";
-import { getCanvasRelativePosition } from "./utils";
+import { getCanvasRelativePosition, cj2gltf } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
+import { OutlineManager} from "./outlines";
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
@@ -16,6 +18,7 @@ export class Map {
         this.container = container;
         this.activeBasemap = null;
         this.userLocationMarker = null;
+        this.cityjson = cityjson;
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -32,11 +35,12 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
+        this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
+
         this._attachEvents();
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
-
     }
 
     _initScene() {
@@ -349,6 +353,8 @@ export class Map {
 
             const object = this.picker.picked;
 
+            console.log(object);
+
             this.zoom_on_object(object);
 
         } else {
@@ -422,12 +428,12 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
-            console.log("gltf", gltf);
+            // console.log("gltf", gltf);
 
             // load only lod2 on startup
             this.model = objs;
             this.lodVis();
-            scene.add(objs);
+            this.scene.add(this.model);
 
             // if (child.name.startsWith("08")) child.visible = false;
             // if (child.name != "08-lod_2") child.visible = false;
@@ -438,6 +444,8 @@ export class Map {
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
+            this.setOutline();
+
         }, undefined, function (error) {
             console.error(error);
         });
@@ -447,13 +455,15 @@ export class Map {
     render(time) {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
-        this.renderer.render(this.scene, this.cameraManager.camera);
+        // this.renderer.render(this.scene, this.cameraManager.camera);
+        this.outlineManager.render(time);
         requestAnimationFrame(this.render);
     }
 
-    lodToggle(level) {
-        this.lodVis(level);
-    }
+    // just a wrapper, not needed anymore.
+    // lodToggle(level) {
+    //     this.lodVis(level);
+    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -461,7 +471,11 @@ export class Map {
             if (child.isMesh) {
                 child.material.side = THREE.DoubleSide;
             }
+            
             if (child.name.includes(lod)) {
+                // can search by floor sections in cityjson?
+                // if (lod === 'lod_0') {      
+                //  }
                 child.visible = true;
                 var vis = child.parent;
                 while (vis) {
@@ -475,4 +489,29 @@ export class Map {
             }
         });
     }
+
+    setOutline(type = 'Building', lod = 'lod_2') {
+
+        const outlineObjects = [];
+        for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
+            if (obj.type !== type) continue;
+            // console.log(id);
+
+            const meshName = `${cj2gltf(id)}-${lod}`;
+
+            this.scene.traverse(child => {
+                if (child.isMesh && child.name === meshName) {
+                    outlineObjects.push(child);
+                }
+            });
+        }   
+        console.log("selected objects for outlining:", outlineObjects);
+        this.outlineManager.outlineObjects(outlineObjects);
+    }
 }
+
+// sample thematic layers to add:
+// Lactation Room	E1-6 
+// Contemplation room	E1-8 - there are none in BK?
+// All-gender restroom	S1-3
+// Accessible toilet	S2 
