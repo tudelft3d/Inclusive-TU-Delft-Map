@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import Any
 
 import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from cj_geometry import CityJSONGeometries, Geometry
+from cj_geometry import CityJSONGeometries, Geometry, IconPosition
 
 
 class CityJSONFile:
@@ -139,7 +139,7 @@ class CityJSONFile:
         return json.dumps(full_object)
 
     def add_cityjson_objects(
-        self, cj_objects: Iterable[CityJSONObjectSubclass]
+        self, cj_objects: Sequence[CityJSONObjectSubclass]
     ) -> None:
         self.city_objects.extend(cj_objects)
 
@@ -163,7 +163,8 @@ class CityJSONObject(ABC):
         self,
         object_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
+        icon_position: IconPosition | None = None,
     ) -> None:
         if attributes is not None:
             if not isinstance(attributes, dict):
@@ -181,6 +182,30 @@ class CityJSONObject(ABC):
         self.parent_id = None
         self.children_ids: set[str] = set()
         self.geometries = list(geometries if geometries is not None else [])
+        if icon_position is not None:
+            self.icon_position = icon_position
+        elif geometries is not None and len(geometries) > 0:
+            # Use the highest lod to create a point
+            best_idx = 0
+            for idx in range(1, len(geometries)):
+                if geometries[idx].lod > geometries[best_idx].lod:
+                    best_idx = idx
+
+            self.icon_position = IconPosition.from_mesh(
+                geometries[best_idx].to_trimesh()
+            )
+        else:
+            self.icon_position = None
+        if self.icon_position is not None:
+            self.add_attributes(
+                {
+                    "icon_position": [
+                        self.icon_position.x,
+                        self.icon_position.y,
+                        self.icon_position.z,
+                    ]
+                }
+            )
 
     def __repr__(self) -> str:
         return f"{type(self)}(id={self.id}, parent_id={self.parent_id}, children_ids={self.children_ids})"
@@ -202,7 +227,6 @@ class CityJSONObject(ABC):
             content_dict["parents"] = [self.parent_id]
         if len(self.children_ids) > 0:
             content_dict["children"] = list(self.children_ids)
-        # content_dict["children"] = list(self.children_ids)
         content_dict["attributes"] = self.attributes
         return content_dict
 
@@ -238,7 +262,7 @@ class CityJSONSpace(CityJSONObject):
         object_id: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
     ) -> None:
 
         super().__init__(
@@ -282,7 +306,7 @@ class Building(CityJSONSpace):
         object_id: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
@@ -301,7 +325,7 @@ class BuildingPart(CityJSONSpace):
         object_id: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
@@ -320,7 +344,7 @@ class BuildingStorey(CityJSONSpace):
         object_id: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
@@ -339,7 +363,7 @@ class BuildingRoom(CityJSONSpace):
         object_id: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
-        geometries: Iterable[Geometry] | None = None,
+        geometries: Sequence[Geometry] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,

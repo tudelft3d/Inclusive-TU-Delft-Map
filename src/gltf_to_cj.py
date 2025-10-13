@@ -175,7 +175,7 @@ def load_units_from_csv(
                 unit=unit, space=cj_file.city_objects[cj_file_pos]
             )
 
-    cj_file.add_cityjson_objects(all_unit_containers.values())
+    cj_file.add_cityjson_objects(list(all_unit_containers.values()))
     cj_file.add_cityjson_objects(
         [unit for units in all_units.values() for unit in units]
     )
@@ -260,6 +260,6 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
         translate=np.array([0, 0, 0], dtype=np.float64),
     )
     # cj_file.add_cityjson_objects([root])
-    cj_file.add_cityjson_objects(all_objects_cj.values())
+    cj_file.add_cityjson_objects(list(all_objects_cj.values()))
 
     return cj_file

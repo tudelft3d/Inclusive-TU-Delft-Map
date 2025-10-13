@@ -5,6 +5,9 @@ import numpy as np
 from numpy.typing import NDArray
 from trimesh import Trimesh
 
+from geometry_utils import flatten_trimesh
+from icon_positions import icon_position_from_mesh
+
 
 def _remap_boundaries(
     boundaries: list[Any], offset: int, mapping: NDArray[np.signedinteger]
@@ -161,3 +164,21 @@ class CityJSONGeometries:
             new_boundaries.append(remapped)
 
         return unique_vertices, new_boundaries
+
+
+class IconPosition:
+
+    def __init__(self, x: float, y: float, z: float) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+
+    @classmethod
+    def from_mesh(cls, mesh: Trimesh) -> Self:
+        if not isinstance(mesh, Trimesh):
+            raise TypeError(
+                f"IconPosition.from_geometry expects a `MultiSurface` instance, not `{type(geom)}`."
+            )
+
+        pos_array = icon_position_from_mesh(mesh=mesh, z_offset=2)
+        return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])

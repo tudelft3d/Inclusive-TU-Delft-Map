@@ -301,7 +301,7 @@ class Bag2Cityjson(CityjsonLoader):
             scale=np.array([0.00001, 0.00001, 0.00001], dtype=np.float64),
             translate=np.array([0, 0, 0], dtype=np.float64),
         )
-        cj_file.add_cityjson_objects(all_objects_cj.values())
+        cj_file.add_cityjson_objects(list(all_objects_cj.values()))
 
         return cj_file
 
