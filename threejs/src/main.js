@@ -220,8 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
             event.stopPropagation();
-            // To be added here
-            console.log('Location clicked');
+            map.getUserLocationAndZoom();
         });
     }
 
