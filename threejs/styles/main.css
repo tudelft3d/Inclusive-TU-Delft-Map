@@ -1,31 +1,23 @@
 body {
   margin: 0;
-  height: 100vh;               /* page a full-height flex column */
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-
-  /* Style text */
   text-align: center;
   font-size: 12px;
   font-family: Sans-Serif;
-
-  /* Color text */
   color: #444;
 }
 
-/* Header injected at the top in normal flow.
-   Scene-container now the flex box in a column layout below header.
-*/
 #scene-container {
-  position: relative;          
+  position: relative;
   width: 100%;
-  flex: 1 1 auto;              /* grow and shrink as needed */
-  height: auto;                /* height driven by flex */
+  flex: 1 1 auto;
+  height: auto;
   z-index: 1;
 }
 
-/* Make sure any canvas fills the scene container */
 canvas {
   display: block;
   width: 100% !important;
@@ -33,15 +25,11 @@ canvas {
 }
 
 h1 {
-  /* Position the heading */
   position: absolute;
   width: 100%;
-
-  /* Make sure that the heading is drawn on top */
   z-index: 1;
 }
 
-/*scene container to take up the full page */
 #scene-container {
   position: absolute;
   width: 100%;
@@ -49,9 +37,7 @@ h1 {
   z-index: 1;
 }
 
-/* The three.js renderer */
 canvas {
-  /* Removes scrollbars */
   display: block;
 }
 
@@ -64,18 +50,16 @@ canvas {
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 4px;
-  /* Let mouse clicks pass through */
   pointer-events: none;
   font-size: 14px;
   line-height: 1.4;
-  /* Hidden until something is selected */
   opacity: 0;
   transition: opacity .2s ease;
 }
 
 #search-bar {
   position: fixed;
-  top: calc(var(--height, 64px) + 10px); /* push below the sticky header */
+  top: calc(var(--height, 64px) + 20px);
   left: 5px;
   transform: translateX(5%);
   opacity: 0.5;
@@ -90,113 +74,82 @@ canvas {
   border: 1px solid #ccc;
 }
 
-/* Sidebar flex container for all right-side controls */
-#right-sidebar-controls {
+/* TOP RIGHT SIDEBAR CONTROLS */
+#top-right-sidebar-controls {
   position: fixed;
-  top: 10%;
+  top: calc(var(--height, 64px) + 20px);
   right: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px; /* Adjust this value for spacing between all controls */
+  gap: 6px;
   z-index: 30;
 }
 
-#basemap-container,
-#thematic-container,
-#colorBlind-container,
-#zoom-controls,
-#orthographic-controls,
-#lod-container {
-  position: static; /* Remove fixed positioning */
-  z-index: inherit;
-  /* Remove any top/right values here */
-}
-
-#basemap-btn,
-#thematic-btn,
-#colorBlind-btn,
-#zoom-in,
-#zoom-out,
-#orthographic-btn,
-#lod-btn{
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-
-
-#basemap-btn {
-  width: 40px;
-  height: 40px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#basemap-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  text-align: left;
-  padding-left: 20px;
-  border-radius: 5px;
-  min-width: 160px;
-  z-index: inherit;
-}
-
-#basemap-dropdown a {
-  display: block;
-  padding: 10px;
-  text-decoration: none;
-  color: black;
-}
-
-
-#thematic-btn {
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  cursor: pointer;
-  z-index: inherit;
-}
-
-#thematic-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  text-align: left;
-  padding-left: 20px;
-  border-radius: 5px;
-  min-width: 160px;
-  z-index: inherit;
-}
-
-#thematic-dropdown a {
-  display: block;
-  padding: 10px;
-  text-decoration: none;
-  color: black;
-  z-index: inherit;
-}
-
-#colorBlind-btn {
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  cursor: pointer;
-  z-index: inherit;
-}
-
-#colorBlind-dropdown {
-  display: none;
+/* BOTTOM RIGHT SIDEBAR CONTROLS */
+#bottom-right-sidebar-controls {
   position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 30;
+}
+
+/* Common button container styles */
+#reset-container,
+#accessibility-container,
+#basemap-container,
+#layers-container,
+#compass-container,
+#view-toggle-container,
+#location-container {
+  position: relative;
+  z-index: 31;
+}
+
+/* Common button styles */
+#reset-btn,
+#accessibility-btn,
+#basemap-btn,
+#layers-btn,
+#compass-btn,
+#view-toggle-btn,
+#location-btn,
+#zoom-in-btn,
+#zoom-out-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#reset-btn:hover,
+#accessibility-btn:hover,
+#basemap-btn:hover,
+#layers-btn:hover,
+#compass-btn:hover,
+#view-toggle-btn:hover,
+#location-btn:hover,
+#zoom-in-btn:hover,
+#zoom-out-btn:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+}
+
+/* Dropdown styles */
+#accessibility-dropdown,
+#basemap-dropdown,
+#layers-dropdown {
+  display: none;
+  position: absolute;
   top: 100%;
   right: 0;
   background: white;
@@ -208,101 +161,102 @@ canvas {
   z-index: inherit;
 }
 
-#colorBlind-dropdown a {
+#accessibility-dropdown a,
+#basemap-dropdown a,
+#layers-dropdown a {
   display: block;
   padding: 10px;
   text-decoration: none;
   color: black;
-  z-index: inherit;
 }
 
+#accessibility-dropdown a:hover,
+#basemap-dropdown a:hover,
+#layers-dropdown a:hover {
+  background: #f3f3f3;
+}
+
+/* Zoom controls */
 #zoom-controls {
   display: flex;
   flex-direction: column;
-  gap: 6px; 
-
+  gap: 6px;
 }
 
-#zoom-in,
-#zoom-out {
-  position: static;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 31;
-}
-
-#orthographic-btn {
-  position: static;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 31;
-}
-
-/*#lod-container {
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  z-index: 9;
-}*/
-
-#lod-btn {
-  position: static;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 31;
-}
-
-#lod-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  text-align: left;
-  padding-left: 20px;
-  border-radius: 5px;
-  min-width: 160px;
-  z-index: inherit;
-}
-
-#lod-dropdown a {
-  display: block;
-  padding: 10px;
-  text-decoration: none;
-  color: black;
-}
-
-/*#camera-toggle {
-  position: absolute;
-  top: 5%;
-  left: 20px;
-  z-index: 40;
-}*/
-
+/* Intermediate search results */
 #intermediate_results {
   border: 1px dotted #ccc;
   padding: 3px;
 }
+
 #intermediate_results ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
   float: left;
 }
+
 #intermediate_results ul li {
   padding: 5px 0;
 }
+
 #intermediate_results ul li:hover {
   background: #eee;
 }
 
+/* Tooltip styles */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 9999;
+}
+
+[data-tooltip]::after {
+  content: '';
+  position: absolute;
+  right: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: rgba(0, 0, 0, 0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 9999;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* SVG icon sizing */
+#reset-btn img,
+#accessibility-btn img,
+#basemap-btn img,
+#layers-btn img,
+#compass-btn img,
+#view-toggle-btn img,
+#location-btn img,
+#zoom-in-btn img,
+#zoom-out-btn img {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
