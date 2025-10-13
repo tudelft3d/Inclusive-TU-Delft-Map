@@ -59,7 +59,9 @@ export class Searcher {
         	console.log(current_object.item.attributes);
 
         	let space_id = current_object.item.attributes["space_id"];
+
         	const threejs_object_name = space_id.split('.').join("-").concat(lod);
+            
         	threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
 
 		}

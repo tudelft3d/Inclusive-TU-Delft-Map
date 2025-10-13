@@ -1,17 +1,22 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
+import { BuildingView } from "./buildingView"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
+
     const searcher = new Searcher();
+    const buildingView = new BuildingView(map);
+
+    buildingView.set_target("08");
 
     // The amount of time the searchbar will wait before searcing in miliseconds
     const search_delay = 250;
 
     // The number of results that are returned for partials searches
-    const search_result_count = 3;
+    const search_result_count = 5;
 
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
@@ -67,7 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
             var li = document.createElement("li");
             li.appendChild(document.createTextNode(search_results[i]));
 
-            // Example of how to engage with the intermediate result:
+            li.addEventListener("click", (event) => {
+
+                searcher.search_and_zoom(search_results[i], map);
+
+            });
+
+            //Example of how to engage with the intermediate result:
             // li.addEventListener("mouseover", (event) => {
             //     console.log("yeah that works");
             // });
@@ -110,9 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     intermediateResults.addEventListener("click", (event) => {
 
-        let value = event.target.textContent
+        // let value = event.target.textContent;
 
-        searcher.search_and_zoom(value, map);
+        // searcher.search_and_zoom(value, map);
 
     });
 
