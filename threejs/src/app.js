@@ -6,6 +6,7 @@ import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
+import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
@@ -14,6 +15,7 @@ export class Map {
     constructor(container) {
         this.container = container;
         this.activeBasemap = null;
+        this.userLocationMarker = null;
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -93,6 +95,125 @@ export class Map {
         this.canvas = this.renderer.domElement;
         this.container.appendChild(this.canvas);
         this._resizeRenderer();
+    }
+
+    /* Convert GPS coordinates (lat/lon) to map's local coordinates */
+    latLonToLocal(lat, lon) {
+        // Define coordinate systems
+        // WGS84 (GPS coordinates)
+        const wgs84 = 'EPSG:4326';
+
+        // RD New (Rijksdriehoek) - Dutch coordinate system
+        const rdNew = '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs';
+
+        // Convert GPS to RD coordinates using proj4
+        const [rdX, rdY] = proj4(wgs84, rdNew, [lon, lat]);
+
+        console.log(`GPS (${lat}, ${lon}) -> RD (${rdX}, ${rdY})`);
+
+        // RD coordinates ARE the local model coordinates
+        const x = rdX;
+        const z = -rdY; // Negative Z because of coordinate system orientation
+
+        console.log(`RD (${rdX}, ${rdY}) -> Local (${x}, ${z})`);
+
+        return { x, z };
+    }
+
+    /* Get user location and zoom to it */
+    getUserLocationAndZoom() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        console.log('Requesting user location...');
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                console.log(`User location: ${lat}, ${lon} (accuracy: ${accuracy}m)`);
+
+                // Convert GPS to local coordinates
+                const local = this.latLonToLocal(lat, lon);
+
+                // Add a marker at the user's location
+                this.addUserLocationMarker(local.x, local.z);
+
+                // Zoom to the location
+                this.cameraManager.zoomToLocation(local.x, local.z);
+            },
+            (error) => {
+                let message = 'Unable to retrieve your location';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = 'Location permission denied. Please enable location access in your browser settings.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        message = 'Location request timed out.';
+                        break;
+                }
+                console.error('Geolocation error:', error);
+                alert(message);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    /* Add a visual marker at user's location */
+    addUserLocationMarker(x, z) {
+        // Remove previous marker if it exists
+        if (this.userLocationMarker) {
+            this.scene.remove(this.userLocationMarker);
+        }
+
+        // Create a LARGE marker so it's easy to find for debugging
+        const markerGroup = new THREE.Group();
+
+        // Inner dot - make it bigger
+        const dotGeometry = new THREE.SphereGeometry(20, 16, 16);
+        const dotMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFF0000, // Changed to red for visibility
+            transparent: true,
+            opacity: 1
+        });
+        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+        markerGroup.add(dot);
+
+        // Outer ring (for pulsing effect)
+        const ringGeometry = new THREE.RingGeometry(25, 30, 32);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFF0000, // Changed to red for visibility
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.5
+        });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.rotation.x = -Math.PI / 2; // Lay flat
+        markerGroup.add(ring);
+
+        markerGroup.position.set(x, 1, z); // Position higher above ground
+
+        this.userLocationMarker = markerGroup;
+        this.scene.add(this.userLocationMarker);
+
+        console.log('====== USER LOCATION MARKER ======');
+        console.log(`Marker position: X=${x}, Z=${z}`);
+        console.log('===================================');
+
+        // Also log the current camera position for reference
+        console.log('Current camera position:', this.cameraManager.camera.position);
+        console.log('Current camera target:', this.cameraManager.controls.target);
     }
 
     _zoom_perspective(object) {
@@ -176,7 +297,7 @@ export class Map {
         const radius = sphere.radius;
 
         const rotation = this.cameraManager.camera.quaternion;
-        
+
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
         // this.orthographicCamera.right = halfWidth;
@@ -233,14 +354,14 @@ export class Map {
         } else {
 
             if (!this.cameraManager.orthographic) {
-                
+
                 this.controlsManager.activateMap();
 
                 const { x, y, z } = this.cameraManager.previousCamera.position;
                 this.cameraManager.camera.position.set(x, y, z);
                 this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
                 this.cameraManager.controls.update();
-            } 
+            }
         }
     }
 
