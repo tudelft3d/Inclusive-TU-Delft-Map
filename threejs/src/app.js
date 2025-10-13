@@ -6,6 +6,7 @@ import { getCanvasRelativePosition } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
+import { OutlineManager} from "./outlines";
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
@@ -30,7 +31,10 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
+        this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
+
         this._attachEvents();
+        this.setOutline();
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -302,6 +306,8 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
+            // console.log("gltf", gltf);
+
             // load only lod2 on startup
             this.model = objs;
             this.lodVis();
@@ -326,13 +332,15 @@ export class Map {
     render(time) {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
-        this.renderer.render(this.scene, this.cameraManager.camera);
+        // this.renderer.render(this.scene, this.cameraManager.camera);
+        this.outlineManager.render(time);
         requestAnimationFrame(this.render);
     }
 
-    lodToggle(level) {
-        this.lodVis(level);
-    }
+    // just a wrapper, not needed anymore.
+    // lodToggle(level) {
+    //     this.lodVis(level);
+    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -353,5 +361,17 @@ export class Map {
                 }
             }
         });
+    }
+
+    setOutline() {
+        const outlineObjects = [];
+        this.scene.traverse(obj => {
+            // if (obj.isMesh && obj.visible){
+            //     outlineObjects.push(obj);
+            // }
+            
+        });
+        console.log("selected objects for outlining:", outlineObjects);
+        this.outlineManager.outlineObjects(outlineObjects);
     }
 }
