@@ -1,5 +1,6 @@
-# VS Code stuff
+# VS Code & PyCharm stuff
 .vscode/
+/.idea
 
 # Python virtual environments and cache
 **/.venv/

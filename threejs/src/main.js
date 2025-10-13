@@ -1,47 +1,142 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
+import { BuildingView } from "./buildingView"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
-    const searcher = new Searcher();
 
+    const searcher = new Searcher();
+    const buildingView = new BuildingView(map);
+
+    buildingView.set_target("08");
+
+    // The amount of time the searchbar will wait before searcing in miliseconds
+    const search_delay = 250;
+
+    // The number of results that are returned for partials searches
+    const search_result_count = 5;
 
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     // map.lodToggle('lod_0');
 
-    document.getElementById('zoom-in').addEventListener('click', (event) => {
+    document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
-        event.preventDefault;
+        event.preventDefault();
         map.cameraManager.zoomIn();
     });
-    document.getElementById('zoom-out').addEventListener('click', (event) => {
+
+    document.getElementById('zoom-out-btn').addEventListener('click', (event) => {
         event.stopPropagation();
+        event.preventDefault();
         map.cameraManager.zoomOut();
     });
 
-    document.getElementById('orthographic-btn').addEventListener('click', () => {
+    document.getElementById('view-toggle-btn').addEventListener('click', () => {
         map.cameraManager.toggle_orthographic();
     });
 
+
     const searchBar = document.getElementById('search');
+    const intermediateResults = document.getElementById("intermediate_results");
 
-    searchBar.addEventListener('keypress', (event) => {
+    // general idea of "debouncing" from: https://dev.to/rowsanali/how-to-implement-a-search-functionality-using-javascript-1n1b
 
-        if (event.key === "Enter") {
+    let timeout;
 
-            let value = event.target.value;
+    function debounce(func, wait) {
 
-            if (value && value.trim().length > 0){
-                console.log(value);
-            }
+        return function(...args) {
 
-            console.log(searcher.search_pattern(value, map));
+            window.clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+
+    // Since we are adding html elements, we could in theory add entire subviews to the
+    // intermediate results, like a little picture of the result or other data.
+    function show_intermediate_results(search_results) {
+
+        console.log(search_results);
+
+        var ul = document.createElement("ul");
+
+        intermediateResults.innerHTML = '';
+
+        search_results = search_results.map((element) => {return element.item.attributes["space_id"]});
+
+        for (let i=0; i<search_results.length; i++) {
+
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(search_results[i]));
+
+            li.addEventListener("click", (event) => {
+
+                searcher.search_and_zoom(search_results[i], map);
+
+            });
+
+            //Example of how to engage with the intermediate result:
+            // li.addEventListener("mouseover", (event) => {
+            //     console.log("yeah that works");
+            // });
+
+            ul.appendChild(li);
+
         }
 
+        intermediateResults.appendChild(ul);
+    }
+
+
+
+    searchBar.addEventListener('keyup', (event) => {
+
+        let value = event.target.value;
+
+        if (!value || value.trim().length <= 0){
+                return;
+        }
+
+        // If the key being released is enter, the user wants to search
+        // If the key being released is not enter, we show intermediate results
+        if (event.key === "Enter") {
+
+            searcher.search_and_zoom(value, map);
+
+        } else {
+
+            const debouncedSearch = debounce(() => {
+                const results = searcher.search_n_best_matches(value, search_result_count);
+                show_intermediate_results(results);
+            }, search_delay);
+
+            debouncedSearch();
+
+        }
+
+    });
+
+    intermediateResults.addEventListener("click", (event) => {
+
+        // let value = event.target.textContent;
+
+        // searcher.search_and_zoom(value, map);
+
+    });
+
+    // These two make sure the suggestions are hidden,
+    // but they also cause the suggestions to disappear before they can be clicked
+    searchBar.addEventListener("focusout", (event) => {
+        //intermediateResults.style.visibility = 'hidden';
+    });
+
+    searchBar.addEventListener("focusin", (event) => {
+        //intermediateResults.style.visibility = 'visible';
     });
 
     const basemapBtn = document.getElementById('basemap-btn');
@@ -70,62 +165,96 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const layersBtn = document.getElementById('layers-btn');
+    const layersDropdown = document.getElementById('layers-dropdown');
 
-    const thematicBtn = document.getElementById('thematic-btn');
-    const thematicDropdown = document.getElementById('thematic-dropdown');
-
-    thematicBtn.addEventListener('click', (event) => {
+    layersBtn.addEventListener('click', (event) => {
         event.stopPropagation();
-        if (thematicDropdown.style.display === 'none' || thematicDropdown.style.display === '') {
-            thematicDropdown.style.display = 'block';
+        if (layersDropdown.style.display === 'none' || layersDropdown.style.display === '') {
+            layersDropdown.style.display = 'block';
         } else {
-            thematicDropdown.style.display = 'none';
+            layersDropdown.style.display = 'none';
         }
     });
 
     document.addEventListener('click', () => {
-        thematicDropdown.style.display = 'none';
+        layersDropdown.style.display = 'none';
     });
 
-    const colorBlindBtn = document.getElementById('colorBlind-btn');
-    const colorBlindDropdown = document.getElementById('colorBlind-dropdown');
+    const accessibilityBtn = document.getElementById('accessibility-btn');
+    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
 
-    colorBlindBtn.addEventListener('click', (event) => {
+    accessibilityBtn.addEventListener('click', (event) => {
         event.stopPropagation();
-        if (colorBlindDropdown.style.display === 'none' || colorBlindDropdown.style.display === '') {
-            colorBlindDropdown.style.display = 'block';
+        if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
+            accessibilityDropdown.style.display = 'block';
         } else {
-            colorBlindDropdown.style.display = 'none';
+            accessibilityDropdown.style.display = 'none';
         }
     });
 
+    document.addEventListener('click', () => {
+        accessibilityDropdown.style.display = 'none';
+    });
 
+    // RESET VIEW BUTTON
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            map.cameraManager.resetView();
+        });
+    }
+
+    // COMPASS BUTTON
+    const compassBtn = document.getElementById('compass-btn');
+    if (compassBtn) {
+        compassBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            map.cameraManager.resetNorth();
+        });
+    }
+
+    // LOCATION BUTTON
+    const locationBtn = document.getElementById('location-btn');
+    if (locationBtn) {
+        locationBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // To be added here
+            console.log('Location clicked');
+        });
+    }
+
+
+
+    // LOD DROPDOWN - Commented out
+    /*
     const lodBtn = document.getElementById('lod-btn');
     const lodDropdown = document.getElementById('lod-dropdown');
-    lodBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
-            lodDropdown.style.display = 'block';
-        } else {
-            lodDropdown.style.display = 'none';
-        }
-    });
 
-    document.addEventListener('click', () => {
-        lodDropdown.style.display = 'none';
-    });
+    if (lodBtn && lodDropdown) {
+        lodBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
+                lodDropdown.style.display = 'block';
+            } else {
+                lodDropdown.style.display = 'none';
+            }
+        });
 
-    lodDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const lod = item.dataset.lod;
-            map.lodVis(lod);
+        document.addEventListener('click', () => {
             lodDropdown.style.display = 'none';
         });
-    });
+
+        lodDropdown.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lod = item.dataset.lod;
+                map.lodVis(lod);
+                lodDropdown.style.display = 'none';
+            });
+        });
+    }
+    */
 
 });
-
-
-
-
