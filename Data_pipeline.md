@@ -147,6 +147,40 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
 
 ## Example
 
+### Without the database
+
+1. Go to `src`:
+
+    ```bash
+    cd src
+    ```
+
+2. Process 3DBAG data:
+
+    ```bash
+    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/db_input/3dbag.city.json -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
+    ```
+
+3. Process custom geometry:
+
+    ```bash
+    uv run python cli.py load_custom_building ../threejs/assets/processing_input/custom_geometry/08.glb ../threejs/assets/processing_output/db_input/08.city.json -u ../threejs/assets/processing_input/attributes/units.csv --units-code-column "Type Code [str]" --units-spaces-column "Numbers [list,str]" -a ../threejs/assets/processing_input/attributes/rooms_attributes_2.csv -c "Number [str]" -a ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes_2.csv -c "Number [str]"
+    ```
+
+4. Merge them together:
+
+    ```bash
+    uv run cjio ../threejs/assets/processing_output/db_input/08.city.json merge ../threejs/assets/processing_output/db_input/3dbag.city.json save  ../threejs/assets/processing_output/db_output/all_buildings.city.json
+    ```
+
+5. Split into CityJSON and glTF used by the map:
+
+    ```bash
+    uv run python cli.py split_cj ../threejs/assets/processing_output/db_output/all_buildings.city.json ../threejs/assets/threejs/buildings --overwrite
+    ```
+
+### With the database
+
 The current pipeline looks like this:
 
 1. Go to `src`:
