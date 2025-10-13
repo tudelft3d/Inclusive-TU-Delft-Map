@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
 
     const buildingView = new BuildingView(map);
+
+    map.buildingView = buildingView;
+
     const searcher = new Searcher();
 
     // The amount of time the searchbar will wait before searcing in miliseconds
@@ -113,14 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-    intermediateResults.addEventListener("click", (event) => {
-
-        // let value = event.target.textContent;
-
-        // searcher.search_and_zoom(value, map);
-
-    });
-
     // These two make sure the suggestions are hidden,
     // but they also cause the suggestions to disappear before they can be clicked
     searchBar.addEventListener("focusout", (event) => { 
@@ -172,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', () => {
         thematicDropdown.style.display = 'none';
+        lodDropdown.style.display = 'none';
     });
 
     const colorBlindBtn = document.getElementById('colorBlind-btn');
@@ -198,10 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.addEventListener('click', () => {
-        lodDropdown.style.display = 'none';
-    });
-
     lodDropdown.querySelectorAll('a').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -209,6 +201,15 @@ document.addEventListener('DOMContentLoaded', () => {
             map.lodVis(lod);
             lodDropdown.style.display = 'none';
         });
+    });
+
+    const bvBtn = document.getElementById("bv-btn");
+    const bvDropdown = document.getElementById("bv-storey-btn");
+
+    bvBtn.addEventListener("click", (event) => {
+
+        buildingView.initiate_buildingView();
+
     });
 
 });

@@ -14,6 +14,7 @@ export class Map {
     constructor(container) {
         this.container = container;
         this.activeBasemap = null;
+        this.buildingView;
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -227,7 +228,7 @@ export class Map {
 
             const object = this.picker.picked;
 
-            console.log(object);
+            this.buildingView.set_target(object.name);
 
             this.zoom_on_object(object);
 

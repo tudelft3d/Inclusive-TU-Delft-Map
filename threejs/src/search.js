@@ -33,7 +33,7 @@ export class Searcher {
         var object_attribute_list = [];
 
         for (const [key, value] of Object.entries(json)) {
-            value["key"] = key;
+            
             object_attribute_list.push(value);
         }
 
@@ -66,9 +66,9 @@ export class Searcher {
 
             }
 
-        	let space_id = current_object.item.attributes["space_id"];
+        	// let space_id = current_object.item.attributes["space_id"];
 
-        	const threejs_object_name = space_id.split('.').join("").concat(lod);
+        	const threejs_object_name = current_object.item.attributes["key"].concat(lod);
             
         	threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
 
@@ -105,33 +105,6 @@ export class Searcher {
     	const results = this._search_pattern(pattern, n);
 
     	return results;
-
-    }
-
-
-    search_pattern_old(pattern, map) {
-
-        const result = this.attribute_searcher.search(pattern);
-
-        const top_result = result[0];
-
-        if (typeof top_result == 'undefined') {
-            return "No results";
-        }
-
-        var object_name;
-
-        if (top_result.item.type == "Building") {
-            object_name = top_result.item.attributes["Campus Map Number"].split('.').join("").concat("-lod_2");
-        } else if (top_result.item.type == "BuildingRoom")  {
-            object_name = top_result.item.attributes["room_str_id"].split('.').join("").concat("-lod_0");
-        }
-
-        const threejs_object = map.scene.getObjectByName(object_name);
-
-        // map.zoom_on_object(threejs_object);
-
-        return top_result;
 
     }
 

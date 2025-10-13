@@ -12,7 +12,7 @@ export class BuildingView {
 
 		this.map = map;
 
-		this.building_space_id;
+		this.building_key;
 
 		this.building_json;
 
@@ -20,15 +20,26 @@ export class BuildingView {
 
     }
 
-    set_target(space_id) {
+    set_target(key) {
 
-    	this.building_space_id = space_id;
+    	this.building_key = key.split("-").slice(0, 3).join("-");
 
-    	const building_json_key = "Building_" + space_id + "-Building-" + space_id;
+    }
 
-    	this.building_json = cityjson.CityObjects[building_json_key];
+    initiate_buildingView() {
+
+    	if (!this.building_key) {
+    		console.log("no building selected");
+    		return;
+    	}
+
+    	this.building_json = cityjson.CityObjects[this.building_key];
+
+    	console.log(this.building_json);
 
     	this.storeys_json = this._isolate_storey_json();
+
+    	console.log(this.storeys_json);
 
     	console.log(this._retrieve_room_threejs_objects("00"));
 
@@ -54,7 +65,7 @@ export class BuildingView {
 
     	storey_json_keys.forEach((storey_key) => {
 
-    		const storey_code = storey_key.split(".").pop();
+    		const storey_code = storey_key.split("_").pop();
 
     		if (storey_code in sorted_storey_json_keys) {
     			sorted_storey_json_keys[storey_code].push(storey_key);
@@ -89,9 +100,11 @@ export class BuildingView {
 
     	building_room_keys.forEach((room_key) => {
 
-    		const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
+    		console.log(room_key);
 
-    		const threejs_object_name = space_id.split('.').join("").concat("-lod_0");
+    		// const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
+
+    		const threejs_object_name = room_key.concat("-lod_0");
 
     		room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
 
