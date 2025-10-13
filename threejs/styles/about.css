@@ -147,6 +147,6 @@ body{
 }
 
 /* responsive tweak */
-@media (max-width: 700px){
+@media (max-width: 620px){
   .about-image{ height:200px; max-width:260px; }
 }
