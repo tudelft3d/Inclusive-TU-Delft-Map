@@ -208,6 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const lod = item.dataset.lod;
             map.lodVis(lod);
             lodDropdown.style.display = 'none';
+
+            if (lod === 'lod_0') {
+                console.log('lod0');
+                map.setOutline('BuildingRoom','lod_0');
+            }
         });
     });
 
