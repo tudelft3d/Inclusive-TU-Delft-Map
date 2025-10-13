@@ -158,7 +158,7 @@ The current pipeline looks like this:
 2. Process 3DBAG data:
 
     ```bash
-    uv run python cli.py load_3dbag ../assets/processing_input/bag_geometry/subset.city.json ../assets/processing_output/db_input/3dbag.city.json -b ../assets/processing_input/attributes/3dbag_buildings_attributes.csv -s ../assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
+    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/db_input/3dbag.city.json -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
     ```
 
 3. Process custom geometry:

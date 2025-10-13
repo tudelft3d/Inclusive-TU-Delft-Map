@@ -6,7 +6,7 @@ from typing import Annotated, List, Optional
 import typer
 
 from bag_to_cj import Bag2Cityjson
-from cj_objects import CityJSONObject
+from cj_objects import CityJSONObject, CityJSONSpace
 from cj_to_gltf import Cityjson2Gltf
 from gltf_to_cj import (
     full_building_from_gltf,
@@ -224,16 +224,13 @@ def load_custom_building(
                 load_attributes_from_csv(csv_path=path, id_column=id_col)
             )
 
-        # print(all_attributes)
-
-        # Add the attributes to the CityJSON data
+        # Add the attributes to the CityJSON spaces
         for city_object in cj_file.city_objects:
-            for attributes in all_attributes:
-                city_object.add_attributes(
-                    new_attributes=attributes.get(
-                        city_object.attributes[CityJSONObject.space_id], {}
+            if isinstance(city_object, CityJSONSpace):
+                for attributes in all_attributes:
+                    city_object.add_attributes(
+                        new_attributes=attributes.get(city_object.space_id, {})
                     )
-                )
 
         # Load the units
         load_units_from_csv(
@@ -244,7 +241,7 @@ def load_custom_building(
         )
 
         # Check the correctness of the hierarchy
-        cj_file.check_objects_hierarchy()
+        cj_file.check_objects_hierarchy(n_components=2)
 
         # Write to CityJSON
         file_json = cj_file.to_json()

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
@@ -8,8 +10,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from cj_geometry import CityJSONGeometries, Geometry
-
-type CityJSONObjectSubclass = Building | BuildingPart | BuildingStorey | BuildingRoom | BuildingUnit | BuildingUnitContainer
 
 
 class CityJSONFile:
@@ -74,7 +74,7 @@ class CityJSONFile:
                 expected_components = n_components
             if len(comps) != expected_components:
                 raise RuntimeError(
-                    f"The number of connected components is {len(comps)} (expected {n_components})"
+                    f"The number of connected components is {len(comps)} (expected {expected_components})"
                 )
 
         # Ensure every edge is mirrored in the opposite list
@@ -158,15 +158,11 @@ class CityJSONFile:
 class CityJSONObject(ABC):
 
     type_name = "CityJSONObject"
-    space_id = "space_id"
-    unit_code = "code"
 
     def __init__(
         self,
         object_id: str,
         attributes: dict[str, Any] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
         geometries: Iterable[Geometry] | None = None,
     ) -> None:
         if attributes is not None:
@@ -182,21 +178,21 @@ class CityJSONObject(ABC):
 
         self.id = object_id
         self.attributes = attributes if attributes is not None else {}
-        self.parent_id = parent_id
-        self.children_ids = set(children_ids if children_ids is not None else [])
+        self.parent_id = None
+        self.children_ids: set[str] = set()
         self.geometries = list(geometries if geometries is not None else [])
 
     def __repr__(self) -> str:
         return f"{type(self)}(id={self.id}, parent_id={self.parent_id}, children_ids={self.children_ids})"
 
-    def set_parent(self, parent_id: str, replace: bool = False) -> None:
+    def _set_parent(self, parent_id: str, replace: bool = False) -> None:
         if self.parent_id is not None and not replace:
             raise RuntimeError(
                 "Parent id is already set. To replace it, set `replace` to True."
             )
         self.parent_id = parent_id
 
-    def add_child(self, child_id: str) -> None:
+    def _add_child(self, child_id: str) -> None:
         self.children_ids.add(child_id)
 
     def get_cityobject(self) -> dict[str, Any]:
@@ -206,6 +202,7 @@ class CityJSONObject(ABC):
             content_dict["parents"] = [self.parent_id]
         if len(self.children_ids) > 0:
             content_dict["children"] = list(self.children_ids)
+        # content_dict["children"] = list(self.children_ids)
         content_dict["attributes"] = self.attributes
         return content_dict
 
@@ -221,134 +218,217 @@ class CityJSONObject(ABC):
 
     @classmethod
     def add_parent_child(
-        cls: type, parent: CityJSONObjectSubclass, child: CityJSONObjectSubclass
+        cls, parent: CityJSONObjectSubclass, child: CityJSONObjectSubclass
     ) -> None:
-        parent.add_child(child.id)
-        child.set_parent(parent.id)
+        parent._add_child(child.id)
+        child._set_parent(parent.id)
+
+    @classmethod
+    def add_unit_space(cls, unit: BuildingUnit, space: CityJSONSpace) -> None:
+        unit._add_space(space.id)
+        space._add_unit(unit.id)
 
 
-class Building(CityJSONObject):
+class CityJSONSpace(CityJSONObject):
+
+    type_name = "CityJSONSpace"
+
+    def __init__(
+        self,
+        object_id: str,
+        space_id: str,
+        attributes: dict[str, Any] | None = None,
+        geometries: Iterable[Geometry] | None = None,
+    ) -> None:
+
+        super().__init__(
+            object_id=object_id,
+            attributes=attributes,
+            geometries=geometries,
+        )
+        self.space_id = space_id
+        self.add_attributes({"space_id": space_id})
+        self.parent_units: set[str] = set()
+
+    def _add_unit(self, new_unit_id: str) -> None:
+        self.parent_units.add(new_unit_id)
+
+    def get_cityobject(self) -> dict[str, Any]:
+        parent_units_key = "parent_units"
+        self.add_attributes({parent_units_key: self.parent_units})
+        content_dict = super().get_cityobject()
+        # Remove it from the attributes to ensure the object is unchanged
+        self.attributes.pop(parent_units_key)
+        return content_dict
+
+    @classmethod
+    def space_number_to_prefix(cls, number: str) -> str:
+        return f"Building_{number.split(".")[0]}"
+
+    @classmethod
+    def space_number_to_id(cls, number: str) -> str:
+        prefix = cls.space_number_to_prefix(number=number)
+        number.replace(".", ":")
+        number.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{number}"
+
+
+class Building(CityJSONSpace):
 
     type_name = "Building"
 
     def __init__(
         self,
         object_id: str,
+        space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Iterable[Geometry] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
+            space_id=space_id,
             attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
             geometries=geometries,
         )
 
 
-class BuildingPart(CityJSONObject):
+class BuildingPart(CityJSONSpace):
 
     type_name = "BuildingPart"
 
     def __init__(
         self,
         object_id: str,
+        space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Iterable[Geometry] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
+            space_id=space_id,
             attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
             geometries=geometries,
         )
 
 
-class BuildingStorey(CityJSONObject):
+class BuildingStorey(CityJSONSpace):
 
     type_name = "BuildingStorey"
 
     def __init__(
         self,
         object_id: str,
+        space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Iterable[Geometry] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
+            space_id=space_id,
             attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
             geometries=geometries,
         )
 
 
-class BuildingRoom(CityJSONObject):
+class BuildingRoom(CityJSONSpace):
 
     type_name = "BuildingRoom"
 
     def __init__(
         self,
         object_id: str,
+        space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Iterable[Geometry] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
+            space_id=space_id,
             attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
             geometries=geometries,
-        )
-
-
-class BuildingUnit(CityJSONObject):
-
-    type_name = "BuildingUnit"
-    unit_children = "unit_spaces"
-    space_parents = "parent_units"
-
-    def __init__(
-        self,
-        object_id: str,
-        attributes: dict[str, Any] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
-    ) -> None:
-        super().__init__(
-            object_id=object_id,
-            attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
-            geometries=None,
         )
 
 
 class BuildingUnitContainer(CityJSONObject):
 
-    type_name = "BuildingUnitContainer"
+    type_name = "CityObjectGroup"
     main_parent = "BuildingUnits"
 
     def __init__(
         self,
         object_id: str,
+        unit_code: str,
         attributes: dict[str, Any] | None = None,
-        parent_id: str | None = None,
-        children_ids: list[str] | None = None,
     ) -> None:
         super().__init__(
             object_id=object_id,
             attributes=attributes,
-            parent_id=parent_id,
-            children_ids=children_ids,
             geometries=None,
         )
+        self.unit_code = unit_code
+        self.add_attributes({"code": unit_code})
+
+    @classmethod
+    def unit_code_to_id(cls, code: str, prefix: str) -> str:
+        code.replace(".", ":")
+        code.replace("-", "_")
+        prefix.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{code}"
+
+
+class BuildingUnit(BuildingUnitContainer):
+
+    type_name = "BuildingUnit"
+
+    def __init__(
+        self,
+        object_id: str,
+        unit_code: str,
+        attributes: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            object_id=object_id,
+            unit_code=unit_code,
+            attributes=attributes,
+        )
+        self.unit_spaces: set[str] = set()
+
+    def _add_space(self, new_space_id: str) -> None:
+        self.unit_spaces.add(new_space_id)
+
+    def get_cityobject(self) -> dict[str, Any]:
+        unit_spaces_key = "unit_spaces"
+        self.add_attributes({unit_spaces_key: self.unit_spaces})
+        content_dict = super().get_cityobject()
+        # Remove it from the attributes to ensure the object is unchanged
+        self.attributes.pop(unit_spaces_key)
+        return content_dict
+
+    @classmethod
+    def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
+        code.replace(".", ":")
+        code.replace("-", "_")
+        prefix.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{code}@{str(number)}"
+
+
+class BuildingRoot(CityJSONObject):
+
+    type_name = "CityObjectGroup"
+
+    def __init__(
+        self,
+        object_id: str,
+        attributes: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            object_id=object_id,
+            attributes=attributes,
+            geometries=None,
+        )
+
+
+CityJSONSpaceSubclass = Building | BuildingPart | BuildingStorey | BuildingRoom
+CityJSONObjectSubclass = (
+    CityJSONSpaceSubclass | BuildingUnit | BuildingUnitContainer | BuildingRoot
+)

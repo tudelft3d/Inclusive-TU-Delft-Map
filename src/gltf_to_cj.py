@@ -13,13 +13,16 @@ from cj_objects import (
     Building,
     BuildingPart,
     BuildingRoom,
+    BuildingRoot,
     BuildingStorey,
     BuildingUnit,
     BuildingUnitContainer,
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
+    CityJSONSpaceSubclass,
 )
+from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
 from geometry_utils import flatten_trimesh, orient_polygons_z_up
 
 
@@ -46,71 +49,6 @@ def _get_scene_geometry_from_id(
     return geometry
 
 
-# def extract_objects_first_level_gltf(gltf_path: Path) -> dict[str, trimesh.Trimesh]:
-#     # Load the scene
-#     scene = trimesh.load_scene(gltf_path)
-#     nodes_names: list[str] = scene.graph.nodes_geometry
-
-#     geometries = {}
-
-#     for node_name in nodes_names:
-#         geometry = get_scene_geometry_from_id(scene=scene, object_id=node_name)
-#         geometries[node_name] = geometry
-
-#     return geometries
-
-
-# def building_parts_from_gltf(gltf_path: Path, id_prefix: str) -> list[BuildingPart]:
-#     geometries_3D = extract_objects_first_level_gltf(gltf_path=gltf_path)
-#     bdg_parts: list[BuildingPart] = []
-
-#     for bdg_part_name, geometry_3D in geometries_3D.items():
-#         # Fix the 3D geometry
-#         geometry_3D.process(validate=True)
-#         geometry_3D.fill_holes()
-#         geometry_3D.fix_normals()
-
-#         # Build the geometry part
-#         bdg_part_geometry_2D = MultiSurface.from_mesh(
-#             lod=0, mesh=flatten_trimesh(geometry_3D)
-#         )
-#         bdg_part_geometry_3D = MultiSurface.from_mesh(lod=2, mesh=geometry_3D)
-
-#         # Extract all the triangles into Polygons
-#         bdg_part_id = id_prefix + bdg_part_name
-#         room = BuildingPart(
-#             object_id=bdg_part_id,
-#             attributes={"name": bdg_part_name},
-#             geometries=[bdg_part_geometry_2D, bdg_part_geometry_3D],
-#         )
-#         bdg_parts.append(room)
-
-#     return bdg_parts
-
-
-# def building_rooms_from_gltf(gltf_path: Path, id_prefix: str) -> list[BuildingRoom]:
-#     geometries = extract_objects_first_level_gltf(gltf_path=gltf_path)
-#     rooms: list[BuildingRoom] = []
-
-#     for room_name, geometry in geometries.items():
-#         # Fix the orientation
-#         orient_polygons_z_up(geometry)
-
-#         # Build the geometry part
-#         room_geometry = MultiSurface.from_mesh(lod=0, mesh=geometry)
-
-#         # Extract all the triangles into Polygons
-#         room_id = id_prefix + room_name
-#         room = BuildingRoom(
-#             object_id=room_id,
-#             attributes={"name": room_name},
-#             geometries=[room_geometry],
-#         )
-#         rooms.append(room)
-
-#     return rooms
-
-
 def _geom_and_name_from_scene_id(
     scene: trimesh.Scene, object_id: str
 ) -> tuple[Geometry, str]:
@@ -120,45 +58,6 @@ def _geom_and_name_from_scene_id(
     if lod == 0:
         orient_polygons_z_up(mesh)
     return MultiSurface.from_mesh(lod=lod, mesh=mesh), name
-
-
-def _csv_format_type(value: Any, column_type: str) -> Any:
-    if column_type == "str":
-        return str(value)
-    elif column_type == "float":
-        if value == "":
-            return None
-        return float(value.replace(",", "."))
-    elif column_type == "int":
-        if value == "":
-            return None
-        return int(value)
-    elif column_type.startswith("list"):
-        if value == "":
-            return []
-        list_info = column_type[len("list") :]
-        separator = list_info[0]
-        other_type = list_info[1:]
-        return [
-            _csv_format_type(value=v, column_type=other_type)
-            for v in value.split(separator)
-        ]
-    else:
-        raise NotImplementedError(
-            f"Support for type '{column_type}' is not implemented yet."
-        )
-
-
-def _csv_get_row_value(row: dict[str, Any], column: str) -> tuple[str, Any]:
-    value = row[column]
-    column_split = column.split(" [")
-    if len(column_split) != 2:
-        raise RuntimeError(
-            f"The column name should look like this: '<Name> [<type>]', but it is '{column}'."
-        )
-    column_type = column_split[1][:-1]
-    column_name = column_split[0]
-    return column_name, _csv_format_type(value=value, column_type=column_type)
 
 
 def _unit_code_to_parent(code: str) -> str:
@@ -172,41 +71,17 @@ def _unit_code_to_parent(code: str) -> str:
         return code[:-2]
 
 
-def _unit_code_to_id(code: str, prefix: str) -> str:
-    return f"{BuildingUnitContainer.type_name}-{prefix}-{code}"
-
-
 def load_attributes_from_csv(
     csv_path: Path, id_column: str
 ) -> dict[str, dict[str, Any]]:
-    attributes = {}
-    with open(csv_path, encoding="utf-8-sig") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=";")
-        for row in reader:
-            # Skip empty rows
-            if not any(cell != "" for cell in row.values()):
-                continue
-            # Process the row
-            col_name, id_value = _csv_get_row_value(row=row, column=id_column)
-            if id_value in attributes:
-                raise RuntimeError(
-                    f"Column {id_column} cannot be they key, because multiple rows share the same value (e.g. {id_value})."
-                )
-            row_attributes = {}
-            for col_name_type in row.keys():
-                # Skip columns that don't have a type
-                if col_name_type.find(" [") == -1:
-                    continue
-                # Add the column and its value to the attributes
-                col_name, col_value = _csv_get_row_value(row=row, column=col_name_type)
-                if col_name in row_attributes:
-                    raise RuntimeError(
-                        f"Two columns have the same name '{col_name}' in {str(csv_path)}"
-                    )
-                row_attributes[col_name] = col_value
-
-            attributes[id_value] = row_attributes
-    return attributes
+    attributes_all, specific_values_all = csv_read_attributes(
+        csv_path=csv_path, specific_columns=(id_column,)
+    )
+    id_to_attributes: dict[str, dict[str, Any]] = {}
+    for i in range(len(attributes_all)):
+        _, id_value = specific_values_all[i][0]
+        id_to_attributes[id_value] = attributes_all[i]
+    return id_to_attributes
 
 
 def load_units_from_csv(
@@ -216,52 +91,43 @@ def load_units_from_csv(
     spaces_column: str,
 ) -> None:
     root_pos = cj_file.get_root_position()
-    prefix_ids = cj_file.city_objects[root_pos].id.replace("-", "_")
+    root = cj_file.city_objects[root_pos]
+    if not isinstance(root, Building):
+        raise RuntimeError(
+            f"The root of the `cj_file` should be a Building, not a {type(root)}"
+        )
+    prefix = Building.space_number_to_id(number=root.space_id)
 
     all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
 
     # Process the CSV file to find all the units
-    with open(csv_path, encoding="utf-8-sig") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=";")
-        for row in reader:
-            # Skip empty rows
-            if not any(cell != "" for cell in row.values()):
-                continue
-            # Process the row
-            code_column_name, code_value = _csv_get_row_value(
-                row=row, column=code_column
-            )
+    unit_to_spaces: dict[str, list[str]] = {}
+    specific_columns = (code_column, spaces_column)
+    attributes_all, specific_values_all = csv_read_attributes(
+        csv_path=csv_path, specific_columns=specific_columns
+    )
+    for attributes, specific_values in zip(attributes_all, specific_values_all):
+        _, unit_code = specific_values[0]
+        _, unit_spaces = specific_values[1]
 
-            unit_container_id = _unit_code_to_id(code=code_value, prefix=prefix_ids)
-            unit_id = f"{unit_container_id}@{len(all_units[code_value])}"
+        current_units_same_code = len(all_units[unit_code])
+        unit_id = BuildingUnit.unit_code_to_id(
+            code=unit_code, prefix=prefix, number=current_units_same_code
+        )
 
-            # Load the columns that contain a type as attributes
-            attributes = {}
-            for col_name_type in row.keys():
-                # Skip columns that don't have a type
-                if col_name_type.find(" [") == -1:
-                    continue
-                # Add the column and its value to the attributes
-                col_name, col_value = _csv_get_row_value(row=row, column=col_name_type)
-                # Rename the columns used specifically
-                if col_name_type == spaces_column:
-                    col_name = BuildingUnit.unit_children
-                elif col_name_type == code_column:
-                    col_name = CityJSONObject.unit_code
-                if col_name in attributes:
-                    raise RuntimeError(
-                        f"Two columns have the same name '{col_name}' in {str(csv_path)}"
-                    )
-                attributes[col_name] = col_value
-
-            bdg_unit = BuildingUnit(object_id=unit_id, attributes=attributes)
-            all_units[code_value].append(bdg_unit)
+        unit = BuildingUnit(
+            object_id=unit_id,
+            unit_code=unit_code,
+            attributes=attributes,
+        )
+        unit_to_spaces[unit.id] = unit_spaces
+        all_units[unit_code].append(unit)
 
     # Add the missing hierarchy in the codes
+    main_container_id = BuildingUnitContainer.unit_code_to_id(code="", prefix=prefix)
     all_unit_containers: dict[str, BuildingUnitContainer] = {
         BuildingUnitContainer.main_parent: BuildingUnitContainer(
-            object_id=f"{BuildingUnitContainer.main_parent}-{prefix_ids}",
-            attributes={CityJSONObject.unit_code: ""},
+            object_id=main_container_id, unit_code=""
         )
     }
     current_codes = list(all_units.keys())
@@ -270,17 +136,18 @@ def load_units_from_csv(
             if not code in all_units.keys():
                 all_units[code] = []
             if not code in all_unit_containers.keys():
-                obj_id = _unit_code_to_id(code=code, prefix=prefix_ids)
+                obj_id = BuildingUnitContainer.unit_code_to_id(code=code, prefix=prefix)
                 all_unit_containers[code] = BuildingUnitContainer(
-                    object_id=obj_id, attributes={CityJSONObject.unit_code: code}
+                    object_id=obj_id, unit_code=code
                 )
             code = _unit_code_to_parent(code=code)
 
     # Extract all the spaces from the given CityJSON file
     spaces_ids_to_pos = {}
     for i, cj_obj in enumerate(cj_file.city_objects):
-        space_id = cj_obj.attributes[CityJSONObject.space_id]
-        spaces_ids_to_pos[space_id] = i
+        # We seach for the actual spaces
+        if isinstance(cj_obj, CityJSONSpaceSubclass):
+            spaces_ids_to_pos[cj_obj.space_id] = i
 
     # Apply the parent-child relationships of unit containers
     for code, unit_container in all_unit_containers.items():
@@ -302,18 +169,11 @@ def load_units_from_csv(
     # Add the links from spaces to the units they belong in
     all_units_flattened = [unit for units in all_units.values() for unit in units]
     for unit in all_units_flattened:
-        for space_id in unit.attributes[BuildingUnit.unit_children]:
+        for space_id in unit_to_spaces[unit.id]:
             cj_file_pos = spaces_ids_to_pos[space_id]
-            if (
-                BuildingUnit.space_parents
-                not in cj_file.city_objects[cj_file_pos].attributes
-            ):
-                cj_file.city_objects[cj_file_pos].add_attributes(
-                    {BuildingUnit.space_parents: []}
-                )
-            cj_file.city_objects[cj_file_pos].attributes[
-                BuildingUnit.space_parents
-            ].append(unit.id)
+            CityJSONObject.add_unit_space(
+                unit=unit, space=cj_file.city_objects[cj_file_pos]
+            )
 
     cj_file.add_cityjson_objects(all_unit_containers.values())
     cj_file.add_cityjson_objects(
@@ -366,31 +226,23 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
         hierarchy_level = name.count(".")
         if hierarchy_level == 0:
             obj_func = Building
-            obj_prefix = "Building-"
         elif hierarchy_level == 1:
             obj_func = BuildingPart
-            obj_prefix = "BuildingPart-"
         elif hierarchy_level == 2:
             obj_func = BuildingStorey
-            obj_prefix = "BuildingStorey-"
         elif hierarchy_level == 3:
             obj_func = BuildingRoom
-            obj_prefix = "BuildingRoom-"
         else:
             raise RuntimeError(f"Unexpected format for an object name: '{name}'")
 
-        # Replace the dots in the name by hyphens
-        obj_id = name.replace(".", "-")
-
-        # Add the type to the object key
-        obj_id = f"{obj_prefix}{obj_id}"
-
-        # Store the initial key as an attribute
-        attributes = {CityJSONObject.space_id: name}
+        obj_id = obj_func.space_number_to_id(number=name)
 
         all_objects_cj[name] = obj_func(
-            object_id=obj_id, geometries=geoms, attributes=attributes
+            object_id=obj_id, space_id=name, geometries=geoms
         )
+
+    # # Add the root group
+    # root = BuildingRoot(object_id=f"Root-08")
 
     # Apply the parent-child relationships
     for obj_name in all_objects_cj.keys():
@@ -400,11 +252,14 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
             CityJSONObject.add_parent_child(
                 parent=all_objects_cj[obj_parent_name], child=all_objects_cj[obj_name]
             )
+        # else:
+        #     CityJSONObject.add_parent_child(parent=root, child=all_objects_cj[obj_name])
 
     cj_file = CityJSONFile(
         scale=np.array([0.00001, 0.00001, 0.00001], dtype=np.float64),
         translate=np.array([0, 0, 0], dtype=np.float64),
     )
+    # cj_file.add_cityjson_objects([root])
     cj_file.add_cityjson_objects(all_objects_cj.values())
 
     return cj_file
