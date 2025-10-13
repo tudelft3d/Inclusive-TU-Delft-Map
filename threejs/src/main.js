@@ -23,17 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     // map.lodToggle('lod_0');
 
-    document.getElementById('zoom-in').addEventListener('click', (event) => {
+    document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
-        event.preventDefault;
+        event.preventDefault();
         map.cameraManager.zoomIn();
     });
-    document.getElementById('zoom-out').addEventListener('click', (event) => {
+
+    document.getElementById('zoom-out-btn').addEventListener('click', (event) => {
         event.stopPropagation();
+        event.preventDefault();
         map.cameraManager.zoomOut();
     });
 
-    document.getElementById('orthographic-btn').addEventListener('click', () => {
+    document.getElementById('view-toggle-btn').addEventListener('click', () => {
         map.cameraManager.toggle_orthographic();
     });
 
@@ -62,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(search_results);
 
         var ul = document.createElement("ul");
-        
+
         intermediateResults.innerHTML = '';
 
         search_results = search_results.map((element) => {return element.item.attributes["space_id"]});
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         intermediateResults.appendChild(ul);
     }
 
-    
+
 
     searchBar.addEventListener('keyup', (event) => {
 
@@ -129,11 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // These two make sure the suggestions are hidden,
     // but they also cause the suggestions to disappear before they can be clicked
-    searchBar.addEventListener("focusout", (event) => { 
+    searchBar.addEventListener("focusout", (event) => {
         //intermediateResults.style.visibility = 'hidden';
     });
 
-    searchBar.addEventListener("focusin", (event) => { 
+    searchBar.addEventListener("focusin", (event) => {
         //intermediateResults.style.visibility = 'visible';
     });
 
@@ -163,62 +165,96 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const layersBtn = document.getElementById('layers-btn');
+    const layersDropdown = document.getElementById('layers-dropdown');
 
-    const thematicBtn = document.getElementById('thematic-btn');
-    const thematicDropdown = document.getElementById('thematic-dropdown');
-
-    thematicBtn.addEventListener('click', (event) => {
+    layersBtn.addEventListener('click', (event) => {
         event.stopPropagation();
-        if (thematicDropdown.style.display === 'none' || thematicDropdown.style.display === '') {
-            thematicDropdown.style.display = 'block';
+        if (layersDropdown.style.display === 'none' || layersDropdown.style.display === '') {
+            layersDropdown.style.display = 'block';
         } else {
-            thematicDropdown.style.display = 'none';
+            layersDropdown.style.display = 'none';
         }
     });
 
     document.addEventListener('click', () => {
-        thematicDropdown.style.display = 'none';
+        layersDropdown.style.display = 'none';
     });
 
-    const colorBlindBtn = document.getElementById('colorBlind-btn');
-    const colorBlindDropdown = document.getElementById('colorBlind-dropdown');
+    const accessibilityBtn = document.getElementById('accessibility-btn');
+    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
 
-    colorBlindBtn.addEventListener('click', (event) => {
+    accessibilityBtn.addEventListener('click', (event) => {
         event.stopPropagation();
-        if (colorBlindDropdown.style.display === 'none' || colorBlindDropdown.style.display === '') {
-            colorBlindDropdown.style.display = 'block';
+        if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
+            accessibilityDropdown.style.display = 'block';
         } else {
-            colorBlindDropdown.style.display = 'none';
+            accessibilityDropdown.style.display = 'none';
         }
     });
 
+    document.addEventListener('click', () => {
+        accessibilityDropdown.style.display = 'none';
+    });
 
+    // RESET VIEW BUTTON
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            map.cameraManager.resetView();
+        });
+    }
+
+    // COMPASS BUTTON
+    const compassBtn = document.getElementById('compass-btn');
+    if (compassBtn) {
+        compassBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            map.cameraManager.resetNorth();
+        });
+    }
+
+    // LOCATION BUTTON
+    const locationBtn = document.getElementById('location-btn');
+    if (locationBtn) {
+        locationBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // To be added here
+            console.log('Location clicked');
+        });
+    }
+
+
+
+    // LOD DROPDOWN - Commented out
+    /*
     const lodBtn = document.getElementById('lod-btn');
     const lodDropdown = document.getElementById('lod-dropdown');
-    lodBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
-            lodDropdown.style.display = 'block';
-        } else {
-            lodDropdown.style.display = 'none';
-        }
-    });
 
-    document.addEventListener('click', () => {
-        lodDropdown.style.display = 'none';
-    });
+    if (lodBtn && lodDropdown) {
+        lodBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
+                lodDropdown.style.display = 'block';
+            } else {
+                lodDropdown.style.display = 'none';
+            }
+        });
 
-    lodDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const lod = item.dataset.lod;
-            map.lodVis(lod);
+        document.addEventListener('click', () => {
             lodDropdown.style.display = 'none';
         });
-    });
+
+        lodDropdown.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lod = item.dataset.lod;
+                map.lodVis(lod);
+                lodDropdown.style.display = 'none';
+            });
+        });
+    }
+    */
 
 });
-
-
-
-
