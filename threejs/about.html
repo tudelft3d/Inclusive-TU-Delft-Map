@@ -1,23 +1,91 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>About - TU Delft Inclusive Campus Map</title>
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="./styles/about.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/about.css" rel="stylesheet" type="text/css">
 
     <script type="module" src="./src/header.js" defer></script>
-    <!-- <script type="module" src="./src/about.js"></script> -->
-    <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous" defer></script>
 </head>
-
 <body>
+    <!-- header injected here by src/header.js (same approach as feedback.html) -->
     <div id="site-header"></div>
-</body>
 
+    <main>
+        <section class="journey" aria-labelledby="journey_title">
+            <div class="container">
+                <div class="journey-text">
+                    <h1 id="journey_title">The start towards Inclusive 3D Campus Map</h1>
+                    <p class="lead"> The Inclusive 3D Campus Map began as a collaborative project by five Master’s students in Geomatics from TU Delft during the elective course GEOIT1501. </p>
+
+                    <p>Guided by project supervisors Gina Stavropoulou and Bastiaan van Loenen, and working together with TU Delft Diversity & Inclusion Office, we formed a project’s aim: to develop a comprehensive, accessible and truly inclusive map that serves the needs of every student, staff member, and visitor at TU Delft.</p>
+                </div>
+
+                <div class="journey-image" aria-hidden="true">
+                    <img src="./assets/threejs/graphics/Tu_Delft_Map3D_Logo.svg"
+                         alt="TU Delft 3D Map logo"
+                         class="about-image"
+                         role="img"
+                         aria-label="TU Delft 3D Map logo">
+                </div>
+            </div>
+
+        </section>
+        <section class="continuous-journey" aria-labelledby="continuing_journey">
+            <div class="container">
+                <div class="journey-text">
+                    <h1 id="continuing_journey">A Continuous Approach</h1>
+                    <p class="lead">Creating a detailed, inclusive map that covers the entire TU Delft campus is an extensive effort requiring time. Due to these constraints, the map you see today is a work in continuous development.</p>
+                    <p class="lead">We began by mapping the interior of the Faculty of Architecture (BK) building as our initial proof-of-concept. Our aim is to continuously add more interior data for all campus buildings as time goes on, expanding the map's coverage building by building. Additionally, we are committed to continuously improving our map through the valuable feedback we receive from our users.</p>
+                </div>
+
+                <div class="journey-image" aria-hidden="true">
+                    <img src="./assets/threejs/graphics/Continous process.svg"
+                         alt="Infographic showing the continuous mapping process"
+                         class="about-image"
+                         role="img"
+                         aria-label="Infographic showing the continuous mapping process">
+                </div>
+            </div>
+        </section>
+
+        <section class="core-values" aria-labelledby="values_title">
+            <div class="container narrow">
+                <h1 id="values_title">Built on Principles: Our Core Values</h1>
+                <p class="sublead">Our map is guided by three core values that serve as a guidance for our map to foster a welcoming and accessible campus for all members of the TU Delft community through participatory design.</p>
+
+                <div class="values-grid" role="list">
+                    <article class="value-card" role="listitem" aria-labelledby="v1_title">
+                        <div class="icon">
+                            <img src="./assets/threejs/graphics/diversity.svg" alt="" class="value-icon" aria-hidden="true">
+                        </div>
+                        <h3 id="v1_title">Diversity</h3>
+                        <p>Recognizing and representing the diverse backgrounds and needs of our users.</p>
+                    </article>
+
+                    <article class="value-card" role="listitem" aria-labelledby="v2_title">
+                        <div class="icon">
+                            <img src="./assets/threejs/graphics/equity.svg" alt="" class="value-icon" aria-hidden="true">
+                        </div>
+                        <h3 id="v2_title">Equity</h3>
+                        <p>Ensuring fair access to our map for all users, regardless of their background or abilities.</p>
+                    </article>
+
+                    <article class="value-card" role="listitem" aria-labelledby="v3_title">
+                        <div class="icon">
+                            <img src="./assets/threejs/graphics/inclusion.svg" alt="" class="value-icon" aria-hidden="true">
+                        </div>
+                        <h3 id="v3_title">Inclusion</h3>
+                        <p>Creating a welcoming environment for all users, ensuring they feel represented and valued.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
 </html>
