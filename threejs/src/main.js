@@ -7,21 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = new Map(container);
 
-    const searcher = new Searcher();
-    const buildingView = new BuildingView(map);
+    // map.loadGLTF('assets/campus/geom/model.glb');
+    // map.loadGLTF('assets/campus/geom/geometry.glb');
+    map.loadGLTF('assets/threejs/buildings/geometry.glb');
 
-    buildingView.set_target("08");
+    const buildingView = new BuildingView(map);
+    const searcher = new Searcher();
 
     // The amount of time the searchbar will wait before searcing in miliseconds
     const search_delay = 250;
 
     // The number of results that are returned for partials searches
     const search_result_count = 5;
-
-    // map.loadGLTF('assets/campus/geom/model.glb');
-    // map.loadGLTF('assets/campus/geom/geometry.glb');
-    map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    // map.lodToggle('lod_0');
 
     document.getElementById('zoom-in').addEventListener('click', (event) => {
         event.stopPropagation();
@@ -36,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('orthographic-btn').addEventListener('click', () => {
         map.cameraManager.toggle_orthographic();
     });
-
 
     const searchBar = document.getElementById('search');
     const intermediateResults = document.getElementById("intermediate_results");
@@ -58,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Since we are adding html elements, we could in theory add entire subviews to the
     // intermediate results, like a little picture of the result or other data.
     function show_intermediate_results(search_results) {
-
-        console.log(search_results);
 
         var ul = document.createElement("ul");
         

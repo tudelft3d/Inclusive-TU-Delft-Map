@@ -34,7 +34,6 @@ export class Map {
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
-
     }
 
     _initScene() {
@@ -228,6 +227,8 @@ export class Map {
 
             const object = this.picker.picked;
 
+            console.log(object);
+
             this.zoom_on_object(object);
 
         } else {
@@ -301,8 +302,6 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
-            console.log("gltf", gltf);
-
             // load only lod2 on startup
             this.model = objs;
             this.lodVis();
@@ -317,6 +316,7 @@ export class Map {
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
+
         }, undefined, function (error) {
             console.error(error);
         });

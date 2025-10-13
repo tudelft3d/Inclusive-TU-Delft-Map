@@ -91,9 +91,7 @@ export class BuildingView {
 
     		const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
 
-    		const threejs_object_name = space_id.split('.').join("-").concat("-lod_0");
-
-    		console.log(threejs_object_name);
+    		const threejs_object_name = space_id.split('.').join("").concat("-lod_0");
 
     		room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
 
