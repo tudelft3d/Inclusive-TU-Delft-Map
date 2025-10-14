@@ -12,6 +12,7 @@ export class OutlineManager {
         this.scene = scene;
         this.composers = [];
         this.cameras = [];
+        this.outlinePasses = [];
         this.selectedObjects = [];
         this._resizeListener = () => this.onResize();
         window.addEventListener('resize', this._resizeListener);
@@ -20,18 +21,21 @@ export class OutlineManager {
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
     render(deltaTime, cameraManager, renderer) {
-        var currentComposer = null;
+        var currentIndex = null;
         for (var i = 0; i < this.composers.length; i++) {
-            var composer = this.composers[i];
             var camera = this.cameras[i];
             if (camera == cameraManager.camera) {
-                currentComposer = composer;
+                currentIndex = i;
             }
         }
-        if (!currentComposer && (this.composers.length < 3)) {
-            currentComposer = this._create_outline_pass(cameraManager, renderer);
+        if (!currentIndex && (this.composers.length < 3)) {
+            this._create_outline_pass(cameraManager, renderer);
+            currentIndex = this.composers.length - 1;
         }
-        currentComposer.render(deltaTime);
+        var composer = this.composers[currentIndex];
+        var outlinePass = this.outlinePasses[currentIndex];
+        outlinePass.selectedObjects = this.selectedObjects;
+        composer.render(deltaTime);
     }
 
     _create_outline_pass(cameraManager, renderer) {
@@ -59,6 +63,7 @@ export class OutlineManager {
 
         this.composers.push(composer);
         this.cameras.push(cameraManager.camera);
+        this.outlinePasses.push(outlinePass);
         return composer;
     }
 
@@ -66,12 +71,10 @@ export class OutlineManager {
         console.log(objects);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
-        this.outlinePass.selectedObjects = objects;
     }
 
     clearOutline() {
         this.selectedObjects = [];
-        this.outlinePass.selectedObjects = [];
     }
 
     // below two functions are necessary when browser window is resized
