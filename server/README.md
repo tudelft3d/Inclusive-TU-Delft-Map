@@ -108,12 +108,14 @@ For everything related to the database, see [/database/README.md](/database/READ
 
     ```bash
     ssh inclusivemap
+    cd Inclusive-TU-Delft-Map/threejs
     ```
 
 3. Create the new website content:
 
     ```bash
-    cd Inclusive-TU-Delft-Map/threejs
+    git pull
+    npm ci
     npm run build
     ```
 

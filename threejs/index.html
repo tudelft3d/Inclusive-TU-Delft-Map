@@ -7,6 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="icon" type="image/svg" href="./assets/threejs/graphics/website_icon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
@@ -31,11 +32,13 @@
     <div id="top-right-sidebar-controls">
 
         <div id="reset-container">
-            <button id="reset-btn" data-tooltip="Reset view"><img src="assets/threejs/graphics/icons/home.svg"/></button>
+            <button id="reset-btn" data-tooltip="Reset view"><img
+                    src="assets/threejs/graphics/icons/home.svg" /></button>
         </div>
 
         <div id="accessibility-container">
-            <button id="accessibility-btn" data-tooltip="Accessibility options"><img src="assets/threejs/graphics/icons/accessibility.svg"/></button>
+            <button id="accessibility-btn" data-tooltip="Accessibility options"><img
+                    src="assets/threejs/graphics/icons/accessibility.svg" /></button>
             <div id="accessibility-dropdown">
                 <a href="#">Red-Green Color Blind</a>
                 <a href="#">Blue-Yellow Color Blind</a>
@@ -44,7 +47,8 @@
         </div>
 
         <div id="basemap-container">
-            <button id="basemap-btn" data-tooltip="Change base map"><img src="assets/threejs/graphics/icons/map.svg"/></button>
+            <button id="basemap-btn" data-tooltip="Change base map"><img
+                    src="assets/threejs/graphics/icons/map.svg" /></button>
             <div id="basemap-dropdown">
                 <a href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
                     data-layer="Actueel_orthoHR">Satellite Imagery</a>
@@ -56,12 +60,13 @@
         </div>
 
         <div id="layers-container">
-            <button id="layers-btn" data-tooltip="Select layers"><img src="assets/threejs/graphics/icons/layers.svg"/></button>
+            <button id="layers-btn" data-tooltip="Select layers"><img
+                    src="assets/threejs/graphics/icons/layers.svg" /></button>
             <div id="layers-dropdown">
-                <a href="#">Accessible Entrances</a>
-                <a href="#">Elevators</a>
-                <a href="#">Parking</a>
-                <a href="#">Restrooms</a>
+                <a href="#" data-code="">Accessible Entrances</a>
+                <a href="#" data-code="">Elevators</a>
+                <a href="#" data-code="">Parking</a>
+                <a href="#" data-code="S1">Restrooms</a>
             </div>
         </div>
 
@@ -71,22 +76,41 @@
     <div id="bottom-right-sidebar-controls">
 
         <div id="compass-container">
-            <button id="compass-btn" data-tooltip="Reset compass"><img src="assets/threejs/graphics/icons/compass.svg"/></button>
+            <button id="compass-btn" data-tooltip="Reset compass"><img
+                    src="assets/threejs/graphics/icons/compass.svg" /></button>
         </div>
 
         <div id="view-toggle-container">
-            <button id="view-toggle-btn" data-tooltip="Toggle 3D/2D view"><img src="assets/threejs/graphics/icons/cube.svg"/></button>
+            <button id="view-toggle-btn" data-tooltip="Toggle 3D/2D view"><img
+                    src="assets/threejs/graphics/icons/cube.svg" /></button>
         </div>
 
         <div id="location-container">
-            <button id="location-btn" data-tooltip="Find my location"><img src="assets/threejs/graphics/icons/locate.svg"/></button>
+            <button id="location-btn" data-tooltip="Find my location"><img
+                    src="assets/threejs/graphics/icons/locate.svg" /></button>
         </div>
 
         <div id="zoom-controls">
-            <button id="zoom-in-btn" data-tooltip="Zoom in"><img src="assets/threejs/graphics/icons/plus-sign.svg"/></button>
-            <button id="zoom-out-btn" data-tooltip="Zoom out"><img src="assets/threejs/graphics/icons/minus-sign.svg"/></button>
+            <button id="zoom-in-btn" data-tooltip="Zoom in"><img
+                    src="assets/threejs/graphics/icons/plus-sign.svg" /></button>
+            <button id="zoom-out-btn" data-tooltip="Zoom out"><img
+                    src="assets/threejs/graphics/icons/minus-sign.svg" /></button>
         </div>
 
+        
+
+    </div>
+
+    <!-- BOTTOM LEFT SIDEBAR CONTROLS -->
+    <div id="bottom-left-sidebar-controls">
+        <div id="bv-controls">
+            <button id="bv-btn"><i class="fa-solid fa-street-view"></i></i></button>
+        </div>
+
+        <div id="bv-storey-controls">
+            <button id="bv-storey-btn"><i class="fa-solid fa-circle-info" alt="bv"></i></button>
+            <div id="bv-dropdown"></div>
+        </div>
     </div>
 
     <div id="scene-container">

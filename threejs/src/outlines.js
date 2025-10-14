@@ -7,55 +7,83 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 
 export class OutlineManager {
- 
-    constructor(scene, camera, renderer) {
+
+    constructor(scene) {
         this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
-
-        this.composer = new EffectComposer(renderer);
-
-        this.renderPass = new RenderPass(scene, camera);
-        this.composer.addPass(this.renderPass);
-
-        this.outlinePass = new OutlinePass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            scene,
-            camera
-        );
-
-        // default styling
-        this.outlinePass.edgeStrength = 5;
-        this.outlinePass.edgeGlow = 0.25;
-        this.outlinePass.edgeThickness = 0.3;
-        this.outlinePass.visibleEdgeColor.set('#ffffff');
-        this.outlinePass.hiddenEdgeColor.set('#ffffff');
-
-        this.composer.addPass(this.outlinePass);
-
-        this.gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
-        this.composer.addPass(this.gammaCorrectionPass);
-
+        this.composers = [];
+        this.cameras = [];
+        this.outlinePasses = [];
         this.selectedObjects = [];
+        this.style = {
+            edgeStrength: 5,
+            edgeGlow: 0.25,
+            edgeThickness: 0.3,
+            visibleEdgeColor: '#ffffff',
+            hiddenEdgeColor: '#ffffff'
+        };
         this._resizeListener = () => this.onResize();
         window.addEventListener('resize', this._resizeListener);
     }
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
-    render(deltaTime) {
-        this.composer.render(deltaTime);
+    render(deltaTime, cameraManager, renderer) {
+        var currentIndex = null;
+        for (var i = 0; i < this.composers.length; i++) {
+            var camera = this.cameras[i];
+            if (camera == cameraManager.camera) {
+                currentIndex = i;
+            }
+        }
+        if (currentIndex === null) {
+            this._create_outline_pass(cameraManager, renderer);
+            currentIndex = this.composers.length - 1;
+        }
+        var composer = this.composers[currentIndex];
+        var outlinePass = this.outlinePasses[currentIndex];
+        outlinePass.selectedObjects = this.selectedObjects;
+        composer.render(deltaTime);
     }
 
-    outlineObjects(objects) {
+    _create_outline_pass(cameraManager, renderer) {
+        var composer = new EffectComposer(renderer);
+        var renderPass = new RenderPass(this.scene, cameraManager.camera);
+        composer.addPass(renderPass);
+
+        var outlinePass = new OutlinePass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            this.scene,
+            cameraManager.camera
+        );
+
+        outlinePass.edgeStrength = this.style.edgeStrength;
+        outlinePass.edgeGlow = this.style.edgeGlow;
+        outlinePass.edgeThickness = this.style.edgeThickness;
+        outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
+        outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
+
+        composer.addPass(outlinePass);
+
+        var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
+        composer.addPass(gammaCorrectionPass);
+
+        this.composers.push(composer);
+        this.cameras.push(cameraManager.camera);
+        this.outlinePasses.push(outlinePass);
+        return composer;
+    }
+
+    outlineObjects(objects, code = "default") {
+        // console.log(objects);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
-        this.outlinePass.selectedObjects = objects;
+
+        console.log(objects);
+
     }
 
     clearOutline() {
         this.selectedObjects = [];
-        this.outlinePass.selectedObjects = [];
     }
 
     // below two functions are necessary when browser window is resized
@@ -67,4 +95,5 @@ export class OutlineManager {
     dispose() {
         window.removeEventListener('resize', this._resizeListener);
     }
+
 }

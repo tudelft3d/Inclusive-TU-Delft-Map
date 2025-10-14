@@ -7,7 +7,7 @@ import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
-import { OutlineManager} from "./outlines";
+import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
@@ -17,9 +17,11 @@ export class Map {
     constructor(container) {
         this.container = container;
         this.activeBasemap = null;
+        this.buildingView;
         this.userLocationMarker = null;
         this.cityjson = cityjson;
         this.locationWatchId = null; // For tracking real-time location updates
+
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -159,7 +161,7 @@ export class Map {
             },
             (error) => {
                 let message = 'Unable to retrieve your location';
-                switch(error.code) {
+                switch (error.code) {
                     case error.PERMISSION_DENIED:
                         message = 'Location permission denied. Please enable location access in your browser settings.';
                         break;
@@ -280,7 +282,7 @@ export class Map {
         var currentPosition = initPosition;
         const finalPosition = cameraPosition
 
-        if (finalPosition.y < radius* 2) {
+        if (finalPosition.y < radius * 2) {
             finalPosition.y = radius * 2;
         }
 
@@ -365,16 +367,16 @@ export class Map {
 
     }
 
-     zoom_on_object(object) {
+    zoom_on_object(object) {
 
         if (this.cameraManager.orthographic) {
-                this._zoom_orthographic(object);
-                return;
-            } else {
-                this._zoom_perspective(object);
+            this._zoom_orthographic(object);
+            return;
+        } else {
+            this._zoom_perspective(object);
         }
 
-     }
+    }
 
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
@@ -385,7 +387,7 @@ export class Map {
 
             const object = this.picker.picked;
 
-            console.log(object);
+            this.buildingView.set_target(object.name);
 
             this.zoom_on_object(object);
 
@@ -473,10 +475,24 @@ export class Map {
             //     child.visible = true;
             // } else { child.visible = false; }
             // });
-            this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
-            this.cameraManager.controls.target.copy(center);
+
+            // Old camera positioning based on model bounds
+            // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
+            // this.cameraManager.controls.target.copy(center);
+
+            // New standard view position and target
+            this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
+            this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
+
             this.cameraManager.controls.update();
-            this.setOutline();
+            this.cameraManager.setHomeView();
+
+            const buildingOutline = [];
+            for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
+                if (obj.type !== "Building") continue;
+                buildingOutline.push(obj.attributes.key);
+            }
+            this.setOutline(buildingOutline, 'lod_2', 'default');
 
         }, undefined, function (error) {
             console.error(error);
@@ -488,7 +504,7 @@ export class Map {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
-        this.outlineManager.render(time);
+        this.outlineManager.render(time, this.cameraManager, this.renderer);
         requestAnimationFrame(this.render);
     }
 
@@ -522,22 +538,34 @@ export class Map {
         });
     }
 
-    setOutline(type = 'Building', lod = 'lod_2') {
+    setOutline(objectList, lod = 'lod_2', style = 'default') {
 
         const outlineObjects = [];
-        for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
-            if (obj.type !== type) continue;
-            // console.log(id);
 
-            const meshName = `${cj2gltf(id)}-${lod}`;
-
-            this.scene.traverse(child => {
-                if (child.isMesh && child.name === meshName) {
-                    outlineObjects.push(child);
-                }
+        // console.log(id);
+        for (const obj of objectList) {
+            const target = this.scene.getObjectByName(`${obj}-${lod}`);
+            if (target) outlineObjects.push(target);
+        }
+        if (style == 'single') {
+            Object.assign(this.outlineManager.style = {
+                edgeStrength: 5,
+                edgeGlow: 0.25,
+                edgeThickness: 0.3,
+                visibleEdgeColor: '#d9ff00',
+                hiddenEdgeColor: '#d9ff00'
             });
         }
-        console.log("selected objects for outlining:", outlineObjects);
+        else if (style == 'hover') {
+            Object.assign(this.outlineManager.style = {
+                edgeStrength: 5,
+                edgeGlow: 0.25,
+                edgeThickness: 0.3,
+                visibleEdgeColor: '#0bff02',
+                hiddenEdgeColor: '#0bff02'
+            });
+        }
+        // console.log("selected objects for outlining:", outlineObjects);
         this.outlineManager.outlineObjects(outlineObjects);
     }
 }

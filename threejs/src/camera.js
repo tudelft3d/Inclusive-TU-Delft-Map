@@ -40,10 +40,37 @@ export class CamerasControls {
 
         this.orthographic = false;
         this.orbit = false;
+
+        // Initial compass rotation
+        this.compassElement = null;
+    }
+
+    // Method to set the compass element
+    setCompassElement(element) {
+        this.compassElement = element;
+    }
+
+    // Method to calculate and update compass rotation
+    updateCompassRotation() {
+        if (!this.compassElement) return;
+
+        // Get camera direction vector (horizontal plane only)
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+
+        // Project onto horizontal plane (ignore Y component)
+        direction.y = 0;
+        direction.normalize();
+
+        // Calculate angle from north (positive Z axis), in degrees
+        const angle = Math.atan2(direction.x, direction.z);
+        const degrees = THREE.MathUtils.radToDeg(angle) + 180;
+
+        // Apply rotation to compass
+        this.compassElement.style.transform = `rotate(${-degrees}deg)`;
     }
 
     _initCameras(position, startMap) {
-        console.log(position);
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
@@ -195,19 +222,6 @@ export class CamerasControls {
 
             this.orthographic = true;
 
-        } else {
-
-            // this.orthographicCamera.position.copy(this.controls.target);
-            // this.orthographicCamera.position.y = 1000
-
-            // this.orthographicCamera.lookAt(this.controls.target);
-
-            // this.orthographicCamera.updateProjectionMatrix();
-
-            this.switchToMap();
-
-            console.log("resetting orthographic view");
-
         }
     }
 
@@ -248,6 +262,13 @@ export class CamerasControls {
         }
     }
 
+    /* Update the home position to initial camera state (after having moved towards GLTF scene) */
+    setHomeView() {
+        console.log("Setting home view");
+        this.initialPosition.copy(this.camera.position);
+        this.initialTarget.copy(this.controls.target);
+    }
+
      /* Reset camera to initial position and orientation */
     resetView() {
         console.log("Resetting view");
@@ -277,17 +298,18 @@ export class CamerasControls {
         // Get current distance from camera to target
         const distance = this.camera.position.distanceTo(target);
 
-        // Calculate the current height (y position)
-        const currentHeight = this.camera.position.y;
+        // Calculate the height difference between camera and target
+        const heightDiff = this.camera.position.y - target.y;
 
-        // Set camera position north of target
-        // Maintain the same distance and height
-        const horizontalDistance = Math.sqrt(distance * distance - currentHeight * currentHeight);
+        // Calculate horizontal distance maintaining total distance
+        const horizontalDistance = Math.sqrt(Math.max(0, distance * distance - heightDiff * heightDiff));
 
+        // Set camera position north of target (positive Z direction)
+        // Maintain the same distance and height relative to target
         this.camera.position.set(
             target.x,
-            currentHeight,
-            target.z - horizontalDistance
+            this.camera.position.y,
+            target.z + horizontalDistance
         );
 
         this.camera.lookAt(target);
