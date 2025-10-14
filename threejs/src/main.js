@@ -24,6 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // The number of results that are returned for partials searches
     const search_result_count = 5;
 
+    // Set up compass element and rotation updates
+    const compassIcon = document.querySelector('#compass-btn svg') ||
+                       document.querySelector('#compass-btn img') ||
+                       document.querySelector('#compass-btn .compass-icon');
+
+    if (compassIcon) {
+        map.cameraManager.setCompassElement(compassIcon);
+
+        // Add controls change listener to update compass rotation
+        map.cameraManager.controls.addEventListener('change', () => {
+            map.cameraManager.updateCompassRotation();
+        });
+
+        // Initial compass update
+        map.cameraManager.updateCompassRotation();
+    }
+
     document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();

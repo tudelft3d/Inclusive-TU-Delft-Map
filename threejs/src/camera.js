@@ -40,6 +40,34 @@ export class CamerasControls {
 
         this.orthographic = false;
         this.orbit = false;
+
+        // Initial compass rotation
+        this.compassElement = null;
+    }
+
+    // Method to set the compass element
+    setCompassElement(element) {
+        this.compassElement = element;
+    }
+
+    // Method to calculate and update compass rotation
+    updateCompassRotation() {
+        if (!this.compassElement) return;
+
+        // Get camera direction vector (horizontal plane only)
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+
+        // Project onto horizontal plane (ignore Y component)
+        direction.y = 0;
+        direction.normalize();
+
+        // Calculate angle from north (positive Z axis), in degrees
+        const angle = Math.atan2(direction.x, direction.z);
+        const degrees = THREE.MathUtils.radToDeg(angle) + 180;
+
+        // Apply rotation to compass
+        this.compassElement.style.transform = `rotate(${-degrees}deg)`;
     }
 
     _initCameras(position, startMap) {
@@ -287,7 +315,7 @@ export class CamerasControls {
         this.camera.lookAt(target);
         this.controls.update();
     }
-    
+
     /* Zoom to a specific coordinate */
     zoomToLocation(x, z, height = 200) {
         console.log(`Zooming to location: ${x}, ${z}`);
