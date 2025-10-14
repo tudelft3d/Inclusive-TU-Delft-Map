@@ -270,23 +270,24 @@ export class CamerasControls {
         // Get current distance from camera to target
         const distance = this.camera.position.distanceTo(target);
 
-        // Calculate the current height (y position)
-        const currentHeight = this.camera.position.y;
+        // Calculate the height difference between camera and target
+        const heightDiff = this.camera.position.y - target.y;
 
-        // Set camera position north of target
-        // Maintain the same distance and height
-        const horizontalDistance = Math.sqrt(distance * distance - currentHeight * currentHeight);
+        // Calculate horizontal distance maintaining total distance
+        const horizontalDistance = Math.sqrt(Math.max(0, distance * distance - heightDiff * heightDiff));
 
+        // Set camera position north of target (positive Z direction)
+        // Maintain the same distance and height relative to target
         this.camera.position.set(
             target.x,
-            currentHeight,
-            target.z - horizontalDistance
+            this.camera.position.y,
+            target.z + horizontalDistance
         );
 
         this.camera.lookAt(target);
         this.controls.update();
     }
-
+    
     /* Zoom to a specific coordinate */
     zoomToLocation(x, z, height = 200) {
         console.log(`Zooming to location: ${x}, ${z}`);
