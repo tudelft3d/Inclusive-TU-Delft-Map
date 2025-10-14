@@ -1,6 +1,7 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
+import { outline_code } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -164,6 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             layersDropdown.style.display = 'none';
         }
+    });
+
+    layersDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            outline_code(item.dataset.code, map);
+
+            layersDropdown.style.display = 'none';
+        });
     });
 
     document.addEventListener('click', () => {

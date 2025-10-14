@@ -35,7 +35,7 @@ export class OutlineManager {
                 currentIndex = i;
             }
         }
-        if (!currentIndex) {
+        if (currentIndex === null) {
             this._create_outline_pass(cameraManager, renderer);
             currentIndex = this.composers.length - 1;
         }
@@ -77,6 +77,8 @@ export class OutlineManager {
         // console.log(objects);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
+
+        console.log(objects);
 
     }
 

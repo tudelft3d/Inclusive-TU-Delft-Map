@@ -65,6 +65,10 @@ export class BuildingView {
         const storey_00_room_threejs = this._retrieve_room_threejs_objects("00");
         this._unhide_objects(storey_00_room_threejs);
 
+        console.log(storey_00_room_threejs);
+
+        this._apply_outlines(storey_00_room_threejs, "lod_0", "default");
+
         this._populate_storey_buttons();
 
     }
@@ -81,6 +85,18 @@ export class BuildingView {
 
     }
 
+    _apply_outlines(threejs_objects, lod, style) {
+
+        let keys = [];
+
+        threejs_objects.forEach((current_object) => {
+            keys.push(current_object.name.split("-").slice(0, 3).join("-"));
+        });
+
+        this.map.setOutline(keys, lod, style);
+
+    }
+
     _switch_to_storey(storey_code) {
 
         this._hide_mesh_children(this.building_threejs);
@@ -88,6 +104,8 @@ export class BuildingView {
         const new_storey_threejs = this._retrieve_room_threejs_objects(storey_code);
 
         this._unhide_objects(new_storey_threejs);
+
+        this._apply_outlines(new_storey_threejs, "lod_0", "default");
 
     }
 
@@ -244,10 +262,6 @@ export class BuildingView {
             storey_dropdown.appendChild(a);
 
         }
-
-        console.log(storey_dropdown);
-
-        console.log(document.getElementById("lod-dropdown"));
 
     }
 
