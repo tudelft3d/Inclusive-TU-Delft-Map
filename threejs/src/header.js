@@ -37,15 +37,14 @@ function initHeaderToggle() {
     // Close the menu immediately
     close();
     // If a normal HTML page link and something else may block navigation, ensure navigation:
-    if (href && !href.startsWith('#') && !a.hasAttribute('target')) {
-      setTimeout(() => { window.location.href = href; }, 100);
-    }
+    // if (href && !href.startsWith('#') && !a.hasAttribute('target')) {
+    //   setTimeout(() => { window.location.href = href; }, 100);
+    // }
   });
 
-
-  // tighten document click: only close when clicking outside nav/toggle/backdrop
+  // tighten document click: only close when clicking outside nav/toggle
   document.addEventListener('click', (e) => {
-    if (nav.contains(e.target) || toggle.contains(e.target) || (backdrop && backdrop.contains(e.target))) return;
+    if (nav.contains(e.target) || toggle.contains(e.target))return;
     close();
   });
 
@@ -79,4 +78,4 @@ if (headerContainer) {
 document.body.classList.add('menu-open');    // open
 document.body.classList.remove('menu-open'); // close
 // or toggle:
-document.body.classList.toggle('menu-open');
+// document.body.classList.toggle('menu-open');
