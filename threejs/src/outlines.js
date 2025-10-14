@@ -28,7 +28,7 @@ export class OutlineManager {
                 currentIndex = i;
             }
         }
-        if (!currentIndex && (this.composers.length < 3)) {
+        if (!currentIndex) {
             this._create_outline_pass(cameraManager, renderer);
             currentIndex = this.composers.length - 1;
         }
