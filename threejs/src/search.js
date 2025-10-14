@@ -20,7 +20,7 @@ export class Searcher {
         
         this.searches = [];
 
-        this.fuseOptions = {keys: ["attributes.space_id", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"]};
+        this.fuseOptions = {keys: ["attributes.space_id", "attributes.key", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"]};
 
         this.attribute_searcher = new Fuse(this.processed_json, this.fuseOptions);
         this.geometry_searcher = new Fuse();
@@ -33,17 +33,11 @@ export class Searcher {
         var object_attribute_list = [];
 
         for (const [key, value] of Object.entries(json)) {
-            
+
             object_attribute_list.push(value);
         }
 
         return object_attribute_list;
-    }
-
-    _traverse_children(object) {
-
-
-
     }
 
     // Perhaps make lod extractable from the map
@@ -65,8 +59,6 @@ export class Searcher {
                 }
 
             }
-
-        	// let space_id = current_object.item.attributes["space_id"];
 
         	const threejs_object_name = current_object.item.attributes["key"].concat(lod);
             

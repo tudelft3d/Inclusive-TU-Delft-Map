@@ -269,7 +269,7 @@ canvas {
   z-index: inherit;
 }
 
-#bv-dropdown storey {
+#bv-dropdown a {
   display: block;
   padding: 10px;
   text-decoration: none;

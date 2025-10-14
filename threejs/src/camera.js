@@ -43,7 +43,6 @@ export class CamerasControls {
     }
 
     _initCameras(position, startMap) {
-        console.log(position);
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
@@ -189,19 +188,6 @@ export class CamerasControls {
             this.controls.object = this.orthographicCamera;
 
             this.orthographic = true;
-
-        } else {
-
-            // this.orthographicCamera.position.copy(this.controls.target);
-            // this.orthographicCamera.position.y = 1000
-
-            // this.orthographicCamera.lookAt(this.controls.target);
-
-            // this.orthographicCamera.updateProjectionMatrix();
-
-            this.switchToMap();
-
-            console.log("resetting orthographic view");
 
         }
     }

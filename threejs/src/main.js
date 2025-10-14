@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         intermediateResults.innerHTML = '';
 
-        search_results = search_results.map((element) => {return element.item.attributes["space_id"]});
+        search_results = search_results.map((element) => {return element.item.attributes["key"]});
 
         for (let i=0; i<search_results.length; i++) {
 
@@ -204,14 +204,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const bvBtn = document.getElementById("bv-btn");
-    const bvDropdown = document.getElementById("bv-storey-btn");
-
     bvBtn.addEventListener("click", (event) => {
 
         buildingView.initiate_buildingView();
 
     });
 
+
+    const bvDropdown_button = document.getElementById("bv-storey-btn");
+    const bvDropdown_dropdown = document.getElementById("bv-dropdown");
+
+    bvDropdown_button.addEventListener("click", (event) => {
+
+        event.stopPropagation();
+        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
+            bvDropdown_dropdown.style.display = 'block';
+        } else {
+            bvDropdown_dropdown.style.display = 'none';
+        }
+
+    });
+
+    
 });
 
 
