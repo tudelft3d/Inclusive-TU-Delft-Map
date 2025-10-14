@@ -478,6 +478,7 @@ export class Map {
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
+            this.cameraManager.setHomeView();
 
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {

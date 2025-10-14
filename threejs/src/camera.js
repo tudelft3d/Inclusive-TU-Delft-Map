@@ -234,6 +234,13 @@ export class CamerasControls {
         }
     }
 
+    /* Update the home position to initial camera state (after having moved towards GLTF scene) */
+    setHomeView() {
+        console.log("Setting home view");
+        this.initialPosition.copy(this.camera.position);
+        this.initialTarget.copy(this.controls.target);
+    }
+
      /* Reset camera to initial position and orientation */
     resetView() {
         console.log("Resetting view");
