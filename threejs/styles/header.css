@@ -203,6 +203,7 @@ body.menu-open {
     color: var(--text);
     font-size: 15px;
     z-index: 1300;
+
   }
 
   /* Hide desktop inline language controls, show mobile nav-language */
@@ -221,11 +222,8 @@ body.menu-open {
     justify-content: flex-start;
     position: fixed;
     top: var(--height);
-    /* anchored below header */
     right: 0;
-    /* anchored to right edge */
     height: calc(100vh - var(--height));
-    /* remaining viewport */
     width: min(50%);
     max-width: 100%;
     transform: translateX(100%);
@@ -238,6 +236,7 @@ body.menu-open {
     z-index: 1250;
     overflow-y: auto;
     box-sizing: border-box;
+    
   }
 
   .main-nav.open {
@@ -284,18 +283,5 @@ body.menu-open {
     min-width: auto;
     margin: 0;
   }
-/* 
-  backdrop for closing the panel
-  .nav-backdrop {
-    display: none;
-  }
-
-  .nav-backdrop.show {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 1200;
-  } */
 
 }
