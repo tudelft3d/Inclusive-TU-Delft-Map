@@ -11,7 +11,7 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-
+import { addPointerSprite, svgToCanvasTexture, svgToDiscTexture } from './icons';
 
 export class Map {
     constructor(container) {
@@ -36,7 +36,7 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
-        this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
+        this.outlineManager = new OutlineManager(this.scene, this.iconsScene, this.renderer);
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -56,6 +56,8 @@ export class Map {
             'sky_gradient_sides.png',
         ]);
         this.scene.background = skyboxTexture;
+
+        this.iconsScene = new THREE.Scene();
 
         // const geometry = new THREE.BoxGeometry(100, 100, 100);
         // const material = new THREE.MeshBasicMaterial({
@@ -453,6 +455,7 @@ export class Map {
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
+            console.log(center);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = this.cameraManager.camera.fov * (Math.PI / 180);
@@ -484,11 +487,20 @@ export class Map {
         // this.render();
     }
 
+    async loadIcon(path) {
+        var iconTexture = await svgToDiscTexture(path);
+        var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
+        // var position = new THREE.Vector3(85894.6171875, 43.24994134912861, -445815.28125);
+        var sprite = addPointerSprite(this.iconsScene, iconTexture, position);
+        console.log(sprite);
+
+    }
+
     render(time) {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
-        this.outlineManager.render(time, this.cameraManager, this.renderer);
+        this.outlineManager.render(time, this.cameraManager);
         requestAnimationFrame(this.render);
     }
 
@@ -537,7 +549,6 @@ export class Map {
                 }
             });
         }
-        console.log("selected objects for outlining:", outlineObjects);
         this.outlineManager.outlineObjects(outlineObjects);
     }
 }

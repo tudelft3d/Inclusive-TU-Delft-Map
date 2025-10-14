@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
+    map.loadIcon('assets/threejs/graphics/icons/bus.svg');
 
     const buildingView = new BuildingView(map);
     const searcher = new Searcher();
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function debounce(func, wait) {
 
-        return function(...args) {
+        return function (...args) {
 
             window.clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
@@ -61,9 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         intermediateResults.innerHTML = '';
 
-        search_results = search_results.map((element) => {return element.item.attributes["space_id"]});
+        search_results = search_results.map((element) => { return element.item.attributes["space_id"] });
 
-        for (let i=0; i<search_results.length; i++) {
+        for (let i = 0; i < search_results.length; i++) {
 
             var li = document.createElement("li");
             li.appendChild(document.createTextNode(search_results[i]));
@@ -92,8 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let value = event.target.value;
 
-        if (!value || value.trim().length <= 0){
-                return;
+        if (!value || value.trim().length <= 0) {
+            return;
         }
 
         // If the key being released is enter, the user wants to search

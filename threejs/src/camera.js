@@ -43,7 +43,6 @@ export class CamerasControls {
     }
 
     _initCameras(position, startMap) {
-        console.log(position);
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
@@ -130,7 +129,7 @@ export class CamerasControls {
     }
 
     /** Switch to orbit view */
-    switchToOrbit() {   
+    switchToOrbit() {
 
         if (this.orthographic) {
 
@@ -248,7 +247,7 @@ export class CamerasControls {
         }
     }
 
-     /* Reset camera to initial position and orientation */
+    /* Reset camera to initial position and orientation */
     resetView() {
         console.log("Resetting view");
 
