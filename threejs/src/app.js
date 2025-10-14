@@ -2,10 +2,13 @@ import { CamerasControls } from "./camera";
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ObjectPicker } from "./objectPicker";
-import { getCanvasRelativePosition } from "./utils";
+import { getCanvasRelativePosition, cj2gltf } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
+import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
+import { OutlineManager } from "./outlines";
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 
@@ -14,6 +17,9 @@ export class Map {
     constructor(container) {
         this.container = container;
         this.activeBasemap = null;
+        this.userLocationMarker = null;
+        this.cityjson = cityjson;
+        this.locationWatchId = null; // For tracking real-time location updates
 
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(0, 1000, 0);
@@ -30,8 +36,8 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
+        this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
         this._attachEvents();
-
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
 
@@ -95,6 +101,157 @@ export class Map {
         this._resizeRenderer();
     }
 
+    /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
+    latLonToLocal(lat, lon) {
+
+        // WGS84 (GPS coordinates) & RD New (Rijksdriehoek)
+        const wgs84 = 'EPSG:4326';
+        const rdNew = '+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs';
+
+        // Convert GPS to RD coordinates using proj4
+        const [rdX, rdY] = proj4(wgs84, rdNew, [lon, lat]);
+        console.log(`GPS (${lat}, ${lon}) -> RD (${rdX}, ${rdY})`);
+
+        const x = rdX;
+        const z = -rdY; // Negative Z because of coordinate system orientation
+
+        console.log(`RD (${rdX}, ${rdY}) -> Local (${x}, ${z})`);
+
+        return { x, z };
+    }
+
+    /* Get user location and zoom to it with continuous tracking */
+    getUserLocationAndZoom() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        console.log('Starting location tracking...');
+
+        // Stop any existing tracking
+        if (this.locationWatchId !== null) {
+            navigator.geolocation.clearWatch(this.locationWatchId);
+        }
+
+        let firstUpdate = true;
+
+        // Use watchPosition for continuous updates
+        this.locationWatchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const accuracy = position.coords.accuracy; // in meters
+
+                console.log(`Location update: ${lat}, ${lon} (accuracy: ${accuracy}m)`);
+
+                // Convert GPS to local coordinates
+                const local = this.latLonToLocal(lat, lon);
+
+                // Update or create marker at the user's location
+                this.updateUserLocationMarker(local.x, local.z, accuracy);
+
+                // Only zoom on first update (aka button click)
+                if (firstUpdate) {
+                    this.cameraManager.zoomToLocation(local.x, local.z);
+                    firstUpdate = false;
+                }
+            },
+            (error) => {
+                let message = 'Unable to retrieve your location';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = 'Location permission denied. Please enable location access in your browser settings.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        message = 'Location request timed out.';
+                        break;
+                }
+                console.error('Geolocation error:', error);
+                alert(message);
+
+                // Stop tracking on error
+                if (this.locationWatchId !== null) {
+                    navigator.geolocation.clearWatch(this.locationWatchId);
+                    this.locationWatchId = null;
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 3000, // every 3 seconds
+                maximumAge: 0
+            }
+        );
+    }
+
+    /* Stop tracking user location */
+    stopLocationTracking() {
+        if (this.locationWatchId !== null) {
+            navigator.geolocation.clearWatch(this.locationWatchId);
+            this.locationWatchId = null;
+            console.log('Location tracking stopped');
+        }
+
+        // Remove the marker
+        if (this.userLocationMarker) {
+            this.scene.remove(this.userLocationMarker);
+            this.userLocationMarker = null;
+        }
+    }
+
+    /* Update or create user location marker with accuracy circle */
+    updateUserLocationMarker(x, z, accuracy) {
+        // Remove previous marker if it exists
+        if (this.userLocationMarker) {
+            this.scene.remove(this.userLocationMarker);
+        }
+
+        const markerGroup = new THREE.Group();
+
+        // Accuracy circle (transparent, sized to accuracy)
+        const circleGeometry = new THREE.CircleGeometry(accuracy, 64);
+        const circleMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4285F4,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.2
+        });
+        const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+        circle.rotation.x = -Math.PI / 2; // Lay flat
+        markerGroup.add(circle);
+
+        // Accuracy ring border
+        const ringGeometry = new THREE.RingGeometry(accuracy - 1, accuracy + 1, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4285F4,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.5
+        });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.rotation.x = -Math.PI / 2;
+        markerGroup.add(ring);
+
+        // Center dot (actual position)
+        const dotGeometry = new THREE.SphereGeometry(3, 16, 16);
+        const dotMaterial = new THREE.MeshBasicMaterial({
+            color: 0x4285F4
+        });
+        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+        //dot.position.y = 1; // Slightly above the circle
+        markerGroup.add(dot);
+
+        markerGroup.position.set(x, 1, z); // Position just above ground
+
+        this.userLocationMarker = markerGroup;
+        this.scene.add(this.userLocationMarker);
+
+        console.log(`Location marker updated at (${x}, ${z}) with accuracy ${accuracy}m`);
+    }
+
     _zoom_perspective(object) {
         // console.log("perspective");
 
@@ -123,7 +280,7 @@ export class Map {
         var currentPosition = initPosition;
         const finalPosition = cameraPosition
 
-        if (finalPosition.y < radius* 2) {
+        if (finalPosition.y < radius * 2) {
             finalPosition.y = radius * 2;
         }
 
@@ -176,7 +333,7 @@ export class Map {
         const radius = sphere.radius;
 
         const rotation = this.cameraManager.camera.quaternion;
-        
+
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
         // this.orthographicCamera.right = halfWidth;
@@ -208,16 +365,16 @@ export class Map {
 
     }
 
-     zoom_on_object(object) {
+    zoom_on_object(object) {
 
         if (this.cameraManager.orthographic) {
-                this._zoom_orthographic(object);
-                return;
-            } else {
-                this._zoom_perspective(object);
+            this._zoom_orthographic(object);
+            return;
+        } else {
+            this._zoom_perspective(object);
         }
 
-     }
+    }
 
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
@@ -228,19 +385,21 @@ export class Map {
 
             const object = this.picker.picked;
 
+            console.log(object);
+
             this.zoom_on_object(object);
 
         } else {
 
             if (!this.cameraManager.orthographic) {
-                
+
                 this.controlsManager.activateMap();
 
                 const { x, y, z } = this.cameraManager.previousCamera.position;
                 this.cameraManager.camera.position.set(x, y, z);
                 this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
                 this.cameraManager.controls.update();
-            } 
+            }
         }
     }
 
@@ -301,12 +460,12 @@ export class Map {
 
             cameraZ *= 1.5; // add margin
 
-            console.log("gltf", gltf);
+            // console.log("gltf", gltf);
 
             // load only lod2 on startup
             this.model = objs;
             this.lodVis();
-            scene.add(objs);
+            this.scene.add(this.model);
 
             // if (child.name.startsWith("08")) child.visible = false;
             // if (child.name != "08-lod_2") child.visible = false;
@@ -317,6 +476,8 @@ export class Map {
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
+            this.setOutline();
+
         }, undefined, function (error) {
             console.error(error);
         });
@@ -326,13 +487,15 @@ export class Map {
     render(time) {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
-        this.renderer.render(this.scene, this.cameraManager.camera);
+        // this.renderer.render(this.scene, this.cameraManager.camera);
+        this.outlineManager.render(time, this.cameraManager, this.renderer);
         requestAnimationFrame(this.render);
     }
 
-    lodToggle(level) {
-        this.lodVis(level);
-    }
+    // just a wrapper, not needed anymore.
+    // lodToggle(level) {
+    //     this.lodVis(level);
+    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -340,7 +503,11 @@ export class Map {
             if (child.isMesh) {
                 child.material.side = THREE.DoubleSide;
             }
+
             if (child.name.includes(lod)) {
+                // can search by floor sections in cityjson?
+                // if (lod === 'lod_0') {
+                //  }
                 child.visible = true;
                 var vis = child.parent;
                 while (vis) {
@@ -354,4 +521,29 @@ export class Map {
             }
         });
     }
+
+    setOutline(type = 'Building', lod = 'lod_2') {
+
+        const outlineObjects = [];
+        for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
+            if (obj.type !== type) continue;
+            // console.log(id);
+
+            const meshName = `${cj2gltf(id)}-${lod}`;
+
+            this.scene.traverse(child => {
+                if (child.isMesh && child.name === meshName) {
+                    outlineObjects.push(child);
+                }
+            });
+        }
+        console.log("selected objects for outlining:", outlineObjects);
+        this.outlineManager.outlineObjects(outlineObjects);
+    }
 }
+
+// sample thematic layers to add:
+// Lactation Room	E1-6
+// Contemplation room	E1-8 - there are none in BK?
+// All-gender restroom	S1-3
+// Accessible toilet	S2

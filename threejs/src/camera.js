@@ -49,9 +49,6 @@ export class CamerasControls {
 
         this.orthographicCamera = new THREE.OrthographicCamera((frustrumSize * aspect) / - 2, (frustrumSize * aspect) / 2, frustrumSize / 2, frustrumSize / - 2, 0, 100000);
 
-        // Save initial position for reset functionality
-        this.initialPosition = new THREE.Vector3(position.x, position.y, position.z);
-
         // this.orthographicCamera.position.set(0, 1000, 0);
 
         if (startMap) {
@@ -64,6 +61,9 @@ export class CamerasControls {
 
         //this.camera.position.set(position.x, position.y, position.z);
         this.orthographicCamera.position.set(position.x, 1, position.z);
+
+        // Save initial position for reset functionality
+        this.initialPosition = new THREE.Vector3(position.x, position.y, position.z);
     }
 
 
@@ -167,7 +167,7 @@ export class CamerasControls {
 
             // Where we want to go
             this.orthographicCamera.position.copy(this.controls.target);
-            this.orthographicCamera.position.y = 1000
+            this.orthographicCamera.position.y = 1000;
 
             const distance = this.camera.position.distanceTo(this.controls.target);
             const halfHeight = frustrumHeight(this.camera, distance) / 2;
@@ -253,7 +253,6 @@ export class CamerasControls {
         console.log("Resetting view");
 
         // Store the initial position and target when creating the camera
-        // You'll need to save these in the constructor
         if (this.initialPosition && this.initialTarget) {
             this.camera.position.copy(this.initialPosition);
             this.controls.target.copy(this.initialTarget);
@@ -281,7 +280,7 @@ export class CamerasControls {
         // Calculate the current height (y position)
         const currentHeight = this.camera.position.y;
 
-        // Set camera position north of target (negative Z direction in typical Three.js setup)
+        // Set camera position north of target
         // Maintain the same distance and height
         const horizontalDistance = Math.sqrt(distance * distance - currentHeight * currentHeight);
 
@@ -292,6 +291,20 @@ export class CamerasControls {
         );
 
         this.camera.lookAt(target);
+        this.controls.update();
+    }
+
+    /* Zoom to a specific coordinate */
+    zoomToLocation(x, z, height = 200) {
+        console.log(`Zooming to location: ${x}, ${z}`);
+
+        // Set the target to the location
+        this.controls.target.set(x, 0, z);
+
+        // Position camera above and slightly back from the target
+        this.camera.position.set(x, height, z + 100);
+
+        this.camera.lookAt(this.controls.target);
         this.controls.update();
     }
 }

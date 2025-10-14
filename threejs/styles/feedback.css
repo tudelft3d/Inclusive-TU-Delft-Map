@@ -4,8 +4,8 @@
   --card-bg: #f1f1f1;
   --muted: #4a4e55;
   --border: #d7d7d7;
-  --accent: #3097b7;
-  --accent-dark: #257188;
+  --accent: #027dab;
+  --accent-dark: #00a6d6;
   --danger: #580101;
   --radius: 10px;
   --container-w: 1100px;
@@ -85,7 +85,7 @@ form{ width:100%; }
   padding:10px 10px;
   font-size:14px;
   color:#000000;
-  background:#f9fbfdcd;
+  background:#f9fbfdb0;
   border:1px solid var(--border);
   border-radius:8px;
   outline: none;
@@ -133,7 +133,7 @@ select.field-input{
   justify-content:center;
   gap:10px;
   background: var(--accent);
-  color:#fff;
+  color:#ffffff;
   border: none;
   padding:12px 16px;
   border-radius:8px;
@@ -159,6 +159,8 @@ select.field-input{
   font-size: 14px;
   align-items:center;
   justify-content:center;
+  order: 9999;
+  margin-top: 10px;
 }
 .status-error {
   color: #7b0b0b;
@@ -170,10 +172,12 @@ select.field-input{
   font-size: 14px;
   align-items:center;
   justify-content:center;
+  order: 9999;
+  margin-top: 10px;
 }
 
 /* Small screens - tried mobile version */
-@media (max-width:700px){
+@media (max-width:620px){
   .card-inner{ padding:20px; }
   main{ padding:28px 12px; }
   #feedback_title{ font-size:18px; }
@@ -184,6 +188,16 @@ select.field-input{
   border-color: var(--danger);
   box-shadow: 0 0 0 4px rgba(197, 63, 63, 0.08);
 }
+
+/* Ensure form elements use column flow and force status messages to the bottom. */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Put submit button before the status messages visually */
+.submit-btn { order: 5000; }
+
 
 
 
