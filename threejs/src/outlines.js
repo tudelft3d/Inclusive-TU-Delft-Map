@@ -7,35 +7,11 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 
 export class OutlineManager {
- 
-    constructor(scene, camera, renderer) {
+
+    constructor(scene) {
         this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
-
-        this.composer = new EffectComposer(renderer);
-
-        this.renderPass = new RenderPass(scene, camera);
-        this.composer.addPass(this.renderPass);
-
-        this.outlinePass = new OutlinePass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            scene,
-            camera
-        );
-
-        // default styling
-        this.outlinePass.edgeStrength = 5;
-        this.outlinePass.edgeGlow = 0.25;
-        this.outlinePass.edgeThickness = 0.3;
-        this.outlinePass.visibleEdgeColor.set('#ffffff');
-        this.outlinePass.hiddenEdgeColor.set('#ffffff');
-
-        this.composer.addPass(this.outlinePass);
-
-        this.gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
-        this.composer.addPass(this.gammaCorrectionPass);
-
+        this.composers = [];
+        this.cameras = [];
         this.selectedObjects = [];
         this._resizeListener = () => this.onResize();
         window.addEventListener('resize', this._resizeListener);
@@ -43,11 +19,51 @@ export class OutlineManager {
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
-    render(deltaTime) {
-        this.composer.render(deltaTime);
+    render(deltaTime, cameraManager, renderer) {
+        var currentComposer = null;
+        for (var i = 0; i < this.composers.length; i++) {
+            var composer = this.composers[i];
+            var camera = this.cameras[i];
+            if (camera == cameraManager.camera) {
+                currentComposer = composer;
+            }
+        }
+        if (!currentComposer && (this.composers.length < 3)) {
+            currentComposer = this._create_outline_pass(cameraManager, renderer);
+        }
+        currentComposer.render(deltaTime);
+    }
+
+    _create_outline_pass(cameraManager, renderer) {
+        var composer = new EffectComposer(renderer);
+        var renderPass = new RenderPass(this.scene, cameraManager.camera);
+        composer.addPass(renderPass);
+
+        var outlinePass = new OutlinePass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            this.scene,
+            cameraManager.camera
+        );
+
+        // Default styling
+        outlinePass.edgeStrength = 5;
+        outlinePass.edgeGlow = 0.25;
+        outlinePass.edgeThickness = 0.3;
+        outlinePass.visibleEdgeColor.set('#ffffff');
+        outlinePass.hiddenEdgeColor.set('#ffffff');
+
+        composer.addPass(outlinePass);
+
+        var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
+        composer.addPass(gammaCorrectionPass);
+
+        this.composers.push(composer);
+        this.cameras.push(cameraManager.camera);
+        return composer;
     }
 
     outlineObjects(objects) {
+        console.log(objects);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
         this.outlinePass.selectedObjects = objects;

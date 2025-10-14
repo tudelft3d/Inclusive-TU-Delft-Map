@@ -7,7 +7,7 @@ import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 import { addBasemap } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
-import { OutlineManager} from "./outlines";
+import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
@@ -159,7 +159,7 @@ export class Map {
             },
             (error) => {
                 let message = 'Unable to retrieve your location';
-                switch(error.code) {
+                switch (error.code) {
                     case error.PERMISSION_DENIED:
                         message = 'Location permission denied. Please enable location access in your browser settings.';
                         break;
@@ -280,7 +280,7 @@ export class Map {
         var currentPosition = initPosition;
         const finalPosition = cameraPosition
 
-        if (finalPosition.y < radius* 2) {
+        if (finalPosition.y < radius * 2) {
             finalPosition.y = radius * 2;
         }
 
@@ -365,16 +365,16 @@ export class Map {
 
     }
 
-     zoom_on_object(object) {
+    zoom_on_object(object) {
 
         if (this.cameraManager.orthographic) {
-                this._zoom_orthographic(object);
-                return;
-            } else {
-                this._zoom_perspective(object);
+            this._zoom_orthographic(object);
+            return;
+        } else {
+            this._zoom_perspective(object);
         }
 
-     }
+    }
 
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
@@ -488,7 +488,7 @@ export class Map {
         this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
-        this.outlineManager.render(time);
+        this.outlineManager.render(time, this.cameraManager, this.renderer);
         requestAnimationFrame(this.render);
     }
 
