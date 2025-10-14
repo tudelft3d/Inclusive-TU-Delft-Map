@@ -476,7 +476,13 @@ export class Map {
             this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             this.cameraManager.controls.target.copy(center);
             this.cameraManager.controls.update();
-            this.setOutline();
+
+            const buildingOutline = [];
+            for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
+                if (obj.type !== "Building") continue;
+                buildingOutline.push(obj.attributes.key);
+            }
+            this.setOutline(buildingOutline, "lod_2", "hover");
 
         }, undefined, function (error) {
             console.error(error);
@@ -522,22 +528,34 @@ export class Map {
         });
     }
 
-    setOutline(type = 'Building', lod = 'lod_2') {
+    setOutline(objectList, lod = 'lod_2', style = 'default') {
 
         const outlineObjects = [];
-        for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
-            if (obj.type !== type) continue;
-            // console.log(id);
 
-            const meshName = `${cj2gltf(id)}-${lod}`;
-
-            this.scene.traverse(child => {
-                if (child.isMesh && child.name === meshName) {
-                    outlineObjects.push(child);
-                }
+        // console.log(id);
+        for (const obj of objectList) {
+            const target = this.scene.getObjectByName(`${obj}-${lod}`);
+            if (target) outlineObjects.push(target);
+        }
+        if (style == 'single') {
+            Object.assign(this.outlineManager.style = {
+                edgeStrength: 5,
+                edgeGlow: 0.25,
+                edgeThickness: 0.3,
+                visibleEdgeColor: '#d9ff00',
+                hiddenEdgeColor: '#d9ff00'
             });
         }
-        console.log("selected objects for outlining:", outlineObjects);
+        else if (style == 'hover') {
+            Object.assign(this.outlineManager.style = {
+                edgeStrength: 5,
+                edgeGlow: 0.25,
+                edgeThickness: 0.3,
+                visibleEdgeColor: '#0bff02',
+                hiddenEdgeColor: '#0bff02'
+            });
+        }
+        // console.log("selected objects for outlining:", outlineObjects);
         this.outlineManager.outlineObjects(outlineObjects);
     }
 }
