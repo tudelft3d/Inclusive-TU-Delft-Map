@@ -10,7 +10,7 @@ import triangle as tri
 import trimesh
 from numpy.typing import NDArray
 from shapely import LineString, MultiPolygon, Polygon
-from trimesh.path import Path2D
+from trimesh.path import Path2D, repair
 
 from plane import Plane3D
 
@@ -31,9 +31,15 @@ def flatten_trimesh(
     mesh: trimesh.Trimesh, z_value: np.float64 | None = None
 ) -> trimesh.Trimesh:
     try:
+        logging.debug("Start flattening")
         z_value = np.min(mesh.vertices[:, 2]) if z_value is None else z_value
-        flatten_path_2D: Path2D = mesh.projected(normal=(0, 0, 1))
-        vertices, faces = flatten_path_2D.triangulate(**{"engine": "triangle"})
+        # apad is set to 1 mm to prevent errors from araising with triangulation
+        # TODO: understand the error better and fix it in a better way?
+        flatten_path_2D: Path2D = mesh.projected(normal=(0, 0, 1), apad=0.001)
+        logging.debug("Start triangulating")
+        vertices, faces = flatten_path_2D.triangulate(
+            **{"engine": "triangle", "triangle_args": "p"}
+        )
         flat_mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
         flat_mesh.vertices = np.hstack(
             (flat_mesh.vertices, np.full((flat_mesh.vertices.shape[0], 1), z_value))
@@ -41,6 +47,7 @@ def flatten_trimesh(
         orient_polygons_z_up(flat_mesh)
         return flat_mesh
     except Exception as e:
+        logging.error(f"Error during flattening the Trimesh: {e}")
         raise e
 
 

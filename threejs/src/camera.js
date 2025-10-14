@@ -48,7 +48,6 @@ export class CamerasControls {
 
         this.orthographicCamera = new THREE.OrthographicCamera((frustrumSize * aspect) / - 2, (frustrumSize * aspect) / 2, frustrumSize / 2, frustrumSize / - 2, 0, 100000);
 
-
         // this.orthographicCamera.position.set(0, 1000, 0);
 
         if (startMap) {
@@ -61,6 +60,9 @@ export class CamerasControls {
 
         //this.camera.position.set(position.x, position.y, position.z);
         this.orthographicCamera.position.set(position.x, 1, position.z);
+
+        // Save initial position for reset functionality
+        this.initialPosition = new THREE.Vector3(position.x, position.y, position.z);
     }
 
 
@@ -84,13 +86,16 @@ export class CamerasControls {
 
         // this.orthgraphicControls.update()
 
+
+        // Save initial target for reset functionality
+        this.initialTarget = new THREE.Vector3(lookAt.x, lookAt.y, lookAt.z);
+
         if (startMap) {
             this.controls = this.mapControls;
             this.previousControls = this.mapControls;
         } else {
             this.controls = this.orbitControls;
             this.previousControls = this.orbitControls;
-
         }
     }
 
@@ -209,7 +214,7 @@ export class CamerasControls {
         // this.camera.position.set(x, y, z);
     }
 
-    zoomIn(factor = 1.1) {
+    zoomIn(factor = 1.8) {
         if (this.controls._dollyOut) {
             this.controls._dollyOut(factor);
             this.controls.update();
@@ -219,7 +224,7 @@ export class CamerasControls {
         }
     }
 
-    zoomOut(factor = 1.1) {
+    zoomOut(factor = 1.8) {
         if (this.controls._dollyIn) {
             this.controls._dollyIn(factor);
             this.controls.update();
@@ -227,5 +232,65 @@ export class CamerasControls {
         else if (this.camera.isPerspectiveCamera) {
             this.camera.position.multiplyScalar(1 / factor);
         }
+    }
+
+     /* Reset camera to initial position and orientation */
+    resetView() {
+        console.log("Resetting view");
+
+        // Store the initial position and target when creating the camera
+        if (this.initialPosition && this.initialTarget) {
+            this.camera.position.copy(this.initialPosition);
+            this.controls.target.copy(this.initialTarget);
+
+            // Reset zoom for orthographic camera
+            if (this.orthographic) {
+                this.orthographicCamera.zoom = 1;
+                this.orthographicCamera.updateProjectionMatrix();
+            }
+
+            this.controls.update();
+        }
+    }
+
+    /* Reset camera rotation to point north (align with Z-axis) */
+    resetNorth() {
+        console.log("Resetting to north");
+
+        // Get current target position
+        const target = this.controls.target.clone();
+
+        // Get current distance from camera to target
+        const distance = this.camera.position.distanceTo(target);
+
+        // Calculate the current height (y position)
+        const currentHeight = this.camera.position.y;
+
+        // Set camera position north of target
+        // Maintain the same distance and height
+        const horizontalDistance = Math.sqrt(distance * distance - currentHeight * currentHeight);
+
+        this.camera.position.set(
+            target.x,
+            currentHeight,
+            target.z - horizontalDistance
+        );
+
+        this.camera.lookAt(target);
+        this.controls.update();
+    }
+
+    /* Zoom to a specific coordinate */
+    zoomToLocation(x, z, height = 200) {
+        console.log(`Zooming to location: ${x}, ${z}`);
+
+        // Set the target to the location
+        this.controls.target.set(x, 0, z);
+
+        // Position camera above and slightly back from the target
+        this.camera.position.set(x, height, z + 100);
+
+        this.camera.lookAt(this.controls.target);
+        this.controls.update();
     }
 }

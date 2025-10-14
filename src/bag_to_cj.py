@@ -13,10 +13,15 @@ from cj_loader import CityjsonLoader, cj_object_to_mesh
 from cj_objects import (
     Building,
     BuildingPart,
+    BuildingUnit,
+    BuildingUnitContainer,
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
+    CityJSONSpace,
+    CityJSONSpaceSubclass,
 )
+from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
 from geometry_utils import merge_trimeshes, orient_polygons_z_up
 
 
@@ -109,20 +114,6 @@ class Bag2Cityjson(CityjsonLoader):
         skip_column: Optional[str],
         parent_column: Optional[str],
     ) -> CityJSONFile:
-        if bdgs_attr_path is None and bdgs_sub_attr_path is not None:
-            raise ValueError(
-                "When attributes are given for the buildings subdivisions, attributes must be given for the buildings."
-            )
-        if bdgs_attr_path is not None:
-            if bag_column is None or id_column is None or skip_column is None:
-                raise ValueError(
-                    "When there are attributes to attach to the objects, 'bag_column', 'id_column' and 'skip_column' should be specified."
-                )
-        if bdgs_sub_attr_path is not None:
-            if parent_column is None:
-                raise ValueError(
-                    "When there are attributes to attach to the buildings subdivisions, 'parent_column' should be specified."
-                )
 
         # Used to remember which 3D BAG buildings have already been processed
         unprocessed_bag_ids: set[str] = set(self.data["CityObjects"].keys())
@@ -133,15 +124,9 @@ class Bag2Cityjson(CityjsonLoader):
         def _process_bag_element(
             obj_id: str,
             bag_ids: list[str],
-            bdg_type: type,
             unprocessed_bag_ids: set[str] | None = None,
             skip: bool = False,
-        ) -> Building | BuildingPart | None:
-            if bdg_type not in [Building, BuildingPart]:
-                raise RuntimeError(
-                    f"Expected `bdg_type` to be either Building or BuildingPart"
-                )
-
+        ) -> list[MultiSurface] | None:
             logging.log(logging.DEBUG, f"Processing {obj_id}")
 
             # Check if the key is already used
@@ -166,86 +151,129 @@ class Bag2Cityjson(CityjsonLoader):
             if unprocessed_bag_ids is not None:
                 unprocessed_bag_ids -= set(processed_bag_ids)
 
-            return bdg_type(object_id=obj_id, geometries=all_geoms)
+            return all_geoms
 
         # Load the buildings attributes
         if bdgs_attr_path is None:
-            bdgs_reader = []
+            bdgs_attributes_all, bdgs_specific_values_all = [], []
         else:
-            with open(bdgs_attr_path, "r", encoding="utf-8-sig") as csvfile:
-                bdgs_reader = list(csv.DictReader(csvfile, delimiter=";"))
-            # Check that the columns are valid
-            if len(bdgs_reader) > 0:
-                row0 = bdgs_reader[0]
-                for col in [bag_column, id_column, skip_column]:
-                    if bag_column not in row0.keys():
-                        raise ValueError(
-                            f"The column {col} is not in the buildings attributes."
-                        )
+            if bag_column is None:
+                raise ValueError(
+                    f"The `bag_column` must be specified if attributes for buildings are given."
+                )
+            if id_column is None:
+                raise ValueError(
+                    f"The `id_column` must be specified if attributes for buildings are given."
+                )
+            if skip_column is None:
+                raise ValueError(
+                    f"The `skip_column` must be specified if attributes for buildings are given."
+                )
+            bdgs_specific_columns = (bag_column, id_column, skip_column)
+            bdgs_attributes_all, bdgs_specific_values_all = csv_read_attributes(
+                csv_path=bdgs_attr_path, specific_columns=bdgs_specific_columns
+            )
 
         # Load the buildings subdivisions attributes
         if bdgs_sub_attr_path is None:
-            bdgs_sub_reader = []
+            subs_attributes_all, subs_specific_values_all = [], []
         else:
-            with open(bdgs_sub_attr_path, encoding="utf-8-sig") as csvfile:
-                bdgs_sub_reader = list(csv.DictReader(csvfile, delimiter=";"))
-            # Check that the columns are valid
-            if len(bdgs_sub_reader) > 0:
-                row0 = bdgs_sub_reader[0]
-                for col in [bag_column, id_column, skip_column, parent_column]:
-                    if bag_column not in row0.keys():
-                        raise ValueError(
-                            f"The column {col} is not in the buildings attributes."
-                        )
+            if parent_column is None:
+                raise ValueError(
+                    f"The `parent_column` must be specified if attributes for buildings are given."
+                )
+            if id_column is None:
+                raise ValueError(
+                    f"The `id_column` must be specified if attributes for buildings are given."
+                )
+            if skip_column is None:
+                raise ValueError(
+                    f"The `skip_column` must be specified if attributes for buildings are given."
+                )
+            subs_specific_columns = (parent_column, id_column, skip_column)
+            subs_attributes_all, subs_specific_values_all = csv_read_attributes(
+                csv_path=bdgs_sub_attr_path, specific_columns=subs_specific_columns
+            )
 
         # Iterate over the buildings
-        for row in tqdm(bdgs_reader, desc="Processing the buildings with attributes"):
-            # Get the object id
-            obj_id = row[id_column]
+        for attributes, specific_values in tqdm(
+            zip(bdgs_attributes_all, bdgs_specific_values_all),
+            desc="Processing the buildings with attributes",
+            total=len(bdgs_attributes_all),
+        ):
+            # Extract the specific columns
+            _, all_bag_ids = specific_values[0]
+            _, space_id = specific_values[1]
+            _, skip = specific_values[2]
 
-            # Extract the ids of all the BAG buildings that constitue this building
-            all_bag_ids = row[bag_column].split(",") if row[bag_column] != "" else []
+            obj_id = Building.space_number_to_id(number=space_id)
 
-            skip = row[skip_column] != ""
-
-            building = _process_bag_element(
+            geoms = _process_bag_element(
                 obj_id=obj_id,
                 bag_ids=all_bag_ids,
-                bdg_type=Building,
                 unprocessed_bag_ids=unprocessed_bag_ids,
                 skip=skip,
             )
 
-            if building is not None:
-                building.add_attributes(row)
+            if geoms is not None:
+                building = Building(
+                    object_id=obj_id, space_id=space_id, geometries=geoms
+                )
+                building.add_attributes(attributes)
                 all_objects_cj[obj_id] = building
 
-        for row in tqdm(
-            bdgs_sub_reader, desc="Processing the sub-buildings with attributes"
+        # Iterate over the units
+        for attributes, specific_values in tqdm(
+            zip(subs_attributes_all, subs_specific_values_all),
+            desc="Processing the units",
+            total=len(subs_attributes_all),
         ):
-            # Get the object and parent id
-            parent_id = row[parent_column]
-            obj_id = parent_id + "." + row[id_column]
+            # Extract the specific columns
+            _, parent_space_id = specific_values[0]
+            _, unit_id = specific_values[1]
+            _, skip = specific_values[2]
+            prefix = CityJSONSpace.space_number_to_prefix(number=parent_space_id)
 
-            # Extract the ids of all the BAG buidlings that constitue this building
-            all_bag_ids = row[bag_column].split(",") if row[bag_column] != "" else []
-
-            skip = row[skip_column] != ""
-
-            subdivision = _process_bag_element(
-                obj_id=obj_id,
-                bag_ids=all_bag_ids,
-                bdg_type=BuildingPart,
-                unprocessed_bag_ids=unprocessed_bag_ids,
-                skip=skip,
+            # Add the missing hierarchy in the codes
+            main_container_id = BuildingUnitContainer.unit_code_to_id(
+                code="", prefix=prefix
             )
+            if main_container_id not in all_objects_cj:
+                main_container = BuildingUnitContainer(
+                    object_id=main_container_id, unit_code=""
+                )
+                bdg_obj_id = Building.space_number_to_id(number=parent_space_id)
+                bdg_obj = all_objects_cj[bdg_obj_id]
+                all_objects_cj[main_container_id] = main_container
+                CityJSONObject.add_parent_child(parent=bdg_obj, child=main_container)
 
-            if subdivision is not None:
-                subdivision.add_attributes(row)
-                all_objects_cj[obj_id] = subdivision
-                # Connect to the parent Building
-                parent_obj = all_objects_cj[parent_id]
-                CityJSONObject.add_parent_child(parent=parent_obj, child=subdivision)
+            z_container_id = BuildingUnitContainer.unit_code_to_id(
+                code="Z", prefix=prefix
+            )
+            if z_container_id not in all_objects_cj:
+                z_container = BuildingUnitContainer(
+                    object_id=z_container_id, unit_code="Z"
+                )
+                all_objects_cj[z_container_id] = z_container
+                CityJSONObject.add_parent_child(
+                    parent=main_container, child=z_container
+                )
+            z_container = all_objects_cj[z_container_id]
+            assert isinstance(z_container, BuildingUnitContainer)
+
+            # Find the number of units with the same code
+            units_same_code = len(z_container.children_ids)
+
+            obj_id = BuildingUnit.unit_code_to_id(
+                code="Z", prefix=prefix, number=units_same_code
+            )
+            unit = BuildingUnit(object_id=obj_id, unit_code="Z")
+            unit.add_attributes({"subdivision_number": unit_id})
+            unit.add_attributes(attributes)
+            all_objects_cj[obj_id] = unit
+
+            # Connect to the parent building
+            CityJSONObject.add_parent_child(parent=z_container, child=unit)
 
         # Add the remaining buildings
         for bag_2d_id in tqdm(
@@ -255,20 +283,25 @@ class Bag2Cityjson(CityjsonLoader):
             if bag_2d_id[-2] == "-":
                 continue
 
-            building = _process_bag_element(
-                obj_id=bag_2d_id,
+            obj_id = Building.space_number_to_id(number=bag_2d_id)
+
+            geoms = _process_bag_element(
+                obj_id=obj_id,
                 bag_ids=[bag_2d_id],
-                bdg_type=Building,
             )
 
-            if building is not None:
-                all_objects_cj[bag_2d_id] = building
+            if geoms is not None:
+
+                building = Building(
+                    object_id=obj_id, space_id=bag_2d_id, geometries=geoms
+                )
+                all_objects_cj[obj_id] = building
 
         cj_file = CityJSONFile(
             scale=np.array([0.00001, 0.00001, 0.00001], dtype=np.float64),
             translate=np.array([0, 0, 0], dtype=np.float64),
         )
-        cj_file.add_cityjson_objects(all_objects_cj.values())
+        cj_file.add_cityjson_objects(list(all_objects_cj.values()))
 
         return cj_file
 

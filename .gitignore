@@ -1,5 +1,6 @@
-# VS Code stuff
+# VS Code & PyCharm stuff
 .vscode/
+/.idea
 
 # Python virtual environments and cache
 **/.venv/
@@ -25,6 +26,7 @@ threejs/backend/feedback.log
 
 # 3DCityDB stuff
 database/citydb-tool*/
+database/cjdb/
 
 # MACOS stuff
 .DS_Store
