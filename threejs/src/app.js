@@ -482,7 +482,7 @@ export class Map {
                 if (obj.type !== "Building") continue;
                 buildingOutline.push(obj.attributes.key);
             }
-            this.setOutline(buildingOutline, "lod_2", "hover");
+            this.setOutline(buildingOutline, 'lod_2', 'default');
 
         }, undefined, function (error) {
             console.error(error);
