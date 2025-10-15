@@ -45,7 +45,7 @@ function initHeaderToggle() {
 
   // tighten document click: only close when clicking outside nav/toggle/backdrop
   document.addEventListener('click', (e) => {
-    if (nav.contains(e.target) || toggle.contains(e.target) || (backdrop && backdrop.contains(e.target))) return;
+    if (nav.contains(e.target) || toggle.contains(e.target)) return;
     close();
   });
 
@@ -79,4 +79,4 @@ if (headerContainer) {
 document.body.classList.add('menu-open');    // open
 document.body.classList.remove('menu-open'); // close
 // or toggle:
-document.body.classList.toggle('menu-open');
+// document.body.classList.toggle('menu-open');

@@ -45,6 +45,12 @@ export class BuildingView {
             return;
         }
 
+
+
+        if (!cityjson.CityObjects[this.building_key].children) {
+            return;
+        }
+
         this.active = true;
 
 
@@ -242,6 +248,8 @@ export class BuildingView {
     _populate_storey_buttons() {
 
         var storey_dropdown = document.getElementById("bv-dropdown");
+
+        storey_dropdown.innerHTML = "";
 
         const storey_codes = Object.keys(this.storeys_json);
 

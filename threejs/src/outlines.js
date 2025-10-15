@@ -90,8 +90,6 @@ export class OutlineManager {
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
 
-        console.log(objects);
-
     }
 
     clearOutline() {

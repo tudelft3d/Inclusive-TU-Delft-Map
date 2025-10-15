@@ -34,6 +34,6 @@ export function lodVis(scene, lod = 'lod_2') {
     });
 }
 
-export function cj2gltf(name){
+export function cj2gltf(name) {
     return name.replace(/[.:/]/g, '');
 }
