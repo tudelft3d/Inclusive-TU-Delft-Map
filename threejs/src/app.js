@@ -24,9 +24,9 @@ export class Map {
 
 
         // Cameras and controls
-        const cameraPosition = new THREE.Vector3(0, 1000, 0);
-        const cameraLookAt = new THREE.Vector3(0, 0, 0);
-        this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt, true);
+        const cameraPosition = new THREE.Vector3(85715, 1100, -445780);
+        const cameraLookAt = new THREE.Vector3(85743, 30, -445791);
+        this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt);
 
         this.infoPane = document.getElementById('info-pane');
         this.picker = new ObjectPicker(this.infoPane);
@@ -43,6 +43,9 @@ export class Map {
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
 
+        window.addEventListener('resize', (e) => {
+            this._resizeWindow();
+        }, false);
     }
 
     _initScene() {
@@ -102,7 +105,7 @@ export class Map {
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.canvas = this.renderer.domElement;
         this.container.appendChild(this.canvas);
-        this._resizeRenderer();
+        this._resizeWindow();
     }
 
     /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
@@ -353,9 +356,6 @@ export class Map {
 
         this.cameraManager.camera.autoRotate = true;
 
-        console.log(this.cameraManager.controls);
-
-
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;
 
@@ -370,14 +370,11 @@ export class Map {
     }
 
     zoom_on_object(object) {
-
-        if (this.cameraManager.orthographic) {
+        if (this.cameraManager.usesOrthographicCamera()) {
             this._zoom_orthographic(object);
-            return;
         } else {
             this._zoom_perspective(object);
         }
-
     }
 
     _pickEvent(pos) {
@@ -393,18 +390,16 @@ export class Map {
 
             this.zoom_on_object(object);
 
-        } else {
+        } else if (!this.cameraManager.usesOrthographicCamera()) {
 
-            if (!this.cameraManager.orthographic) {
+            this.controlsManager.activateMap();
 
-                this.controlsManager.activateMap();
-
-                const { x, y, z } = this.cameraManager.previousCamera.position;
-                this.cameraManager.camera.position.set(x, y, z);
-                this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
-                this.cameraManager.controls.update();
-            }
+            const { x, y, z } = this.cameraManager.previousCamera.position;
+            this.cameraManager.camera.position.set(x, y, z);
+            this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
+            this.cameraManager.controls.update();
         }
+
     }
 
     _attachEvents() {
@@ -438,16 +433,14 @@ export class Map {
         // window.addEventListener('resize', () => this.render());
     }
 
-    _resizeRenderer() {
+    _resizeWindow() {
         const { clientWidth: w, clientHeight: h } = this.canvas;
-        this.renderer.setSize(w, h, false);
-        this.cameraManager.camera.aspect = w / h;
-        this.cameraManager.camera.updateProjectionMatrix();
+        this.cameraManager.resizeCameras(w, h);
+        this.renderer.setSize(w, h);
     }
 
     loadGLTF(path) {
         const loader = new GLTFLoader();
-        const scene = this.scene
         loader.load(path, (gltf) => {
             let objs = gltf.scene;
             objs.rotateX(-Math.PI / 2);
@@ -483,12 +476,12 @@ export class Map {
             // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             // this.cameraManager.controls.target.copy(center);
 
-            // New standard view position and target
-            this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
-            this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
+            // // New standard view position and target
+            // this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
+            // this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
 
-            this.cameraManager.controls.update();
-            this.cameraManager.setHomeView();
+            // this.cameraManager.controls.update();
+            // this.cameraManager.setHomeView();
 
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
@@ -504,16 +497,18 @@ export class Map {
     }
 
     async loadIcon(path) {
-        var iconTexture = await svgToDiscTexture(path);
+        const iconTexture = await svgToDiscTexture(path);
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
+        const size = 20;
+        position = position.add(new THREE.Vector3(0, size, 0));
         // var position = new THREE.Vector3(85894.6171875, 43.24994134912861, -445815.28125);
-        var sprite = addPointerSprite(this.iconsScene, iconTexture, position);
-        console.log(sprite);
-
+        var sprite = addPointerSprite(this.iconsScene, iconTexture, position, size, false);
+        // console.log(sprite);
+        // console.log(this.iconsScene);
     }
 
     render(time) {
-        this._resizeRenderer();
+        // this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);

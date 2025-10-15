@@ -100,8 +100,10 @@ export class OutlineManager {
 
     // below two functions are necessary when browser window is resized
     onResize() {
-        this.composer.setSize(window.innerWidth, window.innerHeight);
-        this.outlinePass.setSize(window.innerWidth, window.innerHeight);
+        for (var i = 0; i < this.composers.length; i++) {
+            this.composers[i].setSize(window.innerWidth, window.innerHeight);
+            this.outlinePasses[i].setSize(window.innerWidth, window.innerHeight);
+        }
     }
 
     dispose() {

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/bus.svg');
+    // map.loadIcon('assets/threejs/graphics/icons/bus.svg');
 
     const buildingView = new BuildingView(map);
 
@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('view-toggle-btn').addEventListener('click', () => {
-        map.cameraManager.toggle_orthographic();
+        console.log("Clicked the button")
+        map.cameraManager.toggleOrthographic();
     });
 
     const searchBar = document.getElementById('search');

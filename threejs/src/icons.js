@@ -8,7 +8,7 @@ export function svgToCanvasTexture(svgUrl, size = 256) {
 
     // Load the SVG image
     const img = new Image();
-    img.crossOrigin = 'anonymous';          // needed if the SVG is hosted elsewhere
+    img.crossOrigin = 'anonymous'; // Needed for remote SVGs
     img.src = svgUrl;
 
     // Return a promise that resolves once the image is ready
@@ -30,35 +30,34 @@ export function svgToCanvasTexture(svgUrl, size = 256) {
 export function svgToDiscTexture(svgUrl, size = 256, bgColor = '#ffffff') {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';               // needed for remote SVGs
+        img.crossOrigin = 'anonymous'; // Needed for remote SVGs
         img.onload = () => {
-            // ---- 1️⃣ Create the canvas -------------------------------------------------
+            // Create the canvas
             const canvas = document.createElement('canvas');
             canvas.width = canvas.height = size;
             const ctx = canvas.getContext('2d');
 
-            // ---- 2️⃣ Draw the white disc ------------------------------------------------
+            // Draw the white disc
             const radius = size / 2;
             ctx.save();
             ctx.beginPath();
             ctx.arc(radius, radius, radius, 0, Math.PI * 2);
             ctx.closePath();
-            ctx.fillStyle = bgColor;                  // white by default
+            ctx.fillStyle = bgColor;
             ctx.fill();
             ctx.restore();
 
-            // ---- 3️⃣ Draw the SVG centred on the disc ---------------------------------
-            // Scale the SVG to fit nicely inside the disc (e.g. 80 % of the diameter)
-            const paddingFactor = 1;                // 0.9 → 90 % of canvas size
+            // Draw the SVG centred on the disc
+            const paddingFactor = 1; // Scale for the SVG to fit in the disc
             const drawSize = size * paddingFactor;
-            const offset = (size - drawSize) / 2;     // centre it
+            const offset = (size - drawSize) / 2;
 
             ctx.drawImage(img, offset, offset, drawSize, drawSize);
 
-            // ---- 4️⃣ Turn the canvas into a Three.js texture ---------------------------
+            // Turn the canvas into a three.js texture
             const tex = new THREE.CanvasTexture(canvas);
             tex.needsUpdate = true;
-            tex.minFilter = THREE.LinearFilter;       // avoid mip‑map warnings for non‑power‑of‑2
+            tex.minFilter = THREE.LinearFilter;
             resolve(tex);
         };
         img.onerror = reject;
@@ -66,7 +65,7 @@ export function svgToDiscTexture(svgUrl, size = 256, bgColor = '#ffffff') {
     });
 }
 
-export async function addPointerSprite(scene, svgTexture, worldPos) {
+export async function addPointerSprite(scene, svgTexture, worldPos, size, constantSize = false) {
     const material = new THREE.SpriteMaterial({
         map: svgTexture,
         // alphaTest: 0.5,
@@ -74,16 +73,14 @@ export async function addPointerSprite(scene, svgTexture, worldPos) {
         transparent: true,
         depthTest: false,
         depthWrite: true,
-        // sizeAttenuation: false,
+        sizeAttenuation: !constantSize,
     });
 
-    const worldScale = 50;
-
     const sprite = new THREE.Sprite(material);
-    sprite.position.copy(worldPos.add(new THREE.Vector3(0, worldScale / 2, 0)));   // THREE.Vector3 where you want the pointer
+    sprite.position.copy(worldPos);
 
     // Optional: scale the sprite in world units (not pixels)
-    sprite.scale.set(worldScale, worldScale, 1);
+    sprite.scale.set(size, size, 1);
 
     scene.add(sprite);
     return sprite;
