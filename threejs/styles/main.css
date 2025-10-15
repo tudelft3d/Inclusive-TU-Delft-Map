@@ -49,7 +49,7 @@ canvas {
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 6px;
   pointer-events: none;
   font-size: 14px;
   line-height: 1.4;
@@ -60,17 +60,16 @@ canvas {
 #search-bar {
   position: fixed;
   top: calc(var(--height, 64px) + 20px);
-  left: 5px;
-  transform: translateX(5%);
-  opacity: 0.5;
+  left: 20px;
+  opacity: 0.85;
   z-index: 10;
 }
 
 #search-bar input {
   padding: 8px 12px;
   font-size: 16px;
-  width: 600px;
-  border-radius: 5px;
+  width: 450px;
+  border-radius: 6px;
   border: 1px solid #ccc;
 }
 
@@ -257,7 +256,86 @@ canvas {
   min-width: 160px;
   z-index: inherit;
 }
+.info-pane {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
+.info-pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.info-pane-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.info-pane-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+}
+
+.info-pane-content {
+    padding: 12px 16px;
+}
+
+.info-pane-row {
+    display: flex;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.info-pane-label {
+    flex: 0 0 40%;
+    font-weight: 500;
+    color: #555;
+}
+
+.info-pane-value {
+    flex: 0 0 60%;
+    color: #333;
+}
+
+.info-pane-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.info-pane-floorplan-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.info-pane-floorplan-btn:hover {
+    background-color: #3367d6;
+}
 #lod-dropdown a {
   display: block;
   padding: 10px;
@@ -348,4 +426,131 @@ canvas {
   width: 26px;
   height: 26px;
   display: block;
+}
+
+
+/* Info Pane Base Styles */
+#info-pane {
+  position: fixed;
+  top: 140px;
+  left: 20px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  max-width: 320px;
+  min-width: 260px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 30;
+  font-family: Sans-Serif;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* Header */
+.info-pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #00A6D6;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-pane-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.info-pane-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.info-pane-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Content */
+.info-pane-content {
+  padding: 12px 14px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.info-pane-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.info-pane-row:last-child {
+  border-bottom: none;
+}
+
+.info-pane-label {
+  font-weight: 600;
+  color: #444;
+  flex-shrink: 0;
+}
+
+.info-pane-value {
+  color: #666;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Footer with Floor plan Button */
+.info-pane-footer {
+  padding: 12px 14px;
+  background: #f3f3f3;
+  border-top: 1px solid #ddd;
+}
+
+.info-pane-floorplan-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: white;
+  color: #444;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.info-pane-floorplan-btn:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+}
+
+.info-pane-floorplan-btn:active {
+  transform: translateY(0);
+}
+
+.info-pane-floorplan-btn i {
+  font-size: 16px;
 }
