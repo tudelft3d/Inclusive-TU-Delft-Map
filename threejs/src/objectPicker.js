@@ -72,7 +72,7 @@ export class ObjectPicker {
         }
         this.picked = null;
         this.pickedColor = null;
-        setInfoContent({}, this.infoPane);
+
 
         // Cast a ray through the frustum
         this.raycaster.setFromCamera(normalizedPosition, camera);
@@ -96,7 +96,6 @@ export class ObjectPicker {
 
         if (!mesh.name) { return false; }
         this.highlight(mesh);
-
 
         return true;
     }
