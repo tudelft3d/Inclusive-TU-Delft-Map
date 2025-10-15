@@ -16,6 +16,13 @@ export class OutlineManager {
         this.cameras = [];
         this.outlinePasses = [];
         this.selectedObjects = [];
+        this.style = {
+            edgeStrength: 5,
+            edgeGlow: 0.25,
+            edgeThickness: 0.3,
+            visibleEdgeColor: '#ffffff',
+            hiddenEdgeColor: '#ffffff'
+        };
         this._resizeListener = () => this.onResize();
         window.addEventListener('resize', this._resizeListener);
     }
@@ -30,7 +37,7 @@ export class OutlineManager {
                 currentIndex = i;
             }
         }
-        if (!currentIndex) {
+        if (currentIndex === null) {
             this._create_outline_pass(cameraManager);
             currentIndex = this.composers.length - 1;
         }
@@ -55,11 +62,11 @@ export class OutlineManager {
         );
 
         // Outline settings
-        outlinePass.edgeStrength = 5;
-        outlinePass.edgeGlow = 0.25;
-        outlinePass.edgeThickness = 0.3;
-        outlinePass.visibleEdgeColor.set('#ffffff');
-        outlinePass.hiddenEdgeColor.set('#ffffff');
+        outlinePass.edgeStrength = this.style.edgeStrength;
+        outlinePass.edgeGlow = this.style.edgeGlow;
+        outlinePass.edgeThickness = this.style.edgeThickness;
+        outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
+        outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
         composer.addPass(outlinePass);
 
@@ -79,9 +86,12 @@ export class OutlineManager {
         return composer;
     }
 
-    outlineObjects(objects) {
+    outlineObjects(objects, code = "default") {
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
+
+        console.log(objects);
+
     }
 
     clearOutline() {
@@ -97,4 +107,5 @@ export class OutlineManager {
     dispose() {
         window.removeEventListener('resize', this._resizeListener);
     }
+
 }

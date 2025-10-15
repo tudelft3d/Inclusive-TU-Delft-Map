@@ -1,6 +1,7 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
+import { outline_code } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -13,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     map.loadIcon('assets/threejs/graphics/icons/bus.svg');
 
     const buildingView = new BuildingView(map);
+
+    map.buildingView = buildingView;
+
     const searcher = new Searcher();
 
     // The amount of time the searchbar will wait before searcing in miliseconds
@@ -20,6 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // The number of results that are returned for partials searches
     const search_result_count = 5;
+
+    // Set up compass element and rotation updates
+    const compassIcon = document.querySelector('#compass-btn svg') ||
+        document.querySelector('#compass-btn img') ||
+        document.querySelector('#compass-btn .compass-icon');
+
+    if (compassIcon) {
+        map.cameraManager.setCompassElement(compassIcon);
+
+        // Add controls change listener to update compass rotation
+        map.cameraManager.controls.addEventListener('change', () => {
+            map.cameraManager.updateCompassRotation();
+        });
+
+        // Initial compass update
+        map.cameraManager.updateCompassRotation();
+    }
 
     document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
@@ -62,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         intermediateResults.innerHTML = '';
 
-        search_results = search_results.map((element) => { return element.item.attributes["space_id"] });
+        search_results = search_results.map((element) => { return element.item.attributes["key"] });
 
         for (let i = 0; i < search_results.length; i++) {
 
@@ -116,14 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-    intermediateResults.addEventListener("click", (event) => {
-
-        // let value = event.target.textContent;
-
-        // searcher.search_and_zoom(value, map);
-
-    });
-
     // These two make sure the suggestions are hidden,
     // but they also cause the suggestions to disappear before they can be clicked
     searchBar.addEventListener("focusout", (event) => {
@@ -170,6 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             layersDropdown.style.display = 'none';
         }
+    });
+
+    layersDropdown.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            outline_code(item.dataset.code, map);
+
+            layersDropdown.style.display = 'none';
+        });
     });
 
     document.addEventListener('click', () => {
@@ -219,7 +242,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const bvBtn = document.getElementById("bv-btn");
+    bvBtn.addEventListener("click", (event) => {
 
+        buildingView.initiate_buildingView();
+
+    });
+
+
+    const bvDropdown_button = document.getElementById("bv-storey-btn");
+    const bvDropdown_dropdown = document.getElementById("bv-dropdown");
+
+    bvDropdown_button.addEventListener("click", (event) => {
+
+        event.stopPropagation();
+        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
+            bvDropdown_dropdown.style.display = 'block';
+        } else {
+            bvDropdown_dropdown.style.display = 'none';
+        }
+
+    });
 
     // LOD DROPDOWN - Commented out
     /*
@@ -235,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 lodDropdown.style.display = 'none';
             }
         });
+
 
         document.addEventListener('click', () => {
             lodDropdown.style.display = 'none';
