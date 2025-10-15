@@ -159,10 +159,14 @@ export class InfoPane {
      */
     hide() {
         this.pane.style.opacity = '0';
-        setTimeout(() => {
-            this.pane.innerHTML = '';
-            this.pane.style.display = 'none';
-        }, 300);
+
+        this.pane.innerHTML = '';
+        this.pane.style.display = 'none';
+
+        // setTimeout(() => {
+        //     this.pane.innerHTML = '';
+        //     this.pane.style.display = 'none';
+        // }, 3000);
     }
 
     /**
