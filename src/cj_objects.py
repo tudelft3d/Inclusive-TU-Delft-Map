@@ -232,7 +232,7 @@ class CityJSONObject(ABC):
             content_dict["parents"] = [self.parent_id]
         if len(self.children_ids) > 0:
             content_dict["children"] = list(self.children_ids)
-        content_dict["attributes"] = self.attributes
+        content_dict["attributes"] = self.attributes.copy()
         return content_dict
 
     def add_attributes(
@@ -284,7 +284,7 @@ class CityJSONSpace(CityJSONObject):
 
     def get_cityobject(self) -> dict[str, Any]:
         parent_units_key = "parent_units"
-        self.add_attributes({parent_units_key: self.parent_units})
+        self.add_attributes({parent_units_key: list(self.parent_units)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
         self.attributes.pop(parent_units_key)
@@ -425,7 +425,7 @@ class BuildingUnit(BuildingUnitContainer):
 
     def get_cityobject(self) -> dict[str, Any]:
         unit_spaces_key = "unit_spaces"
-        self.add_attributes({unit_spaces_key: self.unit_spaces})
+        self.add_attributes({unit_spaces_key: list(self.unit_spaces)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
         self.attributes.pop(unit_spaces_key)
