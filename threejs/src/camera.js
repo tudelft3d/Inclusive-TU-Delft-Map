@@ -1,18 +1,13 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 
-// import * as constants from 'constants';
-
 import * as THREE from 'three';
-
 
 const MAP_CAMERA = 0;
 const ORBIT_CAMERA = 1;
 const ORTHOGRAPHIC_CAMERA = 2;
 
-
 const fov = 75;
-// const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
 const far = 100000;
 
@@ -143,15 +138,6 @@ export class CamerasControls {
 
     }
 
-    // setInitial(position, target) {
-    //     this.initialPosition = new THREE.Vector3(position.x, position.y, position.z);
-    //     this.initialTarget = new THREE.Vector3(target.x, target.y, target.z);
-    //     this.camera.position.set(position.x, position.y, position.z);
-    //     this.controls.target.set(target.x, target.y, target.z);
-    //     this.camera.updateProjectionMatrix();
-    //     this.controls.update();
-    // }
-
     resizeCameras(width, height) {
         const aspect = width / height;
 
@@ -161,10 +147,6 @@ export class CamerasControls {
         this.orbitCamera.updateProjectionMatrix();
 
         this.orthographicCamera.aspect = aspect;
-        // this.orthographicCamera.left = (frustumSize * aspect) / - 2;
-        // this.orthographicCamera.right = (frustumSize * aspect) / 2;
-        // this.orthographicCamera.top = frustumSize / 2;
-        // this.orthographicCamera.bottom = frustumSize / -2;
 
         this.orthographicCamera.position.copy(this.controls.target);
         this.orthographicCamera.position.y = 1000;
@@ -259,13 +241,6 @@ export class CamerasControls {
             this.switchToMap();
         }
     }
-
-    /** Keep the visual position when swapping cameras */
-    // _syncPositions(sourceCam) {
-    // if (!sourceCam) return;
-    // const { x, y, z } = sourceCam.position;
-    // this.camera.position.set(x, y, z);
-    // }
 
     zoomIn(factor = 1.8) {
         if (this.controls._dollyOut) {
