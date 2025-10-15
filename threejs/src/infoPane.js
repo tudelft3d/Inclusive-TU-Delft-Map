@@ -42,14 +42,25 @@ export class InfoPane {
      * Show info for a picked object
      */
     show(data) {
+        // Store original name if it's a string
+        const originalName = typeof data === 'string' ? data : null;
+
         // If data is a string (object name), look it up in CityJSON
         if (typeof data === 'string') {
             data = this._getBuildingDataFromName(data);
         }
 
+        // If no data found, but we have a name, show that
         if (!data || Object.keys(data).length === 0) {
-            this.hide();
-            return;
+            if (originalName) {
+                data = {
+                    name: originalName,
+                    Type: 'Building Object'
+                };
+            } else {
+                this.hide();
+                return;
+            }
         }
 
         // Extract building name/title if it exists
@@ -91,7 +102,7 @@ export class InfoPane {
             }
         });
 
-        // Add remaining fields
+        // Add other fields
         const entries = Object.entries(data).filter(([k]) =>
             !excludeKeys.includes(k) &&
             !priorityFields.some(pf => pf.key === k)
@@ -138,8 +149,8 @@ export class InfoPane {
 
         this.pane.innerHTML = html;
         this.pane.style.opacity = '1';
+        this.pane.style.display = 'block'; // Keep it always visible, even with no info
 
-        // Add event listeners
         this._attachEventListeners();
     }
 
@@ -148,7 +159,10 @@ export class InfoPane {
      */
     hide() {
         this.pane.style.opacity = '0';
-        setTimeout(() => this.pane.innerHTML = '', 300);
+        setTimeout(() => {
+            this.pane.innerHTML = '';
+            this.pane.style.display = 'none';
+        }, 300);
     }
 
     /**
@@ -167,10 +181,4 @@ export class InfoPane {
             });
         }
     }
-}
-
-// Legacy support - keep the old function for backward compatibility if needed
-export function setInfoContent(data, pane, buildingView = null) {
-    const infoPane = new InfoPane(pane, buildingView);
-    infoPane.show(data);
 }
