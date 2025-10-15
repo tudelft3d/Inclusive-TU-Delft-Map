@@ -349,7 +349,7 @@ export class Map {
 
         // this.orthographicCamera.updateProjectionMatrix();
 
-        this.cameraManager.camera.autoRotate = true;
+        // this.cameraManager.camera.autoRotate = true;
 
         console.log(this.cameraManager.controls);
 
