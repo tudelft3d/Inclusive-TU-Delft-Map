@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    // map.loadIcon('assets/threejs/graphics/icons/bus.svg');
+    map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
     const buildingView = new BuildingView(map);
 

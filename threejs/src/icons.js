@@ -48,7 +48,7 @@ export function svgToDiscTexture(svgUrl, size = 256, bgColor = '#ffffff') {
             ctx.restore();
 
             // Draw the SVG centred on the disc
-            const paddingFactor = 1; // Scale for the SVG to fit in the disc
+            const paddingFactor = 0.8; // Scale for the SVG to fit in the disc
             const drawSize = size * paddingFactor;
             const offset = (size - drawSize) / 2;
 

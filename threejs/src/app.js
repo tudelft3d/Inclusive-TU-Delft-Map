@@ -423,7 +423,7 @@ export class Map {
                 this._pickEvent(pos);
             }
 
-            
+
         });
 
         // touch handling (mirrors the mouse logic)
@@ -436,7 +436,7 @@ export class Map {
             if (clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
             }
-            
+
             this._pickEvent(pos);
         });
 
@@ -511,7 +511,7 @@ export class Map {
     }
 
     async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path);
+        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
         const size = 20;
         position = position.add(new THREE.Vector3(0, size, 0));
