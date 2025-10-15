@@ -29,7 +29,7 @@ export class Map {
         this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt, true);
 
         this.infoPane = document.getElementById('info-pane');
-        this.picker = new ObjectPicker(this.infoPane);
+        this.picker = new ObjectPicker(this.infoPane, this.buildingView);
         this.controlsManager = new ControlsManager(this.container, this.cameraManager);
 
         this.tweens = new Array();
@@ -489,9 +489,17 @@ export class Map {
             //     child.visible = true;
             // } else { child.visible = false; }
             // });
-            this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
-            this.cameraManager.controls.target.copy(center);
+
+            // Old camera positioning based on model bounds
+            // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
+            // this.cameraManager.controls.target.copy(center);
+
+            // New standard view position and target
+            this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
+            this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
+
             this.cameraManager.controls.update();
+            this.cameraManager.setHomeView();
 
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {

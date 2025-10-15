@@ -17,10 +17,10 @@ export class Searcher {
         this.raw_json = cityjson;
 
         this.processed_json = this._process_json(cityjson);
-        
+
         this.searches = [];
 
-        this.fuseOptions = {keys: ["attributes.space_id", "attributes.key", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"]};
+        this.fuseOptions = { keys: ["attributes.space_id", "attributes.key", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"] };
 
         this.attribute_searcher = new Fuse(this.processed_json, this.fuseOptions);
         this.geometry_searcher = new Fuse();
@@ -42,29 +42,29 @@ export class Searcher {
 
     // Perhaps make lod extractable from the map
     // Will have to change this if not all searchable objects have a space_id
-    _retrieve_threejs_objects(object_list, map, lod="infer") {
+    _retrieve_threejs_objects(object_list, map, lod = "infer") {
 
         const threejs_objects = [];
 
         for (let i = 0; i < object_list.length; i++) {
 
-        	const current_object = object_list[i];
+            const current_object = object_list[i];
 
             if (lod == "infer") {
 
                 if (current_object.item.type == "Building") {
                     lod = "-lod_2";
-                } else if (current_object.item.type == "BuildingRoom")  {
+                } else if (current_object.item.type == "BuildingRoom") {
                     lod = "-lod_0";
                 }
 
             }
 
-        	const threejs_object_name = current_object.item.attributes["key"].concat(lod);
-            
-        	threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
+            const threejs_object_name = current_object.item.attributes["key"].concat(lod);
 
-		}
+            threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
+
+        }
 
         return threejs_objects;
     }
@@ -72,31 +72,32 @@ export class Searcher {
 
     _search_pattern(pattern, return_count) {
 
-    	const all_results = this.attribute_searcher.search(pattern);
+        const all_results = this.attribute_searcher.search(pattern);
 
-    	const sliced_results = all_results.slice(0, return_count);
+        const sliced_results = all_results.slice(0, return_count);
 
-    	return sliced_results;
+        return sliced_results;
 
     }
 
 
     search_and_zoom(pattern, map) {
 
-    	const result = this._search_pattern(pattern, 1);
+        const result = this._search_pattern(pattern, 1);
 
-    	const threejs_object = this._retrieve_threejs_objects(result, map)[0];
+        const threejs_object = this._retrieve_threejs_objects(result, map)[0];
 
-    	map.zoom_on_object(threejs_object);
+        map.picker.highlight(threejs_object);
+        map.zoom_on_object(threejs_object);
 
     }
 
 
     search_n_best_matches(pattern, n) {
 
-    	const results = this._search_pattern(pattern, n);
+        const results = this._search_pattern(pattern, n);
 
-    	return results;
+        return results;
 
     }
 
