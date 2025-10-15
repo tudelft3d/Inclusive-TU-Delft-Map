@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accessibilityDropdown = document.getElementById('accessibility-dropdown');
 
     accessibilityBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
             accessibilityDropdown.style.display = 'block';
         } else {

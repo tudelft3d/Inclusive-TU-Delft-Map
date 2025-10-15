@@ -92,7 +92,6 @@ export class ObjectPicker {
                 mesh = hits[i].object;
                 break;
             }
-            console.log(mesh);
         }
 
         // const mesh = hits[0].object;

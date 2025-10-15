@@ -419,13 +419,27 @@ export class Map {
         });
         window.addEventListener('mouseup', (e) => {
             const pos = getCanvasRelativePosition(e, this.canvas);
-            this._pickEvent(pos);
+
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+
+            if (clicked_element.nodeName == "CANVAS") {
+                this._pickEvent(pos);
+            }
+
+            
         });
 
         // touch handling (mirrors the mouse logic)
         window.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
+
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+
+            if (clicked_element.nodeName == "CANVAS") {
+                this._pickEvent(pos);
+            }
+            
             this._pickEvent(pos);
         });
 
