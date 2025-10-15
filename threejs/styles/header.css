@@ -284,19 +284,4 @@ body.menu-open {
     min-width: auto;
     margin: 0;
   }
-
-  /* backdrop for closing the panel */
-  .nav-backdrop {
-    display: none;
-  }
-
-  .nav-backdrop.show {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 1200;
-    /* behind .main-nav (1250) */
-  }
-
 }
