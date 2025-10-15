@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
+    map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
     const buildingView = new BuildingView(map);
 
@@ -26,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
-                       document.querySelector('#compass-btn img') ||
-                       document.querySelector('#compass-btn .compass-icon');
+        document.querySelector('#compass-btn img') ||
+        document.querySelector('#compass-btn .compass-icon');
 
     if (compassIcon) {
         map.cameraManager.setCompassElement(compassIcon);
@@ -54,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('view-toggle-btn').addEventListener('click', () => {
-        map.cameraManager.toggle_orthographic();
+        console.log("Clicked the button")
+        map.cameraManager.toggleOrthographic();
     });
 
     const searchBar = document.getElementById('search');
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function debounce(func, wait) {
 
-        return function(...args) {
+        return function (...args) {
 
             window.clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
@@ -82,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         intermediateResults.innerHTML = '';
 
-        search_results = search_results.map((element) => {return element.item.attributes["key"]});
+        search_results = search_results.map((element) => { return element.item.attributes["key"] });
 
-        for (let i=0; i<search_results.length; i++) {
+        for (let i = 0; i < search_results.length; i++) {
 
             var li = document.createElement("li");
             li.appendChild(document.createTextNode(search_results[i]));
@@ -113,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let value = event.target.value;
 
-        if (!value || value.trim().length <= 0){
-                return;
+        if (!value || value.trim().length <= 0) {
+            return;
         }
 
         // If the key being released is enter, the user wants to search
@@ -139,11 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // These two make sure the suggestions are hidden,
     // but they also cause the suggestions to disappear before they can be clicked
     searchBar.addEventListener("focusout", (event) => {
+
+        setTimeout(() => {
+            intermediateResults.style.visibility = 'hidden';
+        }, 100);
+
         //intermediateResults.style.visibility = 'hidden';
     });
 
     searchBar.addEventListener("focusin", (event) => {
-        //intermediateResults.style.visibility = 'visible';
+        intermediateResults.style.visibility = 'visible';
     });
 
     const basemapBtn = document.getElementById('basemap-btn');
@@ -202,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accessibilityDropdown = document.getElementById('accessibility-dropdown');
 
     accessibilityBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
             accessibilityDropdown.style.display = 'block';
         } else {

@@ -11,7 +11,7 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-
+import { addPointerSprite, svgToCanvasTexture, svgToDiscTexture } from './icons';
 
 export class Map {
     constructor(container) {
@@ -24,9 +24,9 @@ export class Map {
 
 
         // Cameras and controls
-        const cameraPosition = new THREE.Vector3(0, 1000, 0);
-        const cameraLookAt = new THREE.Vector3(0, 0, 0);
-        this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt, true);
+        const cameraPosition = new THREE.Vector3(85715, 1100, -445780);
+        const cameraLookAt = new THREE.Vector3(85743, 30, -445791);
+        this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt);
 
         this.infoPane = document.getElementById('info-pane');
         this.picker = new ObjectPicker(this.infoPane, this.buildingView);
@@ -38,11 +38,14 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
-        this.outlineManager = new OutlineManager(this.scene, this.cameraManager.camera, this.renderer);
+        this.outlineManager = new OutlineManager(this.scene, this.iconsScene, this.renderer);
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
 
+        window.addEventListener('resize', (e) => {
+            this._resizeWindow();
+        }, false);
     }
 
     _initScene() {
@@ -58,6 +61,8 @@ export class Map {
             'sky_gradient_sides.png',
         ]);
         this.scene.background = skyboxTexture;
+
+        this.iconsScene = new THREE.Scene();
 
         // const geometry = new THREE.BoxGeometry(100, 100, 100);
         // const material = new THREE.MeshBasicMaterial({
@@ -100,7 +105,7 @@ export class Map {
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.canvas = this.renderer.domElement;
         this.container.appendChild(this.canvas);
-        this._resizeRenderer();
+        this._resizeWindow();
     }
 
     /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
@@ -349,10 +354,7 @@ export class Map {
 
         // this.orthographicCamera.updateProjectionMatrix();
 
-        this.cameraManager.camera.autoRotate = true;
-
-        console.log(this.cameraManager.controls);
-
+        // this.cameraManager.camera.autoRotate = true;
 
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;
@@ -368,14 +370,11 @@ export class Map {
     }
 
     zoom_on_object(object) {
-
-        if (this.cameraManager.orthographic) {
+        if (this.cameraManager.usesOrthographicCamera()) {
             this._zoom_orthographic(object);
-            return;
         } else {
             this._zoom_perspective(object);
         }
-
     }
 
     _pickEvent(pos) {
@@ -391,18 +390,16 @@ export class Map {
 
             this.zoom_on_object(object);
 
-        } else {
+        } else if (!this.cameraManager.usesOrthographicCamera()) {
 
-            if (!this.cameraManager.orthographic) {
+            this.controlsManager.activateMap();
 
-                this.controlsManager.activateMap();
-
-                const { x, y, z } = this.cameraManager.previousCamera.position;
-                this.cameraManager.camera.position.set(x, y, z);
-                this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
-                this.cameraManager.controls.update();
-            }
+            const { x, y, z } = this.cameraManager.previousCamera.position;
+            this.cameraManager.camera.position.set(x, y, z);
+            this.cameraManager.controls.target.copy(this.cameraManager.previousControls.target);
+            this.cameraManager.controls.update();
         }
+
     }
 
     _attachEvents() {
@@ -419,13 +416,27 @@ export class Map {
         });
         window.addEventListener('mouseup', (e) => {
             const pos = getCanvasRelativePosition(e, this.canvas);
-            this._pickEvent(pos);
+
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+
+            if (clicked_element.nodeName == "CANVAS") {
+                this._pickEvent(pos);
+            }
+
+
         });
 
         // touch handling (mirrors the mouse logic)
         window.addEventListener('touchend', (e) => {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
+
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+
+            if (clicked_element.nodeName == "CANVAS") {
+                this._pickEvent(pos);
+            }
+
             this._pickEvent(pos);
         });
 
@@ -436,16 +447,14 @@ export class Map {
         // window.addEventListener('resize', () => this.render());
     }
 
-    _resizeRenderer() {
+    _resizeWindow() {
         const { clientWidth: w, clientHeight: h } = this.canvas;
-        this.renderer.setSize(w, h, false);
-        this.cameraManager.camera.aspect = w / h;
-        this.cameraManager.camera.updateProjectionMatrix();
+        this.cameraManager.resizeCameras(w, h);
+        this.renderer.setSize(w, h);
     }
 
     loadGLTF(path) {
         const loader = new GLTFLoader();
-        const scene = this.scene
         loader.load(path, (gltf) => {
             let objs = gltf.scene;
             objs.rotateX(-Math.PI / 2);
@@ -455,6 +464,7 @@ export class Map {
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
+            console.log(center);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = this.cameraManager.camera.fov * (Math.PI / 180);
@@ -480,12 +490,12 @@ export class Map {
             // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
             // this.cameraManager.controls.target.copy(center);
 
-            // New standard view position and target
-            this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
-            this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
+            // // New standard view position and target
+            // this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
+            // this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
 
-            this.cameraManager.controls.update();
-            this.cameraManager.setHomeView();
+            // this.cameraManager.controls.update();
+            // this.cameraManager.setHomeView();
 
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
@@ -500,11 +510,22 @@ export class Map {
         // this.render();
     }
 
+    async loadIcon(path) {
+        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
+        var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
+        const size = 20;
+        position = position.add(new THREE.Vector3(0, size, 0));
+        // var position = new THREE.Vector3(85894.6171875, 43.24994134912861, -445815.28125);
+        var sprite = addPointerSprite(this.iconsScene, iconTexture, position, size, false);
+        // console.log(sprite);
+        // console.log(this.iconsScene);
+    }
+
     render(time) {
-        this._resizeRenderer();
+        // this._resizeRenderer();
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
-        this.outlineManager.render(time, this.cameraManager, this.renderer);
+        this.outlineManager.render(time, this.cameraManager);
         requestAnimationFrame(this.render);
     }
 
@@ -565,7 +586,6 @@ export class Map {
                 hiddenEdgeColor: '#0bff02'
             });
         }
-        // console.log("selected objects for outlining:", outlineObjects);
         this.outlineManager.outlineObjects(outlineObjects);
     }
 }

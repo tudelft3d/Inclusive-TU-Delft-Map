@@ -57,13 +57,6 @@ app.use(express.static(staticRoot, {
     immutable: true,
 }));
 
-// // Fallback to index.html for SPA routing (if you need it)
-// app.get('*', (req, res) => {
-//     console.log(path.join(staticRoot, 'index.html'));
-//     res.sendFile(path.join(staticRoot, 'index.html'));
-// });
-
-
 // Export for use with `pm2`, `systemd`, or just `node feedback.js`
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Feedback endpoint listening on ${PORT}`))

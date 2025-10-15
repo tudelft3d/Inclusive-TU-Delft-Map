@@ -66,12 +66,13 @@ export class ObjectPicker {
      */
     pick(normalizedPosition, scene, camera) {
         // Restore the color if there was a picked object
-        if (this.picked) {
+        if (this.picked && this.picked.material && this.picked.material.emissive) {
             this.picked.material.emissive.setHex(this.pickedColor);
-            this.picked = null;
-            this.pickedColor = null;
             this.infoPane.hide(); // Clean separation - InfoPane handles hiding
         }
+        this.picked = null;
+        this.pickedColor = null;
+
 
         // Cast a ray through the frustum
         this.raycaster.setFromCamera(normalizedPosition, camera);
@@ -93,8 +94,15 @@ export class ObjectPicker {
         // No visible object found
         if (!mesh) { return false; }
 
-        // To skip the background
         if (!mesh.name) { return false; }
+        this.highlight(mesh);
+
+        return true;
+    }
+
+    highlight(mesh) {
+        // To skip the background
+
 
         // To prevent the modification from applying to all objects
         if (!mesh.userData.hasOwnProperty('materialCloned')) {
@@ -104,6 +112,7 @@ export class ObjectPicker {
         }
 
         // Save its color
+
         this.pickedColor = mesh.material.emissive.getHex();
 
         // Set its emissive color to picked color
@@ -113,6 +122,5 @@ export class ObjectPicker {
         this.infoPane.show(mesh.name);
 
         this.picked = mesh;
-        return true;
     }
 }

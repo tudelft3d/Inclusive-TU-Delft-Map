@@ -6,19 +6,19 @@ import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {
 
 export class BuildingView {
 
-	constructor(map) {
+    constructor(map) {
 
         this.active = false;
 
-		this.map = map;
+        this.map = map;
 
-		this.building_key;
+        this.building_key;
 
-		this.building_json;
+        this.building_json;
 
         this.building_threejs;
 
-		this.storeys_json;
+        this.storeys_json;
 
         this.current_storey;
 
@@ -26,7 +26,7 @@ export class BuildingView {
 
     set_target(key) {
 
-    	this.building_key = key.split("-").slice(0, 3).join("-");
+        this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
         // this.building_key = this.map.scene.getObjectByName(key).parent.name;
@@ -35,25 +35,29 @@ export class BuildingView {
 
     initiate_buildingView() {
 
-    	if (!this.building_key) {
-    		console.log("no building selected");
-    		return;
-    	}
+        if (!this.building_key) {
+            console.log("no building selected");
+            return;
+        }
 
-        if(this.active) {
+        if (this.active) {
             this.leave_buildingView();
+            return;
+        }
+
+        if (!cityjson.CityObjects[this.building_key].children) {
             return;
         }
 
         this.active = true;
 
 
-        this.map.cameraManager.switch_to_orthographic();
+        this.map.cameraManager.switchToOrthographic();
 
 
-    	this.building_json = cityjson.CityObjects[this.building_key];
+        this.building_json = cityjson.CityObjects[this.building_key];
 
-    	this.storeys_json = this._isolate_storey_json();
+        this.storeys_json = this._isolate_storey_json();
 
         this.building_threejs = this.map.scene.getObjectByName(this.building_key);
 
@@ -64,8 +68,6 @@ export class BuildingView {
 
         const storey_00_room_threejs = this._retrieve_room_threejs_objects("00");
         this._unhide_objects(storey_00_room_threejs);
-
-        console.log(storey_00_room_threejs);
 
         this._apply_outlines(storey_00_room_threejs, "lod_0", "default");
 
@@ -82,6 +84,10 @@ export class BuildingView {
         this.building_key = undefined;
 
         this.active = false;
+
+        var storey_dropdown = document.getElementById("bv-dropdown");
+
+        storey_dropdown.innerHTML = "";
 
     }
 
@@ -111,68 +117,68 @@ export class BuildingView {
 
     _isolate_storey_json() {
 
-    	const building_children = this.building_json["children"];
+        const building_children = this.building_json["children"];
 
-    	const building_parts = building_children.filter((element) => {return element.includes("Part")});
+        const building_parts = building_children.filter((element) => { return element.includes("Part") });
 
-    	let storey_json_keys = [];
+        let storey_json_keys = [];
 
-    	building_parts.forEach((part_json_key) => {
+        building_parts.forEach((part_json_key) => {
 
-    		const building_part_json = cityjson.CityObjects[part_json_key];
+            const building_part_json = cityjson.CityObjects[part_json_key];
 
-    		storey_json_keys = storey_json_keys.concat(building_part_json["children"]);
+            storey_json_keys = storey_json_keys.concat(building_part_json["children"]);
 
-    	});
+        });
 
-    	let sorted_storey_json_keys = {};
+        let sorted_storey_json_keys = {};
 
-    	storey_json_keys.forEach((storey_key) => {
+        storey_json_keys.forEach((storey_key) => {
 
-    		const storey_code = storey_key.split("_").pop();
+            const storey_code = storey_key.split("_").pop();
 
-    		if (storey_code in sorted_storey_json_keys) {
-    			sorted_storey_json_keys[storey_code].push(storey_key);
-    		} else {
-    			sorted_storey_json_keys[storey_code] = [storey_key];
-    		}
+            if (storey_code in sorted_storey_json_keys) {
+                sorted_storey_json_keys[storey_code].push(storey_key);
+            } else {
+                sorted_storey_json_keys[storey_code] = [storey_key];
+            }
 
-    	});
+        });
 
-    	return sorted_storey_json_keys;
+        return sorted_storey_json_keys;
 
     }
 
     _retrieve_room_threejs_objects(storey_code) {
 
-    	if (!(storey_code in this.storeys_json)) {
-    		console.log("Invalid storey code, returning empty array");
-    		return [];
-    	}
+        if (!(storey_code in this.storeys_json)) {
+            console.log("Invalid storey code, returning empty array");
+            return [];
+        }
 
-    	let building_room_keys = [];
+        let building_room_keys = [];
 
-    	const building_part_storey_keys = this.storeys_json[storey_code];
+        const building_part_storey_keys = this.storeys_json[storey_code];
 
-    	building_part_storey_keys.forEach((part_storey_key) => {
+        building_part_storey_keys.forEach((part_storey_key) => {
 
-    		building_room_keys = building_room_keys.concat(cityjson.CityObjects[part_storey_key]["children"]);
+            building_room_keys = building_room_keys.concat(cityjson.CityObjects[part_storey_key]["children"]);
 
-    	});
+        });
 
-    	let room_threejs_objects = [];
+        let room_threejs_objects = [];
 
-    	building_room_keys.forEach((room_key) => {
+        building_room_keys.forEach((room_key) => {
 
-    		// const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
+            // const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
 
-    		const threejs_object_name = room_key.concat("-lod_0");
+            const threejs_object_name = room_key.concat("-lod_0");
 
-    		room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
+            room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
 
-    	});
+        });
 
-    	return room_threejs_objects;
+        return room_threejs_objects;
 
     }
 
@@ -243,9 +249,11 @@ export class BuildingView {
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
+        storey_dropdown.innerHTML = "";
+
         const storey_codes = Object.keys(this.storeys_json);
 
-        for (let i=0; i<storey_codes.length; i++) {
+        for (let i = 0; i < storey_codes.length; i++) {
 
             var a = document.createElement("a");
 

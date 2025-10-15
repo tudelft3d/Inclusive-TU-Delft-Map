@@ -15,8 +15,6 @@ export function outline_code(code, map) {
 
 	object_attribute_list.forEach((current_object) => {
 
-		console.log(current_object.attributes["Usage Code"]);
-
 		if (current_object.attributes["Usage Code"] == code) {
 			keys.push(current_object.attributes.key);
 
