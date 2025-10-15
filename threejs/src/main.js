@@ -141,11 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // These two make sure the suggestions are hidden,
     // but they also cause the suggestions to disappear before they can be clicked
     searchBar.addEventListener("focusout", (event) => {
+
+        setTimeout(() => {
+            intermediateResults.style.visibility = 'hidden';
+        }, 100);
+
         //intermediateResults.style.visibility = 'hidden';
     });
 
     searchBar.addEventListener("focusin", (event) => {
-        //intermediateResults.style.visibility = 'visible';
+        intermediateResults.style.visibility = 'visible';
     });
 
     const basemapBtn = document.getElementById('basemap-btn');

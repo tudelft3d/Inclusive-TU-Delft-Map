@@ -354,7 +354,7 @@ export class Map {
 
         // this.orthographicCamera.updateProjectionMatrix();
 
-        this.cameraManager.camera.autoRotate = true;
+        // this.cameraManager.camera.autoRotate = true;
 
         this.cameraManager.camera.position.x = center.x;
         this.cameraManager.camera.position.z = center.z;

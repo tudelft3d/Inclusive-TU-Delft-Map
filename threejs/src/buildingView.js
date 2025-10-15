@@ -45,8 +45,6 @@ export class BuildingView {
             return;
         }
 
-
-
         if (!cityjson.CityObjects[this.building_key].children) {
             return;
         }
@@ -71,8 +69,6 @@ export class BuildingView {
         const storey_00_room_threejs = this._retrieve_room_threejs_objects("00");
         this._unhide_objects(storey_00_room_threejs);
 
-        console.log(storey_00_room_threejs);
-
         this._apply_outlines(storey_00_room_threejs, "lod_0", "default");
 
         this._populate_storey_buttons();
@@ -88,6 +84,10 @@ export class BuildingView {
         this.building_key = undefined;
 
         this.active = false;
+
+        var storey_dropdown = document.getElementById("bv-dropdown");
+
+        storey_dropdown.innerHTML = "";
 
     }
 
