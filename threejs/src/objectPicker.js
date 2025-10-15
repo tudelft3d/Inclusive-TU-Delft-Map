@@ -65,12 +65,13 @@ export class ObjectPicker {
      */
     pick(normalizedPosition, scene, camera) {
         // Restore the color if there was a picked object
-        if (this.picked) {
+        if (this.picked && this.picked.material && this.picked.material.emissive) {
             this.picked.material.emissive.setHex(this.pickedColor);
-            this.picked = null;
-            this.pickedColor = null;
-            setInfoContent({}, this.infoPane);
+
         }
+        this.picked = null;
+        this.pickedColor = null;
+        setInfoContent({}, this.infoPane);
 
         // Cast a ray through the frustum
         this.raycaster.setFromCamera(normalizedPosition, camera);
@@ -97,8 +98,21 @@ export class ObjectPicker {
 
         // const mesh = hits[0].object;
 
-        // To skip the background
         if (!mesh.name) { return false; }
+        this.highlight(mesh);
+
+        const info = {
+            Name: mesh.name || 'unnamed',
+            Type: mesh.geometry?.type || 'unknown',
+        };
+        setInfoContent(info, this.infoPane);
+
+        return true;
+    }
+
+    highlight(mesh) {
+        // To skip the background
+
 
         // To prevent the modification from applying to all objects
         if (!mesh.userData.hasOwnProperty('materialCloned')) {
@@ -107,18 +121,11 @@ export class ObjectPicker {
             mesh.userData.materialCloned = true;
         }
         // Save its color
+
         this.pickedColor = mesh.material.emissive.getHex();
 
-        // Set its emissive color to red
+        // Set its emissive color to global constant colour
         mesh.material.emissive.setHex(pickedColor);
-
-        const info = {
-            Name: mesh.name || 'unnamed',
-            Type: mesh.geometry?.type || 'unknown',
-        };
-        setInfoContent(info, this.infoPane);
-
         this.picked = mesh;
-        return true;
     }
 }
