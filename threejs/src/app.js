@@ -5,7 +5,7 @@ import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition, cj2gltf } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
-import { addBasemap } from "./basemap";
+import { addBasemap, preloadAllLayers, getTileCacheStats } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
 import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
@@ -21,6 +21,7 @@ export class Map {
         this.userLocationMarker = null;
         this.cityjson = cityjson;
         this.locationWatchId = null; // For tracking real-time location updates
+        this.preloadingStarted = false; // Flag to ensure preloading starts only once
 
 
         // Cameras and controls
@@ -93,6 +94,25 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
+        
+        // Start preloading other layers in the background (only once)
+        if (!this.preloadingStarted) {
+            this.preloadingStarted = true;
+            console.log('Starting background preloading of map layers...');
+            
+            // Start preloading after a short delay to let the initial basemap finish loading
+            setTimeout(() => {
+                preloadAllLayers({
+                    zoom: 12, 
+                    bbox: [84000, 443500, 87500, 448000] // Same bbox as main map
+                });
+            }, 3000); // 3 second delay
+        }
+    }
+
+    // Method to get tile cache statistics and preloading progress
+    getTileCacheInfo() {
+        return getTileCacheStats();
     }
 
     _initRenderer() {
