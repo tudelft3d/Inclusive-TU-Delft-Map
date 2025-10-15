@@ -8,8 +8,10 @@ import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectio
 
 export class OutlineManager {
 
-    constructor(scene) {
+    constructor(scene, iconsScene, renderer) {
         this.scene = scene;
+        this.iconsScene = iconsScene;
+        this.renderer = renderer
         this.composers = [];
         this.cameras = [];
         this.outlinePasses = [];
@@ -27,7 +29,7 @@ export class OutlineManager {
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
-    render(deltaTime, cameraManager, renderer) {
+    render(deltaTime, cameraManager) {
         var currentIndex = null;
         for (var i = 0; i < this.composers.length; i++) {
             var camera = this.cameras[i];
@@ -36,7 +38,7 @@ export class OutlineManager {
             }
         }
         if (currentIndex === null) {
-            this._create_outline_pass(cameraManager, renderer);
+            this._create_outline_pass(cameraManager);
             currentIndex = this.composers.length - 1;
         }
         var composer = this.composers[currentIndex];
@@ -45,17 +47,21 @@ export class OutlineManager {
         composer.render(deltaTime);
     }
 
-    _create_outline_pass(cameraManager, renderer) {
-        var composer = new EffectComposer(renderer);
+    _create_outline_pass(cameraManager) {
+        var composer = new EffectComposer(this.renderer);
+
+        // First pass for the 3D objects
         var renderPass = new RenderPass(this.scene, cameraManager.camera);
         composer.addPass(renderPass);
 
+        // Second pass for the outline of the 3D objects
         var outlinePass = new OutlinePass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
             this.scene,
             cameraManager.camera
         );
 
+        // Outline settings
         outlinePass.edgeStrength = this.style.edgeStrength;
         outlinePass.edgeGlow = this.style.edgeGlow;
         outlinePass.edgeThickness = this.style.edgeThickness;
@@ -64,9 +70,16 @@ export class OutlineManager {
 
         composer.addPass(outlinePass);
 
+        // Third pass for the icons
+        var iconsRenderPass = new RenderPass(this.iconsScene, cameraManager.camera);
+        iconsRenderPass.clear = false; // To avoid replacing everything on the screen
+        composer.addPass(iconsRenderPass);
+
+        // Fourth pass to make everything appear
         var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
         composer.addPass(gammaCorrectionPass);
 
+        // Store all the objects
         this.composers.push(composer);
         this.cameras.push(cameraManager.camera);
         this.outlinePasses.push(outlinePass);
@@ -74,7 +87,6 @@ export class OutlineManager {
     }
 
     outlineObjects(objects, code = "default") {
-        // console.log(objects);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
 
@@ -86,8 +98,10 @@ export class OutlineManager {
 
     // below two functions are necessary when browser window is resized
     onResize() {
-        this.composer.setSize(window.innerWidth, window.innerHeight);
-        this.outlinePass.setSize(window.innerWidth, window.innerHeight);
+        for (var i = 0; i < this.composers.length; i++) {
+            this.composers[i].setSize(window.innerWidth, window.innerHeight);
+            this.outlinePasses[i].setSize(window.innerWidth, window.innerHeight);
+        }
     }
 
     dispose() {

@@ -1,16 +1,17 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 
-// import * as constants from 'constants';
-
 import * as THREE from 'three';
 
+const MAP_CAMERA = 0;
+const ORBIT_CAMERA = 1;
+const ORTHOGRAPHIC_CAMERA = 2;
+
 const fov = 75;
-const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
 const far = 100000;
 
-const frustrumSize = 1;
+const frustumSize = 1;
 
 function frustrumHeight(camera, distance) {
     const field_of_view = (camera.fov * Math.PI) / 180;
@@ -21,28 +22,52 @@ function frustrumWidth(camera, distance) {
     return frustrumHeight(camera, distance) * camera.aspect;
 }
 
-export class CamerasControls {
-    // container: Element;
-    // camera: THREE.PerspectiveCamera;
-    // controls: OrbitControls | MapControls;
-    // previousCamera: THREE.PerspectiveCamera;
-    // previousControls: OrbitControls | MapControls;
-    // mapCamera: THREE.PerspectiveCamera;
-    // mapControls: MapControls;
-    // orbitCamera: THREE.PerspectiveCamera;
-    // orbitControls: OrbitControls;
 
-    constructor(container, position, lookAt, startMap = true) {
+export class CamerasControls {
+    constructor(container, position, target) {
         this.container = container;
 
-        this._initCameras(position, startMap);
-        this._initControls(lookAt, startMap);
+        this._initCameras(position);
+        this._initControls(target);
 
-        this.orthographic = false;
-        this.orbit = false;
+        this.cameraInt = MAP_CAMERA;
 
         // Initial compass rotation
         this.compassElement = null;
+    }
+
+    _changeCameraInt(newCameraInt) {
+        if (![MAP_CAMERA, ORBIT_CAMERA, ORTHOGRAPHIC_CAMERA].includes(newCameraInt)) {
+            console.error("Unexpected input to '_changeCameraInt'.");
+        }
+
+        this.cameraInt = newCameraInt;
+
+        this.previousCamera = this.camera;
+        this.previousControls = this.controls;
+
+        if (this.usesMapCamera()) {
+            this.camera = this.mapCamera;
+            this.controls = this.mapControls;
+        } else if (this.usesOrbitCamera()) {
+            this.camera = this.orbitCamera;
+            this.controls = this.orbitControls;
+        } else if (this.usesOrthographicCamera()) {
+            this.camera = this.orthographicCamera;
+            this.controls = this.orthographicControls;
+        }
+    }
+
+    usesMapCamera() {
+        return this.cameraInt == MAP_CAMERA;
+    }
+
+    usesOrbitCamera() {
+        return this.cameraInt == ORBIT_CAMERA;
+    }
+
+    usesOrthographicCamera() {
+        return this.cameraInt == ORTHOGRAPHIC_CAMERA;
     }
 
     // Method to set the compass element
@@ -67,134 +92,129 @@ export class CamerasControls {
         const degrees = THREE.MathUtils.radToDeg(angle) + 180;
 
         // Apply rotation to compass
-        this.compassElement.style.transform = `rotate(${-degrees}deg)`;
+        this.compassElement.style.transform = `rotate(${degrees}deg)`;
     }
 
-    _initCameras(position, startMap) {
+    _initCameras(position) {
+        const aspect = window.innerWidth / window.innerHeight;
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        this.orthographicCamera = new THREE.OrthographicCamera((frustumSize * aspect) / - 2, (frustumSize * aspect) / 2, frustumSize / 2, frustumSize / - 2, 0, 100000);
 
-        this.orthographicCamera = new THREE.OrthographicCamera((frustrumSize * aspect) / - 2, (frustrumSize * aspect) / 2, frustrumSize / 2, frustrumSize / - 2, 0, 100000);
+        this.camera = this.mapCamera;
+        this.previousCamera = this.mapCamera;
 
-        // this.orthographicCamera.position.set(0, 1000, 0);
-
-        if (startMap) {
-            this.camera = this.mapCamera;
-            this.previousCamera = this.mapCamera;
-        } else {
-            this.camera = this.orbitCamera;
-            this.previousCamera = this.orbitCamera;
-        }
-
-        //this.camera.position.set(position.x, position.y, position.z);
-        this.orthographicCamera.position.set(position.x, 1, position.z);
-
-        // Save initial position for reset functionality
-        this.initialPosition = new THREE.Vector3(position.x, position.y, position.z);
+        this.initialPosition = new THREE.Vector3().copy(position);
+        this.camera.position.copy(this.initialPosition);
+        this.camera.updateProjectionMatrix();
     }
 
 
-    _initControls(lookAt, startMap) {
+    _initControls(target) {
         this.mapControls = new MapControls(this.mapCamera, this.container);
-        this.mapControls.target.set(lookAt.x, lookAt.y, lookAt.z);
+        this.mapControls.target.copy(target);
         this.mapControls.maxPolarAngle = 0.49 * Math.PI;
         this.mapControls.update();
 
         this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
-        this.orbitControls.target.set(lookAt.x, lookAt.y, lookAt.z);
-        // this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
+        this.orbitControls.target.copy(target);
+        this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
+        this.orbitControls.enablePan = false;
         this.orbitControls.update();
 
-        // this.orthgraphicControls = new OrbitControls(this.orthographicCamera, this.container);
-        // this.orthgraphicControls.target.set(lookAt.x, lookAt.y, lookAt.z);
-        // this.orthgraphicControls.maxPolarAngle = 0 * Math.PI;
-        // this.orthgraphicControls.enableDampening = true;
+        this.orthographicControls = new MapControls(this.orthographicCamera, this.container);
+        this.orthographicControls.target.copy(target);
+        this.orthographicControls.screenSpacePanning = true;
+        this.orthographicControls.maxPolarAngle = 0.0 * Math.PI;
+        this.orthographicControls.enableDampening = true;
+        this.orthographicControls.update()
 
-        // this.orthographicCamera.position.set(0, 1000, 0);
+        this.controls = this.mapControls;
+        this.previousControls = this.mapControls;
 
-        // this.orthgraphicControls.update()
+        this.initialTarget = target.clone();
+        this.controls.target.copy(this.initialTarget);
+        this.controls.update();
 
+    }
 
-        // Save initial target for reset functionality
-        this.initialTarget = new THREE.Vector3(lookAt.x, lookAt.y, lookAt.z);
+    resizeCameras(width, height) {
+        const aspect = width / height;
 
-        if (startMap) {
-            this.controls = this.mapControls;
-            this.previousControls = this.mapControls;
-        } else {
-            this.controls = this.orbitControls;
-            this.previousControls = this.orbitControls;
-        }
+        this.mapCamera.aspect = aspect;
+        this.mapCamera.updateProjectionMatrix();
+        this.orbitCamera.aspect = aspect;
+        this.orbitCamera.updateProjectionMatrix();
+
+        this.orthographicCamera.aspect = aspect;
+
+        this.orthographicCamera.position.copy(this.controls.target);
+        this.orthographicCamera.position.y = 1000;
+
+        const distance = this.camera.position.distanceTo(this.controls.target);
+        const halfHeight = frustrumHeight(this.mapCamera, distance) / 2;
+        const halfWidth = frustrumWidth(this.mapCamera, distance) / 2;
+
+        this.orthographicCamera.top = halfHeight;
+        this.orthographicCamera.bottom = -halfHeight;
+        this.orthographicCamera.right = halfWidth;
+        this.orthographicCamera.left = -halfWidth;
+
+        this.orthographicCamera.updateProjectionMatrix();
     }
 
     /** Swith to map view */
     switchToMap() {
-
         console.log("Switching to map");
+        if (this.usesOrthographicCamera()) {
+            console.log(this.camera.quaternion);
+            const frustrumHeight = this.orthographicCamera.top * 2;
+            const field_of_view = (this.mapCamera.fov * Math.PI) / 180;
+            const distance = frustrumHeight / (2 * Math.tan(field_of_view / 2)) / this.orthographicCamera.zoom;
 
-        if (this.orthographic) {
+            const newTarget = this.orthographicControls.target.clone();
+            newTarget.y = 0;
+            const newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
 
-            this.mapControls.maxPolarAngle = 0.49 * Math.PI;
+            this.mapCamera.position.copy(newPosition);
+            this.mapControls.target.copy(newTarget);
 
-            const y = this.mapCamera.position.y;
-            this.mapCamera.position.copy(this.orthographicCamera.position);
-            this.mapCamera.position.y = y / this.orthographicCamera.zoom;
             this.mapCamera.updateProjectionMatrix();
-            this.camera = this.mapCamera;
-            this.controls.object = this.mapCamera;
-
-            this.orthographic = false;
-
-            return;
+            this.mapControls.update();
+        } else if (this.usesOrbitCamera()) {
+            // Nothing to do
         }
 
-        this.previousCamera = this.camera;
-        this.previousControls = this.controls;
-
-        this.camera = this.mapCamera;
-        this.controls = this.mapControls;
-        this._syncPositions(this.previousCamera);
+        this._changeCameraInt(MAP_CAMERA);
     }
 
     /** Switch to orbit view */
-    switchToOrbit() {   
-
-        if (this.orthographic) {
-
-            this.orthographic = false;
+    switchToOrbit() {
+        console.log("Switching to orbit");
+        if (this.usesOrthographicCamera()) {
             this.switchToMap();
+        } else if (this.usesMapCamera()) {
+            // Nothing to do
         }
 
-        console.log("Switching to orbit");
-
-        this.previousCamera = this.camera;
-        this.previousControls = this.controls;
-
-        this.camera = this.orbitCamera;
-        this.controls = this.orbitControls;
-        this._syncPositions(this.previousCamera);
+        this._changeCameraInt(ORBIT_CAMERA);
     }
 
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
 
-    switch_to_orthographic() {
-
-        if (this.orthographic == false) {
-
-            console.log("Switching to orthographic");
-
-            this.mapControls.maxPolarAngle = 0.01 * Math.PI;
-            this.mapControls.minPolarAngle = 0.01 * Math.PI;
-
-            this.previousCamera = this.camera;
-            this.previousControls = this.controls;
-
-            // Where we start
-            this.orthographicCamera.position.copy(this.camera.position);
-
-            // Where we want to go
-            this.orthographicCamera.position.copy(this.controls.target);
-            this.orthographicCamera.position.y = 1000;
+    /** Switch to orthographic view */
+    switchToOrthographic() {
+        console.log("Switching to orthographic");
+        if (this.usesMapCamera() || this.usesOrbitCamera()) {
+            console.log(this.camera.quaternion);
+            // Where we end up
+            const newTarget = this.controls.target.clone();
+            newTarget.y = 0;
+            const newPosition = newTarget.clone().add(new THREE.Vector3(0, 1000, 0));
+            this.orthographicCamera.position.copy(newPosition);
+            this.orthographicControls.target.copy(newTarget);
+            // this.orthographicCamera.quaternion.copy(this.camera.quaternion);
+            // this.orthographicCamera.up.copy(this.camera.up);
 
             const distance = this.camera.position.distanceTo(this.controls.target);
             const halfHeight = frustrumHeight(this.camera, distance) / 2;
@@ -207,39 +227,19 @@ export class CamerasControls {
 
             this.orthographicCamera.zoom = 1;
 
-            this.orthographicCamera.lookAt(this.controls.target);
-            // this.orthographicCamera.lookAt(this.orthographicCamera.position.x, 1, this.orthographicCamera.position.z);
-
-            this.mapControls.maxPolarAngle = 0.01 * Math.PI;
-            this.mapControls.minPolarAngle = 0.01 * Math.PI;
-
             this.orthographicCamera.updateProjectionMatrix();
-
-            this.controls = this.mapControls;
-
-            this.camera = this.orthographicCamera;
-            this.controls.object = this.orthographicCamera;
-
-            this.orthographic = true;
-
+            this.orthographicControls.update();
         }
+
+        this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
     }
 
-    toggle_orthographic() {
-
-        if (this.orthographic == false) {
-            this.switch_to_orthographic();
+    toggleOrthographic() {
+        if (this.cameraInt != ORTHOGRAPHIC_CAMERA) {
+            this.switchToOrthographic();
         } else {
             this.switchToMap();
         }
-
-    }
-
-    /** Keep the visual position when swapping cameras */
-    _syncPositions(sourceCam) {
-        // if (!sourceCam) return;
-        // const { x, y, z } = sourceCam.position;
-        // this.camera.position.set(x, y, z);
     }
 
     zoomIn(factor = 1.8) {
@@ -269,17 +269,17 @@ export class CamerasControls {
         this.initialTarget.copy(this.controls.target);
     }
 
-     /* Reset camera to initial position and orientation */
+    /* Reset camera to initial position and orientation */
     resetView() {
         console.log("Resetting view");
 
         // Store the initial position and target when creating the camera
         if (this.initialPosition && this.initialTarget) {
             this.camera.position.copy(this.initialPosition);
-            this.controls.target.copy(this.initialTarget);
+            this.controls.target.set(this.initialTarget.x, this.initialTarget.y, this.initialTarget.z);
 
             // Reset zoom for orthographic camera
-            if (this.orthographic) {
+            if (this.usesOrthographicCamera()) {
                 this.orthographicCamera.zoom = 1;
                 this.orthographicCamera.updateProjectionMatrix();
             }
