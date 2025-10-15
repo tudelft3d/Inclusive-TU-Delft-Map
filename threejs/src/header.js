@@ -44,7 +44,7 @@ function initHeaderToggle() {
 
   // tighten document click: only close when clicking outside nav/toggle
   document.addEventListener('click', (e) => {
-    if (nav.contains(e.target) || toggle.contains(e.target))return;
+    if (nav.contains(e.target) || toggle.contains(e.target)) return;
     close();
   });
   toggle.dataset.bound = '1';
