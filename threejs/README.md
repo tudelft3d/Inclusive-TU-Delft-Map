@@ -41,4 +41,4 @@ To run the app locally for development, you can use one of the commands availabl
 
 ## Run the app on the server for deployment
 
-The instructions to run the app on the server are in the [specific server README](../server/README.md).
+The instructions to run the app on the server are in the [specific server README](../server/README.md#web-app).
