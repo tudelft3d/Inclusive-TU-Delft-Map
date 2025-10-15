@@ -163,3 +163,17 @@ Here are the steps to deploy the web page for the first time:
     cp -r dist/* /var/www/last_version/html/
     cp -r assets/* /var/www/last_version/html/assets/
     ```
+
+5. Restart the feedback server if necessary:
+
+    - If not started yet:
+
+        ```bash
+        npx pm2 start backend/index.js --name feedback-server --env production
+        ```
+
+    - If already started but requires to be updated
+
+        ```bash
+        npx pm2 restart feedback-server --update-env
+        ```
