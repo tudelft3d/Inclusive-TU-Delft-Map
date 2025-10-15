@@ -29,7 +29,7 @@ export class Map {
         this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt, true);
 
         this.infoPane = document.getElementById('info-pane');
-        this.picker = new ObjectPicker(this.infoPane);
+        this.picker = new ObjectPicker(this.infoPane, this.buildingView);
         this.controlsManager = new ControlsManager(this.container, this.cameraManager);
 
         this.tweens = new Array();
