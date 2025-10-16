@@ -11,7 +11,7 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { addPointerSprite, svgToCanvasTexture, svgToDiscTexture } from './icons';
+import { Icon, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
 
 export class Map {
     constructor(container) {
@@ -34,11 +34,11 @@ export class Map {
 
         this.tweens = new Array();
 
-        this._initScene();
+        this._initScenes();
         this._initLights();
         this.setBasemap();
         this._initRenderer();
-        this.outlineManager = new OutlineManager(this.scene, this.iconsScene, this.renderer);
+        this.outlineManager = new OutlineManager(this.scene, this.iconsSceneManager, this.renderer);
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -48,7 +48,7 @@ export class Map {
         }, false);
     }
 
-    _initScene() {
+    _initScenes() {
         this.scene = new THREE.Scene();
         const loader = new THREE.CubeTextureLoader();
         loader.setPath('assets/threejs/graphics/');
@@ -62,7 +62,8 @@ export class Map {
         ]);
         this.scene.background = skyboxTexture;
 
-        this.iconsScene = new THREE.Scene();
+        const iconsScene = new THREE.Scene();
+        this.iconsSceneManager = new IconsSceneManager(iconsScene);
 
         // const geometry = new THREE.BoxGeometry(100, 100, 100);
         // const material = new THREE.MeshBasicMaterial({
@@ -514,11 +515,9 @@ export class Map {
         const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
         const size = 20;
-        position = position.add(new THREE.Vector3(0, size, 0));
-        // var position = new THREE.Vector3(85894.6171875, 43.24994134912861, -445815.28125);
-        var sprite = addPointerSprite(this.iconsScene, iconTexture, position, size, false);
-        // console.log(sprite);
-        // console.log(this.iconsScene);
+        position = position.add(new THREE.Vector3(0, size / 2, 0));
+        const icon = new Icon(iconTexture, position);
+        this.iconsSceneManager.addIcon(icon);
     }
 
     render(time) {

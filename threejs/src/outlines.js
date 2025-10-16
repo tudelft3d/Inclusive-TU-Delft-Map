@@ -8,9 +8,9 @@ import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectio
 
 export class OutlineManager {
 
-    constructor(scene, iconsScene, renderer) {
+    constructor(scene, iconsSceneManager, renderer) {
         this.scene = scene;
-        this.iconsScene = iconsScene;
+        this.iconsSceneManager = iconsSceneManager;
         this.renderer = renderer
         this.composers = [];
         this.cameras = [];
@@ -41,6 +41,10 @@ export class OutlineManager {
             this._create_outline_pass(cameraManager);
             currentIndex = this.composers.length - 1;
         }
+
+        // Update the size of the icons
+        this.iconsSceneManager.beforeRender(cameraManager);
+
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
         outlinePass.selectedObjects = this.selectedObjects;
@@ -71,7 +75,7 @@ export class OutlineManager {
         composer.addPass(outlinePass);
 
         // Third pass for the icons
-        var iconsRenderPass = new RenderPass(this.iconsScene, cameraManager.camera);
+        var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
         iconsRenderPass.clear = false; // To avoid replacing everything on the screen
         composer.addPass(iconsRenderPass);
 

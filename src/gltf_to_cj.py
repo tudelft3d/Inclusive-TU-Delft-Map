@@ -8,7 +8,7 @@ import numpy as np
 import trimesh
 from tqdm import tqdm
 
-from cj_geometry import Geometry, MultiSurface
+from cj_geometry import Geometry, IconPosition, MultiSurface
 from cj_objects import (
     Building,
     BuildingPart,
@@ -24,7 +24,7 @@ from cj_objects import (
     CityJSONSpaceSubclass,
 )
 from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
-from geometry_utils import flatten_trimesh, orient_polygons_z_up
+from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
 
 
 def _get_scene_geometry_from_id(
@@ -146,7 +146,7 @@ def load_units_from_csv(
     # Extract all the spaces from the given CityJSON file
     spaces_ids_to_pos = {}
     for i, cj_obj in enumerate(cj_file.city_objects):
-        # We seach for the actual spaces
+        # We search for the actual spaces
         if isinstance(cj_obj, CityJSONSpaceSubclass):
             spaces_ids_to_pos[cj_obj.space_id] = i
 
@@ -172,9 +172,33 @@ def load_units_from_csv(
     for unit in all_units_flattened:
         for space_id in unit_to_spaces[unit.id]:
             cj_file_pos = spaces_ids_to_pos[space_id]
-            CityJSONObject.add_unit_space(
-                unit=unit, space=cj_file.city_objects[cj_file_pos]
-            )
+            space = cj_file.city_objects[cj_file_pos]
+            assert isinstance(space, CityJSONSpaceSubclass)
+            CityJSONObject.add_unit_space(unit=unit, space=space)
+
+    # Compute the icon positions of the units
+    for unit in all_units_flattened:
+        meshes: list[trimesh.Trimesh] = []
+        for space_id in unit_to_spaces[unit.id]:
+            cj_file_pos = spaces_ids_to_pos[space_id]
+            space = cj_file.city_objects[cj_file_pos]
+            assert isinstance(space, CityJSONSpaceSubclass)
+            if space.geometries is None:
+                continue
+            best_idx = 0
+            for idx in range(1, len(space.geometries)):
+                if space.geometries[idx].lod > space.geometries[best_idx].lod:
+                    best_idx = idx
+            meshes.append(space.geometries[best_idx].to_trimesh())
+
+        if len(meshes) == 0:
+            continue
+
+        merged_mesh = merge_trimeshes(meshes=meshes, fix_geometry=False)
+        icon_position = IconPosition.from_mesh(
+            merged_mesh, z_offset=BuildingUnit.icon_z_offset
+        )
+        unit.set_icon(icon_position=icon_position)
 
     cj_file.add_cityjson_objects(list(all_unit_containers.values()))
     cj_file.add_cityjson_objects(
