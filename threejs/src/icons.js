@@ -120,7 +120,7 @@ export class Icon {
             // distance = camToIcon.dot(camDirection) / cameraManager.camera.zoom;
         }
         distance = Math.min(distance, 1000);
-        this._setSize(0.1 * distance);
+        this._setSize(0.07 * distance);
     }
 }
 
