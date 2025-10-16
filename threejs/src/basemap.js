@@ -20,9 +20,9 @@ function getTileDistance(tileRow, tileCol, centerRow, centerCol) {
 function createPrioritizedQueue(minRow, maxRow, minCol, maxCol, wmtsBaseURL, layer, matrixSet, zoom) {
   const centerRow = (minRow + maxRow) / 2;
   const centerCol = (minCol + maxCol) / 2;
-  
+
   const tiles = [];
-  
+
   // Create all tile objects with distance from center
   for (let row = minRow; row <= maxRow; row++) {
     for (let col = minCol; col <= maxCol; col++) {
@@ -35,14 +35,14 @@ function createPrioritizedQueue(minRow, maxRow, minCol, maxCol, wmtsBaseURL, lay
         + `&TILEMATRIX=${zoom}`
         + `&TILEROW=${row}`
         + `&TILECOL=${col}`;
-      
+
       tiles.push({ row, col, url, distance });
     }
   }
-  
+
   // Sort by distance - closest tiles first
   tiles.sort((a, b) => a.distance - b.distance);
-  
+
   console.log(`🎯 Prioritized ${tiles.length} tiles - center-out loading strategy`);
   return tiles;
 }
@@ -61,6 +61,7 @@ const preloadingState = {
 const AVAILABLE_LAYERS = [
   { url: "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0", layer: "Actueel_orthoHR", name: "Satellite Imagery" },
   { url: "https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0", layer: "standaard", name: "Topographic Map" },
+  { url: "https://service.pdok.nl/lv/bgt/wmts/v1_0", layer: "achtergrondvisualisatie", name: "BGT Colour" },
   { url: "https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0", layer: "grijs", name: "BGT Grayscale" }
 ];
 
@@ -93,7 +94,7 @@ export function preloadAllLayers(options = {}) {
 // Function to preload a specific layer
 function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
   console.log(`Preloading ${layerName} (${layer})...`);
-  
+
   const {
     matrixSet = "EPSG:28992",
     zoom = 12,
@@ -139,7 +140,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
         // Preloading complete for this layer
         preloadingState.preloadedLayers.add(layer);
         console.log(`✓ Preloading complete for ${layerName}: ${preloadedTiles}/${totalTiles} tiles cached`);
-        
+
         // Check if all layers are preloaded
         if (preloadingState.preloadedLayers.size === AVAILABLE_LAYERS.length) {
           preloadingState.isPreloading = false;
@@ -168,12 +169,12 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
         tileCache.set(cacheKey, texture.clone());
         activePreloads--;
         preloadedTiles++;
-        
+
         // Log progress every 10 tiles
         if (preloadedTiles % 10 === 0) {
           console.log(`${layerName}: ${preloadedTiles}/${totalTiles} tiles preloaded`);
         }
-        
+
         preloadNextTile();
       },
       undefined,
@@ -279,19 +280,19 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
       (texture) => {
         // Cache the texture
         tileCache.set(cacheKey, texture.clone());
-        
+
         createTileMesh(texture, row, col);
         activeLoads--;
         loadedTiles++;
-        
+
         // Enhanced progress logging for viewport-first loading
         const progressPercent = Math.round((loadedTiles / totalTiles) * 100);
-        
+
         if (loadedTiles % 5 === 0 || progressPercent <= 20) {
           // Show more frequent updates for the first 20% (viewport tiles)
           console.log(`🗺️ ${layer}: ${loadedTiles}/${totalTiles} tiles (${progressPercent}%) - viewport-first loading`);
         }
-        
+
         loadNextTile(); // Load next tile
       },
       undefined,
@@ -329,10 +330,10 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
   // Create prioritized loading queue - center-out strategy
   console.log(`🎯 Creating viewport-first loading strategy for ${layer}...`);
   const prioritizedTiles = createPrioritizedQueue(
-    minRow, maxRow, minCol, maxCol, 
+    minRow, maxRow, minCol, maxCol,
     wmtsBaseURL, layer, matrixSet, zoom
   );
-  
+
   // Add prioritized tiles to loading queue
   prioritizedTiles.forEach(tile => {
     loadingQueue.push(tile);
