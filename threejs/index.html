@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/infopane.css" rel="stylesheet" type="text/css">
 
     <script type="module" src="./src/header.js" defer></script>
     <script type="module" src="./src/main.js"></script>
@@ -103,20 +104,21 @@
 
     </div>
 
-    <!-- BOTTOM LEFT SIDEBAR CONTROLS -->
-    <div id="bottom-left-sidebar-controls">
-        <div id="bv-controls">
-            <button id="bv-btn"><i class="fa-solid fa-street-view"></i></i></button>
-        </div>
-
-        <div id="bv-storey-controls">
-            <button id="bv-storey-btn"><i class="fa-solid fa-circle-info" alt="bv"></i></button>
-            <div id="bv-dropdown"></div>
-        </div>
-    </div>
+    
 
     <div id="scene-container">
-        <div id="info-pane"></div>
+        
+        <div id="info-pane">
+            <!-- BUILDING VIEW, WITHIN INFO PANE CONTROLS -->
+            <div id="bv-controls">
+                <button id="bv-btn"><i class="fa-solid fa-street-view"></i></button>
+            </div>
+    
+            <div id="bv-storey-controls">
+                <button id="bv-storey-btn"><i class="fa-solid fa-circle-info" alt="bv"></i></button>
+                <div id="bv-dropdown"></div>
+            </div>
+        </div>
         <!-- Our <canvas> will be inserted here -->
     </div>
 
