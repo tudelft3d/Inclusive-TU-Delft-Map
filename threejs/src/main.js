@@ -2,46 +2,43 @@ import { Map } from "./app";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
 import { outline_code } from "./layers"
+import { initSearchBar } from "./searchbar"
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Root DOM container for the 3D scene / map
     const container = document.querySelector('#scene-container');
 
+    // Instantiate the app-level Map and load assets
     const map = new Map(container);
-
-    // map.loadGLTF('assets/campus/geom/model.glb');
-    // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
+    // Utility view that manages building-specific UI/behavior
     const buildingView = new BuildingView(map);
-
     map.buildingView = buildingView;
 
+    // Search backend used by the UI
     const searcher = new Searcher();
 
-    // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 250;
+    // Search UI tuning
+    const search_delay = 250;         // milliseconds debounce before searching
+    const search_result_count = 5;    // max intermediate results to show
 
-    // The number of results that are returned for partials searches
-    const search_result_count = 5;
-
-    // Set up compass element and rotation updates
+    // Compass setup: find an element inside the compass button to rotate
     const compassIcon = document.querySelector('#compass-btn svg') ||
         document.querySelector('#compass-btn img') ||
         document.querySelector('#compass-btn .compass-icon');
 
     if (compassIcon) {
+        // Let cameraManager rotate the found icon as the view changes
         map.cameraManager.setCompassElement(compassIcon);
-
-        // Add controls change listener to update compass rotation
         map.cameraManager.controls.addEventListener('change', () => {
             map.cameraManager.updateCompassRotation();
         });
-
-        // Initial compass update
-        map.cameraManager.updateCompassRotation();
+        map.cameraManager.updateCompassRotation(); // initial update
     }
 
+    // Zoom controls: wired to camera manager
     document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
@@ -54,183 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.zoomOut();
     });
 
+    // Toggle between 2D / 3D (orthographic/perspective)
     document.getElementById('view-toggle-btn').addEventListener('click', () => {
-        console.log("Clicked the button")
         map.cameraManager.toggleOrthographic();
     });
 
-    const searchBar = document.getElementById('search');
-    const intermediateResults = document.getElementById("intermediate_results");
+    // Initialize the search bar UI (handlers live in searchbar.js)
+    initSearchBar({ map, searcher, search_delay, search_result_count });
 
-    // general idea of "debouncing" from: https://dev.to/rowsanali/how-to-implement-a-search-functionality-using-javascript-1n1b
-
-    let timeout;
-
-    function debounce(func, wait) {
-
-        return function (...args) {
-
-            window.clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-
-
-    // Since we are adding html elements, we could in theory add entire subviews to the
-    // intermediate results, like a little picture of the result or other data.
-    function show_intermediate_results(search_results) {
-
-        var ul = document.createElement("ul");
-
-        intermediateResults.innerHTML = '';
-
-        search_results = search_results.map((element) => { return element.item.attributes["key"] });
-
-        for (let i = 0; i < search_results.length; i++) {
-
-            var li = document.createElement("li");
-            li.appendChild(document.createTextNode(search_results[i]));
-
-            li.addEventListener("click", (event) => {
-
-                searcher.search_and_zoom(search_results[i], map);
-
-            });
-
-            //Example of how to engage with the intermediate result:
-            // li.addEventListener("mouseover", (event) => {
-            //     console.log("yeah that works");
-            // });
-
-            ul.appendChild(li);
-
-        }
-
-        intermediateResults.appendChild(ul);
-    }
-
-
-
-    searchBar.addEventListener('keyup', (event) => {
-
-        let value = event.target.value;
-
-        if (!value || value.trim().length <= 0) {
-            return;
-        }
-
-        // If the key being released is enter, the user wants to search
-        // If the key being released is not enter, we show intermediate results
-        if (event.key === "Enter") {
-
-            searcher.search_and_zoom(value, map);
-
-        } else {
-
-            const debouncedSearch = debounce(() => {
-                const results = searcher.search_n_best_matches(value, search_result_count);
-                show_intermediate_results(results);
-            }, search_delay);
-
-            debouncedSearch();
-
-        }
-
-    });
-
-    // These two make sure the suggestions are hidden,
-    // but they also cause the suggestions to disappear before they can be clicked
-    searchBar.addEventListener("focusout", (event) => {
-
-        setTimeout(() => {
-            intermediateResults.style.visibility = 'hidden';
-        }, 100);
-
-        //intermediateResults.style.visibility = 'hidden';
-    });
-
-    searchBar.addEventListener("focusin", (event) => {
-        intermediateResults.style.visibility = 'visible';
-    });
-
-    const basemapBtn = document.getElementById('basemap-btn');
-    const basemapDropdown = document.getElementById('basemap-dropdown');
-
-    basemapBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (basemapDropdown.style.display === 'none' || basemapDropdown.style.display === '') {
-            basemapDropdown.style.display = 'block';
-        } else {
-            basemapDropdown.style.display = 'none';
-        }
-    });
-
-    document.addEventListener('click', () => {
-        basemapDropdown.style.display = 'none';
-    });
-
-    basemapDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const url = item.dataset.url;
-            const layer = item.dataset.layer;
-            map.setBasemap(url, layer);
-            basemapDropdown.style.display = 'none';
-        });
-    });
-
-    const layersBtn = document.getElementById('layers-btn');
-    const layersDropdown = document.getElementById('layers-dropdown');
-
-    layersBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (layersDropdown.style.display === 'none' || layersDropdown.style.display === '') {
-            layersDropdown.style.display = 'block';
-        } else {
-            layersDropdown.style.display = 'none';
-        }
-    });
-
-    layersDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-
-            outline_code(item.dataset.code, map);
-
-            layersDropdown.style.display = 'none';
-        });
-    });
-
-    document.addEventListener('click', () => {
-        layersDropdown.style.display = 'none';
-    });
-
-    const accessibilityBtn = document.getElementById('accessibility-btn');
-    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
-
-    accessibilityBtn.addEventListener('click', (event) => {
-        event.stopImmediatePropagation();
-        if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
-            accessibilityDropdown.style.display = 'block';
-        } else {
-            accessibilityDropdown.style.display = 'none';
-        }
-    });
-
-    document.addEventListener('click', () => {
-        accessibilityDropdown.style.display = 'none';
-    });
-
-    // RESET VIEW BUTTON
-    const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            map.cameraManager.resetView();
-        });
-    }
-
-    // COMPASS BUTTON
+    // Compass button: reset north orientation
     const compassBtn = document.getElementById('compass-btn');
     if (compassBtn) {
         compassBtn.addEventListener('click', (event) => {
@@ -239,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LOCATION BUTTON
+    // Location button: ask for user location and zoom to it
     const locationBtn = document.getElementById('location-btn');
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
@@ -248,29 +77,101 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // BV (streetview / building view) button: enter building view
     const bvBtn = document.getElementById("bv-btn");
     bvBtn.addEventListener("click", (event) => {
-
         buildingView.initiate_buildingView();
-
     });
 
-
+    // BV storey dropdown: simplest toggle behavior
     const bvDropdown_button = document.getElementById("bv-storey-btn");
     const bvDropdown_dropdown = document.getElementById("bv-dropdown");
 
     bvDropdown_button.addEventListener("click", (event) => {
-
         event.stopPropagation();
+        // toggle display state
         if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
             bvDropdown_dropdown.style.display = 'block';
         } else {
             bvDropdown_dropdown.style.display = 'none';
         }
-
     });
 
-    // LOD DROPDOWN - Commented out
+    // TOP-RIGHT DROPDOWNS: utilities to open/close and wire option clicks
+    function closeAllDropdowns() {
+        // hide any dropdown that is a direct child div of top-right container
+        document.querySelectorAll('#top-right-sidebar-controls > div > div').forEach(dd => {
+            if (dd && dd.style) dd.style.display = 'none';
+        });
+    }
+
+    // Generic helper: wire a button to its dropdown and handle option selection
+    function wireDropdown(buttonId, dropdownId, onOptionClick) {
+        const btn = document.getElementById(buttonId);
+        const dd = document.getElementById(dropdownId);
+        if (!btn || !dd) return;
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // toggle this dropdown while closing others
+            const isOpen = dd.style.display === 'block';
+            closeAllDropdowns();
+            dd.style.display = isOpen ? 'none' : 'block';
+        });
+
+        // Attach click handlers to each anchor inside the dropdown
+        dd.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', (evt) => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                const url = a.dataset.url;
+                const layer = a.dataset.layer;
+                if (typeof onOptionClick === 'function') {
+                    onOptionClick({ url, layer, anchor: a });
+                }
+                // close the dropdown after selection
+                dd.style.display = 'none';
+            });
+        });
+    }
+
+    // Basemap dropdown: attempt to call a Map API to change the basemap
+    wireDropdown('basemap-btn', 'basemap-dropdown', ({ url, layer }) => {
+        if (url) {
+            // try common setter names; replace with your actual API if different
+            if (typeof map.setBaseMap === 'function') {
+                map.setBaseMap(url, layer);
+            } else if (typeof map.setBasemap === 'function') {
+                map.setBasemap(url, layer);
+            } else {
+                console.warn('No basemap setter found on map. Selected:', url, layer);
+            }
+        }
+    });
+
+    // Layers dropdown: call the provided outline_code or log selection
+    wireDropdown('layers-btn', 'layers-dropdown', ({ anchor }) => {
+        const code = anchor.dataset.code;
+        if (code && typeof outline_code === 'function') {
+            outline_code(code);
+        } else {
+            console.log('layer selected', code);
+        }
+    });
+
+    // Accessibility dropdown: placeholder handler to implement color-mode toggles
+    wireDropdown('accessibility-btn', 'accessibility-dropdown', ({ anchor }) => {
+        const mode = anchor.textContent && anchor.textContent.trim();
+        console.log('accessibility option', mode);
+        // Implement accessibility mode toggles here (contrast, color-blind modes, etc.)
+    });
+
+    // Close open dropdowns when clicking anywhere else on the document
+    document.addEventListener('click', () => {
+        closeAllDropdowns();
+    });
+
+    // LOD dropdown: commented-out code kept for future use
     /*
     const lodBtn = document.getElementById('lod-btn');
     const lodDropdown = document.getElementById('lod-dropdown');
@@ -285,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-
         document.addEventListener('click', () => {
             lodDropdown.style.display = 'none';
 
@@ -298,12 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
         lodDropdown.querySelectorAll('a').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const lod = item.dataset.lod;
+                const lod = item.dataset.lod;                const lod = item.dataset.lod;
                 map.lodVis(lod);
                 lodDropdown.style.display = 'none';
             });
         });
     }
     */
-
 });

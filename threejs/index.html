@@ -9,6 +9,7 @@
 
     <link rel="icon" type="image/svg" href="./assets/threejs/graphics/website_icon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+     <link href="./styles/searchBar.css" rel="stylesheet" type="text/css">
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
 
@@ -21,20 +22,23 @@
 
     <div id="site-header"></div>
 
+    <!-- Mobile search button (top-left) -->
+    <button id="mobile-search-btn" class="mobile-only-search" aria-label="Open search" title="Search">
+        <img src="../assets/threejs/graphics/icons/search_icon.svg" alt="Search" />
+    </button>
+
+    <!-- Search Bar -->
     <div id="search-bar" class="search-bar">
         <form autocomplete="off" onsubmit="return false">
             <input type="search" id="search" placeholder="Search for building, room or facility..." />
+            <img id="search-icon" src="../assets/threejs/graphics/icons/search_icon.svg" alt="Search icon" aria-hidden="true" />
             <div id="intermediate_results"></div>
         </form>
     </div>
+    
 
     <!-- TOP RIGHT SIDEBAR CONTROLS -->
     <div id="top-right-sidebar-controls">
-
-        <div id="reset-container">
-            <button id="reset-btn" data-tooltip="Reset view"><img
-                    src="assets/threejs/graphics/icons/home.svg" /></button>
-        </div>
 
         <div id="accessibility-container">
             <button id="accessibility-btn" data-tooltip="Accessibility options"><img

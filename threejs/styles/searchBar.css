@@ -1,0 +1,293 @@
+#search-bar {
+  --search-width: 390px;
+  --search-padding-vertical: 8px;
+  --search-padding-horizontal: 12px;
+  --search-radius: 6px;
+  position: fixed;
+  top: calc(var(--height, 64px) + 15px);
+  opacity: 0.95;
+  z-index: 10;
+  width: 100%;
+  pointer-events: none;
+}
+
+#search-bar form {
+  position: relative;
+  padding: 0; 
+  display: block;
+  width: var(--search-width);
+  max-width: calc(100% - 40px);
+  margin: 0 auto;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+#search-bar input {
+  padding: var(--search-padding-vertical) var(--search-padding-horizontal);
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 400;
+  width: 100%;
+  border-radius: var(--search-radius);
+  border: 1px solid #4a4e55;
+  background-color: #f1f1f1;
+  color: black;
+  box-sizing: border-box;
+  text-align: left;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  pointer-events: auto;
+}
+
+#search-bar input:focus{
+  outline: none;
+  border: none;
+}
+
+#search-bar input::placeholder {
+  color: #4a4e55;
+}
+
+#search-icon {
+  position: absolute;
+  right: var(--search-padding-horizontal);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#intermediate_results {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  right: 0;
+  background: #f1f1f1;
+  border-radius: var(--search-radius) var(--search-radius);
+  border-top: none;
+  box-sizing: border-box;
+  max-height: 0;                 /* start closed */
+  overflow: hidden;
+  opacity: 0;
+  transform-origin: top center;
+  transform: translateY(-6px) scaleY(0.98);
+  transition: max-height 220ms ease, opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  z-index: 20;
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+#intermediate_results.open {
+  max-height: 260px;
+  opacity: 0.98 ;
+  transform: translateY(0) scaleY(1);
+  overflow-y: auto;
+  padding-left: 12px;
+}
+
+#intermediate_results ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  padding-left: var(--search-padding-horizontal);
+  padding-right: var(--search-padding-horizontal);
+}
+
+#intermediate_results ul li {
+  display: block;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  color: #222;
+  font-size: 14px;
+  padding: 8px var(--search-padding-horizontal);
+  transition: background 0.12s ease, color 0.12s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+#intermediate_results ul li:hover,
+#intermediate_results ul li:focus {
+  color: #000;
+  background: rgba(0,0,0,0.03);
+}
+
+#intermediate_results.empty {
+  padding: 10px var(--search-padding-horizontal);
+  color: #666;
+  font-size: 14px;
+  max-height: 60px;
+  opacity: 0.95;
+}
+
+/* Mobile version of search bar */
+@media (max-width: 620px) {
+
+  /* show top-left search button */
+  .mobile-only-search {
+    display: flex;
+    position: fixed;
+    top: calc(var(--height, 64px) + 18px);
+    left: 12px;
+    z-index: 1300;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: #f1f1f1;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+  }
+  .mobile-only-search img {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+  /* bottom sheet - start hidden offscreen until .mobile-open */
+  #search-bar {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    margin: 0;
+    padding: 12px;
+    box-sizing: border-box;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: transform 240ms ease, visibility 0ms linear 240ms;
+    z-index: 1400;
+  }
+
+  /* when opened, slide up fully and allow interactions */
+  #search-bar.mobile-open {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+  }
+
+  #search-bar form {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  #search-bar input {
+    padding: 8px 16px;
+    border-radius: var(--search-radius) var(--search-radius) 0 0;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #intermediate_results {
+    position: relative;
+    top: 0px;
+    left: 0;
+    right: 0;
+    background: #f1f1f1;
+    border-radius: 0 0 var(--search-radius) var(--search-radius);
+    max-height: 0;
+    overflow: hidden;
+    transform-origin: top center;
+    transform: translateY(6px) scaleY(0.98);
+    transition: max-height 260ms ease, opacity 200ms ease, transform 200ms ease;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.14);
+  }
+
+  #intermediate_results.open {
+    max-height: 50%;
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    overflow-y: auto;
+    padding: 8px 16px 8px;
+  }
+
+  #intermediate_results ul li {
+    padding: 14px 12px;
+    font-size: 14px;
+    font-family: "Open Sans";
+  }
+
+  /* dark overlay behind search bar when open */
+  #search-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.503);
+    z-index: 1350;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    pointer-events: none;
+  }
+  #search-overlay.visible { opacity: 1; pointer-events: auto; }
+
+  /* hide other UI while mobile search active */
+  body.search-active-mobile #top-right-sidebar-controls,
+  body.search-active-mobile #bottom-right-sidebar-controls,
+  body.search-active-mobile #bottom-left-sidebar-controls {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+  }
+
+  /* keep the mobile button visible */
+  body.search-active-mobile .mobile-only-search {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* hide the small inline search icon when the mobile bottom-sheet is open */
+  #search-bar.mobile-open #search-icon {
+    display: none;
+  }
+}
+
+/* Make the search container click-through except for its interactive children.
+   This prevents the (invisible) parts of the #search-bar from intercepting clicks
+   on UI elements (e.g. the top-right buttons). */
+#search-bar {
+  pointer-events: none;
+}
+
+/* Interactive parts must still receive pointer events */
+#search-bar form,
+#search-bar input,
+#search-icon,
+#intermediate_results {
+  pointer-events: auto;
+}
+
+/* Force search sheet to be click-through so it doesn't block top-right controls */
+#search-bar {
+  pointer-events: none !important;
+  z-index: 5 !important; /* below top-right controls (z-index:30) */
+}
+
+/* Interactive children must still be interactive */
+#search-bar form,
+#search-bar input,
+#search-icon,
+#intermediate_results {
+  pointer-events: auto !important;
+}
+
+/* Keep intermediate list under controls but above scene */
+#intermediate_results {
+  z-index: 25 !important;
+}
+
+/* Mobile open sheet should allow full interactions */
+#search-bar.mobile-open {
+  pointer-events: auto !important;
+  z-index: 1400 !important; /* keep original mobile behavior */
+}
+
+
+
