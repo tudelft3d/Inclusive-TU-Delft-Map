@@ -50,10 +50,10 @@ canvas {
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 6px;
-  pointer-events: none;
+  pointer-events: auto; /* Allow interaction with the pane */
   font-size: 14px;
   line-height: 1.4;
-  opacity: 0;
+  opacity: 1; /* Make the info-pane visible by default */
   transition: opacity .2s ease;
 }
 
@@ -191,39 +191,6 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-
-#bv-btn,
-#bv-storey-btn {
-  position: static;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 31;
-}
-
-#bv-dropdown {
-  display: none;
-  position: absolute;
-  bottom: 0%;
-  left: 50px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  text-align: right;
-  padding-left: 20px;
-  border-radius: 5px;
-  min-width: 160px;
-  z-index: inherit;
-}
-
-#bv-dropdown a {
-  display: block;
-  padding: 10px;
-  text-decoration: none;
-  color: black;
 }
 
 /*#lod-container {

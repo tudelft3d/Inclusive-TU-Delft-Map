@@ -1,25 +1,22 @@
-/* Info Pane Base Styles */
 #info-pane {
   position: fixed;
   top: 140px;
   left: 20px;
-  bottom: 20px; /* Extends to bottom with 20px margin */
+  bottom: 20px;
+  width: 425px;            /* consistent width */
   background: white;
   border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  max-width: 425px;
-  min-width: 425px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 30;
-  font-family: Sans-Serif;
-  overflow: hidden;
   pointer-events: auto;
-  display: flex;
-  flex-direction: column; /* Stack header, content, and footer vertically */
 }
 
-/* Header */
 .info-pane-header {
   display: flex;
   justify-content: space-between;
@@ -27,15 +24,14 @@
   padding: 12px 14px;
   background: #00A6D6;
   color: white;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0; /* Prevent header from shrinking */
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
 }
 
 .info-pane-title {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: white;
 }
 
 .info-pane-close {
@@ -43,33 +39,30 @@
   border: none;
   color: white;
   font-size: 20px;
-  cursor: pointer;
-  padding: 0;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  cursor: pointer;
   transition: background 0.2s ease;
-  line-height: 1; /* Fix alignment */
 }
 
 .info-pane-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.2);
 }
 
-/* Content - takes up available space */
 .info-pane-content {
+  flex: 1;                 /* fills space between header and footer */
   padding: 12px 14px;
   overflow-y: auto;
-  flex: 1; /* Take up remaining space between header and footer */
 }
 
 .info-pane-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #eee;
   gap: 10px;
   font-size: 13px;
@@ -91,34 +84,42 @@
   word-break: break-word;
 }
 
-/* Footer with Buttons */
 .info-pane-footer {
+  flex-shrink: 0;
   padding: 12px 14px;
   background: #f3f3f3;
   border-top: 1px solid #ddd;
-  flex-shrink: 0; /* Prevent footer from shrinking */
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 }
 
 .info-pane-floorplan-btn,
 .info-pane-level-btn {
-  width: 100%;
-  padding: 10px 16px;
-  background: white;
-  color: #444;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.info-pane-floorplan-btn {
+  background: white;
+  color: #444;
+}
+
+.info-pane-level-btn {
+  background: #00A6D6;
+  color: white;
 }
 
 .info-pane-floorplan-btn:hover,
@@ -127,56 +128,71 @@
   transform: translateY(-1px);
 }
 
-.info-pane-floorplan-btn:active,
-.info-pane-level-btn:active {
-  transform: translateY(0);
-}
-
-.info-pane-floorplan-btn i,
-.info-pane-level-btn i {
-  font-size: 16px;
-}
-
-/* Different color for level button to distinguish it */
-.info-pane-level-btn {
-  background: #00A6D6;
-  color: white;
-}
-
 .info-pane-level-btn:hover {
   background: #0095c2;
 }
 
-/* Building View Dropdown - positioned relative to InfoPane */
-#bv-dropdown {
+#bv-controls,
+#bv-storey-controls {
   position: absolute;
-  bottom: 70px; /* Position above the buttons */
-  left: 14px;
-  right: 14px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  display: none;
-  z-index: 100;
-  max-height: 200px;
-  overflow-y: auto;
+  bottom: 14px;
+  display: flex;
+  gap: 6px;
+  z-index: 40;
 }
+
+#bv-controls { left: 14px; }
+#bv-storey-controls { right: 14px; }
+
+#bv-btn,
+#bv-storey-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#bv-btn:hover,
+#bv-storey-btn:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+}
+
+#bv-btn i,
+#bv-storey-btn i {
+  font-size: 18px;
+  color: #444;
+}
+
+#bv-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border-radius: 5px;
+  min-width: 160px;
+  padding: 8px 0;
+  margin-top: 4px;
+  z-index: 41;
+}
+
+#bv-dropdown.show { display: block; }
 
 #bv-dropdown a {
   display: block;
-  padding: 10px 14px;
+  padding: 8px 16px;
+  font-size: 13px;
   color: #444;
   text-decoration: none;
-  font-size: 13px;
-  border-bottom: 1px solid #eee;
-  transition: background 0.2s ease;
 }
 
-#bv-dropdown a:last-child {
-  border-bottom: none;
-}
-
-#bv-dropdown a:hover {
-  background: #f3f3f3;
-}
+#bv-dropdown a:hover { background: #f3f3f3; }
