@@ -158,6 +158,7 @@ class CityJSONFile:
 class CityJSONObject(ABC):
 
     type_name = "CityJSONObject"
+    icon_z_offset = 2
 
     def __init__(
         self,
@@ -186,21 +187,34 @@ class CityJSONObject(ABC):
         # Add the key to the attributes
         self.add_attributes({"key": self.id})
 
-        # Compute the icon position and add it to the attributes
-        if icon_position is not None:
-            self.icon_position = icon_position
-        elif geometries is not None and len(geometries) > 0:
+        # Compute the icon
+        self._compute_icon(icon_position)
+
+    def _compute_icon(self, icon_position: IconPosition | None = None) -> None:
+        """
+        Compute the icon position and add it to the attributes.
+        If no icon position is given, it is computed based on the geometry.
+
+        Parameters
+        ----------
+        icon_position : IconPosition | None, optional
+            The position of the icon on the map. By default None.
+        """
+        if (
+            icon_position is None
+            and self.geometries is not None
+            and len(self.geometries) > 0
+        ):
             # Use the highest lod to create a point
             best_idx = 0
-            for idx in range(1, len(geometries)):
-                if geometries[idx].lod > geometries[best_idx].lod:
+            for idx in range(1, len(self.geometries)):
+                if self.geometries[idx].lod > self.geometries[best_idx].lod:
                     best_idx = idx
 
-            self.icon_position = IconPosition.from_mesh(
-                geometries[best_idx].to_trimesh()
+            icon_position = IconPosition.from_mesh(
+                self.geometries[best_idx].to_trimesh(), z_offset=self.icon_z_offset
             )
-        else:
-            self.icon_position = None
+        self.icon_position = icon_position
         if self.icon_position is not None:
             self.add_attributes(
                 {
@@ -211,6 +225,18 @@ class CityJSONObject(ABC):
                     ]
                 }
             )
+
+    def set_icon(self, icon_position: IconPosition) -> None:
+        self.icon_position = icon_position
+        self.add_attributes(
+            {
+                "icon_position": [
+                    self.icon_position.x,
+                    self.icon_position.y,
+                    self.icon_position.z,
+                ]
+            }
+        )
 
     def __repr__(self) -> str:
         return f"{type(self)}(id={self.id}, parent_id={self.parent_id}, children_ids={self.children_ids})"
@@ -226,13 +252,22 @@ class CityJSONObject(ABC):
         self.children_ids.add(child_id)
 
     def get_cityobject(self) -> dict[str, Any]:
+        """
+        Returns the object formatted like a CityJSON object, but without the geometry.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary following CityJSON format for a CityObject, but **without** the
+            geometry.
+        """
         content_dict = {}
         content_dict["type"] = type(self).type_name
         if self.parent_id is not None:
             content_dict["parents"] = [self.parent_id]
         if len(self.children_ids) > 0:
             content_dict["children"] = list(self.children_ids)
-        content_dict["attributes"] = self.attributes
+        content_dict["attributes"] = self.attributes.copy()
         return content_dict
 
     def add_attributes(
@@ -284,7 +319,7 @@ class CityJSONSpace(CityJSONObject):
 
     def get_cityobject(self) -> dict[str, Any]:
         parent_units_key = "parent_units"
-        self.add_attributes({parent_units_key: self.parent_units})
+        self.add_attributes({parent_units_key: list(self.parent_units)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
         self.attributes.pop(parent_units_key)
@@ -304,6 +339,7 @@ class CityJSONSpace(CityJSONObject):
 class Building(CityJSONSpace):
 
     type_name = "Building"
+    icon_z_offset = 2
 
     def __init__(
         self,
@@ -323,6 +359,7 @@ class Building(CityJSONSpace):
 class BuildingPart(CityJSONSpace):
 
     type_name = "BuildingPart"
+    icon_z_offset = 1
 
     def __init__(
         self,
@@ -342,6 +379,7 @@ class BuildingPart(CityJSONSpace):
 class BuildingStorey(CityJSONSpace):
 
     type_name = "BuildingStorey"
+    icon_z_offset = 0.5
 
     def __init__(
         self,
@@ -361,6 +399,7 @@ class BuildingStorey(CityJSONSpace):
 class BuildingRoom(CityJSONSpace):
 
     type_name = "BuildingRoom"
+    icon_z_offset = 0.5
 
     def __init__(
         self,
@@ -406,6 +445,7 @@ class BuildingUnitContainer(CityJSONObject):
 class BuildingUnit(BuildingUnitContainer):
 
     type_name = "BuildingUnit"
+    icon_z_offset = 0.5
 
     def __init__(
         self,
@@ -425,7 +465,7 @@ class BuildingUnit(BuildingUnitContainer):
 
     def get_cityobject(self) -> dict[str, Any]:
         unit_spaces_key = "unit_spaces"
-        self.add_attributes({unit_spaces_key: self.unit_spaces})
+        self.add_attributes({unit_spaces_key: list(self.unit_spaces)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
         self.attributes.pop(unit_spaces_key)

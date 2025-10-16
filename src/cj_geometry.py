@@ -174,11 +174,11 @@ class IconPosition:
         self.z = z
 
     @classmethod
-    def from_mesh(cls, mesh: Trimesh) -> Self:
+    def from_mesh(cls, mesh: Trimesh, z_offset: float) -> Self:
         if not isinstance(mesh, Trimesh):
             raise TypeError(
                 f"IconPosition.from_geometry expects a `MultiSurface` instance, not `{type(geom)}`."
             )
 
-        pos_array = icon_position_from_mesh(mesh=mesh, z_offset=2)
+        pos_array = icon_position_from_mesh(mesh=mesh, z_offset=z_offset)
         return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])

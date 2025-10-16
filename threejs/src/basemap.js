@@ -306,7 +306,9 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
 
   // Function to create tile mesh
   function createTileMesh(texture, row, col) {
+    texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
 
     const tileMinX = originX + col * tileSpan;
     const tileMaxY = originY - row * tileSpan;

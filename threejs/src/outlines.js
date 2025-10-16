@@ -8,8 +8,10 @@ import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectio
 
 export class OutlineManager {
 
-    constructor(scene) {
+    constructor(scene, iconsSceneManager, renderer) {
         this.scene = scene;
+        this.iconsSceneManager = iconsSceneManager;
+        this.renderer = renderer
         this.composers = [];
         this.cameras = [];
         this.outlinePasses = [];
@@ -27,7 +29,7 @@ export class OutlineManager {
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
-    render(deltaTime, cameraManager, renderer) {
+    render(deltaTime, cameraManager) {
         var currentIndex = null;
         for (var i = 0; i < this.composers.length; i++) {
             var camera = this.cameras[i];
@@ -36,45 +38,90 @@ export class OutlineManager {
             }
         }
         if (currentIndex === null) {
-            this._create_outline_pass(cameraManager, renderer);
+            this._create_outline_pass(cameraManager);
             currentIndex = this.composers.length - 1;
         }
+
+        // Update the size of the icons
+        this.iconsSceneManager.beforeRender(cameraManager);
+
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
         outlinePass.selectedObjects = this.selectedObjects;
+
         composer.render(deltaTime);
     }
 
-    _create_outline_pass(cameraManager, renderer) {
-        var composer = new EffectComposer(renderer);
+    _create_outline_pass(cameraManager) {
+        var composer = new EffectComposer(this.renderer);
+
+        // First pass for the 3D objects
         var renderPass = new RenderPass(this.scene, cameraManager.camera);
         composer.addPass(renderPass);
 
+        // Second pass for the outline of the 3D objects
         var outlinePass = new OutlinePass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
             this.scene,
             cameraManager.camera
         );
 
+        // Outline settings
         outlinePass.edgeStrength = this.style.edgeStrength;
         outlinePass.edgeGlow = this.style.edgeGlow;
         outlinePass.edgeThickness = this.style.edgeThickness;
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
+
         composer.addPass(outlinePass);
 
+        // Third pass for the icons
+        var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
+        iconsRenderPass.clear = false; // To avoid replacing everything on the screen
+        composer.addPass(iconsRenderPass);
+
+        // Fourth pass to make everything appear
         var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
         composer.addPass(gammaCorrectionPass);
 
+        // Store all the objects
         this.composers.push(composer);
         this.cameras.push(cameraManager.camera);
         this.outlinePasses.push(outlinePass);
         return composer;
     }
+    setStyle(code = 'default') {
+
+        for (const composer of this.composers) {
+            const outline = composer.passes[1];
+            if (code == 'default') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#ffffff');
+                outline.hiddenEdgeColor.set('#ffffff');
+            };
+            if (code == 'single') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#d9ff00');
+                outline.hiddenEdgeColor.set('#d9ff00');
+            };
+            if (code == 'hover') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#0bff02');
+                outline.hiddenEdgeColor.set('#0bff02');
+            };
+        }
+    };
 
     outlineObjects(objects, code = "default") {
-        // console.log(objects);
+        this.setStyle(code);
+        // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
 
@@ -86,8 +133,10 @@ export class OutlineManager {
 
     // below two functions are necessary when browser window is resized
     onResize() {
-        this.composer.setSize(window.innerWidth, window.innerHeight);
-        this.outlinePass.setSize(window.innerWidth, window.innerHeight);
+        for (var i = 0; i < this.composers.length; i++) {
+            this.composers[i].setSize(window.innerWidth, window.innerHeight);
+            this.outlinePasses[i].setSize(window.innerWidth, window.innerHeight);
+        }
     }
 
     dispose() {
