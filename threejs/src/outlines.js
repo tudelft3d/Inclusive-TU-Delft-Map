@@ -48,7 +48,6 @@ export class OutlineManager {
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
         outlinePass.selectedObjects = this.selectedObjects;
-        console.log(composer);
 
         composer.render(deltaTime);
     }
