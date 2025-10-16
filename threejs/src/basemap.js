@@ -163,7 +163,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
 export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0", layer = "Actueel_orthoHR", options = {}) {
   const {
     matrixSet = "EPSG:28992",
-    zoom = 10, // Reduced from 12 to 10 for faster loading (fewer tiles)
+    zoom = 12,
     tileSize = 256,
     resolutions = [
       3440.64, 1720.32, 860.16, 430.08, 215.04,
