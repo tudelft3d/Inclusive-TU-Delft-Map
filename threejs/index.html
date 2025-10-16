@@ -12,6 +12,7 @@
      <link href="./styles/searchBar.css" rel="stylesheet" type="text/css">
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/topRightButtons.css" rel="stylesheet" type="text/css">
 
     <script type="module" src="./src/header.js" defer></script>
     <script type="module" src="./src/main.js"></script>
@@ -39,20 +40,9 @@
 
     <!-- TOP RIGHT SIDEBAR CONTROLS -->
     <div id="top-right-sidebar-controls">
-
-        <div id="accessibility-container">
-            <button id="accessibility-btn" data-tooltip="Accessibility options"><img
-                    src="assets/threejs/graphics/icons/accessibility.svg" /></button>
-            <div id="accessibility-dropdown">
-                <a href="#">Red-Green Color Blind</a>
-                <a href="#">Blue-Yellow Color Blind</a>
-                <a href="#">High Contrast</a>
-            </div>
-        </div>
-
         <div id="basemap-container">
             <button id="basemap-btn" data-tooltip="Change base map"><img
-                    src="assets/threejs/graphics/icons/map.svg" /></button>
+                    src="assets/threejs/graphics/icons/basemap_white.svg" /></button>
             <div id="basemap-dropdown">
                 <a href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
                     data-layer="Actueel_orthoHR">Satellite Imagery</a>
@@ -64,8 +54,8 @@
         </div>
 
         <div id="layers-container">
-            <button id="layers-btn" data-tooltip="Select layers"><img
-                    src="assets/threejs/graphics/icons/layers.svg" /></button>
+            <button id="layer-btn" data-tooltip="Select layers"><img
+                    src="assets/threejs/graphics/icons/layers_white.svg" /></button> 
             <div id="layers-dropdown">
                 <a href="#" data-code="">Accessible Entrances</a>
                 <a href="#" data-code="">Elevators</a>
@@ -78,6 +68,16 @@
 
     <!-- BOTTOM RIGHT SIDEBAR CONTROLS -->
     <div id="bottom-right-sidebar-controls">
+
+        <div id="accessibility-container">
+            <button id="accessibility-btn" data-tooltip="Accessibility options"><img
+                    src="assets/threejs/graphics/icons/accessibility.svg" /></button>
+            <div id="accessibility-dropdown">
+                <a href="#">Red-Green Color Blind</a>
+                <a href="#">Blue-Yellow Color Blind</a>
+                <a href="#">High Contrast</a>
+            </div>
+        </div>
 
         <div id="compass-container">
             <button id="compass-btn" data-tooltip="Reset compass"><img

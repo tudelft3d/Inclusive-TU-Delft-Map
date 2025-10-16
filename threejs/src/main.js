@@ -2,64 +2,170 @@ import { Map } from "./app";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
 import { outline_code } from "./layers"
-import { initSearchBar } from "./searchbar"
+import { initSearchBar } from "./searchBar"
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Root DOM container for the 3D scene / map
     const container = document.querySelector('#scene-container');
 
-    // Instantiate the app-level Map and load assets
     const map = new Map(container);
+
+    // Make map globally accessible for debugging / preloading inspection
+    window.mapInstance = map;
+
+    // Console helper to inspect tile cache / preloading status
+    window.checkPreloadingStatus = () => {
+        const stats = map.getTileCacheInfo ? map.getTileCacheInfo() : {};
+        console.log('=== Tile Cache & Preloading Status ===');
+        console.log(`Cache size: ${stats.size ?? 'n/a'} tiles`);
+        console.log(`Memory estimate: ${stats.memoryEstimate ?? 'n/a'}`);
+        console.log(`Is preloading: ${stats.isPreloading ?? 'n/a'}`);
+        console.log(`Preloaded layers: ${(stats.preloadedLayers || []).join(', ')}`);
+        console.log(`Available layers: ${(stats.availableLayers || []).join(', ')}`);
+        return stats;
+    };
+
+    console.log('🗺️ TU Delft Map initialized!');
+    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
+    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
+
+    // Load assets
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
-    // Utility view that manages building-specific UI/behavior
     const buildingView = new BuildingView(map);
     map.buildingView = buildingView;
 
-    // Search backend used by the UI
     const searcher = new Searcher();
 
-    // Search UI tuning
+    // Search behaviour tuning
     const search_delay = 250;         // milliseconds debounce before searching
     const search_result_count = 5;    // max intermediate results to show
 
-    // Compass setup: find an element inside the compass button to rotate
+    // Compass icon wiring: find an inner element to rotate
     const compassIcon = document.querySelector('#compass-btn svg') ||
         document.querySelector('#compass-btn img') ||
         document.querySelector('#compass-btn .compass-icon');
 
     if (compassIcon) {
-        // Let cameraManager rotate the found icon as the view changes
         map.cameraManager.setCompassElement(compassIcon);
         map.cameraManager.controls.addEventListener('change', () => {
             map.cameraManager.updateCompassRotation();
         });
-        map.cameraManager.updateCompassRotation(); // initial update
+        map.cameraManager.updateCompassRotation();
     }
 
-    // Zoom controls: wired to camera manager
-    document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
+    // Zoom buttons
+    const zi = document.getElementById('zoom-in-btn');
+    const zo = document.getElementById('zoom-out-btn');
+    if (zi) zi.addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
         map.cameraManager.zoomIn();
     });
-
-    document.getElementById('zoom-out-btn').addEventListener('click', (event) => {
+    if (zo) zo.addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
         map.cameraManager.zoomOut();
     });
 
-    // Toggle between 2D / 3D (orthographic/perspective)
-    document.getElementById('view-toggle-btn').addEventListener('click', () => {
+    // 2D/3D toggle
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    if (viewToggleBtn) viewToggleBtn.addEventListener('click', () => {
+        console.log('Clicked the button');
         map.cameraManager.toggleOrthographic();
     });
 
-    // Initialize the search bar UI (handlers live in searchbar.js)
+    // Initialize search bar UI (handles intermediate results, mobile sheet, overlay)
     initSearchBar({ map, searcher, search_delay, search_result_count });
 
-    // Compass button: reset north orientation
+    // Basemap dropdown wiring
+    const basemapBtn = document.getElementById('basemap-btn');
+    const basemapDropdown = document.getElementById('basemap-dropdown');
+    if (basemapBtn && basemapDropdown) {
+        basemapBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // ensure other top-right dropdowns are closed
+            const other = document.getElementById('layers-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== basemapDropdown) other.style.display = 'none';
+            if (accessibility && accessibility !== basemapDropdown) accessibility.style.display = 'none';
+
+            basemapDropdown.style.display = (basemapDropdown.style.display === 'block') ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', () => {
+            basemapDropdown.style.display = 'none';
+        });
+
+        basemapDropdown.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = item.dataset.url;
+                const layer = item.dataset.layer;
+                if (typeof map.setBasemap === 'function') {
+                    map.setBasemap(url, layer);
+                } else if (typeof map.setBaseMap === 'function') {
+                    map.setBaseMap(url, layer);
+                } else {
+                    console.warn('No basemap setter on map', url, layer);
+                }
+                basemapDropdown.style.display = 'none';
+            });
+        });
+    }
+
+    // Layers dropdown wiring
+    const layersBtn = document.getElementById('layer-btn'); 
+    const layersDropdown = document.getElementById('layers-dropdown');
+    if (layersBtn && layersDropdown) {
+        layersBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // close other top-right dropdowns before toggling this one
+            const other = document.getElementById('basemap-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== layersDropdown) other.style.display = 'none';
+            if (accessibility && accessibility !== layersDropdown) accessibility.style.display = 'none';
+
+            layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
+        });
+
+        layersDropdown.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                outline_code(item.dataset.code, map);
+                layersDropdown.style.display = 'none';
+            });
+        });
+
+        document.addEventListener('click', () => {
+            layersDropdown.style.display = 'none';
+        });
+    }
+
+    // Accessibility dropdown wiring
+    const accessibilityBtn = document.getElementById('accessibility-btn');
+    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
+    if (accessibilityBtn && accessibilityDropdown) {
+        accessibilityBtn.addEventListener('click', (event) => {
+            event.stopImmediatePropagation();
+            accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', () => {
+            accessibilityDropdown.style.display = 'none';
+        });
+    }
+
+    // Reset view button
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            map.cameraManager.resetView();
+        });
+    }
+
+    // Compass button
     const compassBtn = document.getElementById('compass-btn');
     if (compassBtn) {
         compassBtn.addEventListener('click', (event) => {
@@ -68,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Location button: ask for user location and zoom to it
+    // Location button
     const locationBtn = document.getElementById('location-btn');
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
@@ -77,132 +183,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // BV (streetview / building view) button: enter building view
+    // BV (streetview) button
     const bvBtn = document.getElementById("bv-btn");
-    bvBtn.addEventListener("click", (event) => {
-        buildingView.initiate_buildingView();
-    });
+    if (bvBtn) {
+        bvBtn.addEventListener("click", () => {
+            buildingView.initiate_buildingView();
+        });
+    }
 
-    // BV storey dropdown: simplest toggle behavior
+    // BV storey dropdown
     const bvDropdown_button = document.getElementById("bv-storey-btn");
     const bvDropdown_dropdown = document.getElementById("bv-dropdown");
-
-    bvDropdown_button.addEventListener("click", (event) => {
-        event.stopPropagation();
-        // toggle display state
-        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
-            bvDropdown_dropdown.style.display = 'block';
-        } else {
-            bvDropdown_dropdown.style.display = 'none';
-        }
-    });
-
-    // TOP-RIGHT DROPDOWNS: utilities to open/close and wire option clicks
-    function closeAllDropdowns() {
-        // hide any dropdown that is a direct child div of top-right container
-        document.querySelectorAll('#top-right-sidebar-controls > div > div').forEach(dd => {
-            if (dd && dd.style) dd.style.display = 'none';
+    if (bvDropdown_button && bvDropdown_dropdown) {
+        bvDropdown_button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            bvDropdown_dropdown.style.display = (bvDropdown_dropdown.style.display === 'block') ? 'none' : 'block';
         });
     }
 
-    // Generic helper: wire a button to its dropdown and handle option selection
-    function wireDropdown(buttonId, dropdownId, onOptionClick) {
-        const btn = document.getElementById(buttonId);
-        const dd = document.getElementById(dropdownId);
-        if (!btn || !dd) return;
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // toggle this dropdown while closing others
-            const isOpen = dd.style.display === 'block';
-            closeAllDropdowns();
-            dd.style.display = isOpen ? 'none' : 'block';
-        });
-
-        // Attach click handlers to each anchor inside the dropdown
-        dd.querySelectorAll('a').forEach(a => {
-            a.addEventListener('click', (evt) => {
-                evt.preventDefault();
-                evt.stopPropagation();
-                const url = a.dataset.url;
-                const layer = a.dataset.layer;
-                if (typeof onOptionClick === 'function') {
-                    onOptionClick({ url, layer, anchor: a });
-                }
-                // close the dropdown after selection
-                dd.style.display = 'none';
-            });
-        });
-    }
-
-    // Basemap dropdown: attempt to call a Map API to change the basemap
-    wireDropdown('basemap-btn', 'basemap-dropdown', ({ url, layer }) => {
-        if (url) {
-            // try common setter names; replace with your actual API if different
-            if (typeof map.setBaseMap === 'function') {
-                map.setBaseMap(url, layer);
-            } else if (typeof map.setBasemap === 'function') {
-                map.setBasemap(url, layer);
-            } else {
-                console.warn('No basemap setter found on map. Selected:', url, layer);
-            }
-        }
-    });
-
-    // Layers dropdown: call the provided outline_code or log selection
-    wireDropdown('layers-btn', 'layers-dropdown', ({ anchor }) => {
-        const code = anchor.dataset.code;
-        if (code && typeof outline_code === 'function') {
-            outline_code(code);
-        } else {
-            console.log('layer selected', code);
-        }
-    });
-
-    // Accessibility dropdown: placeholder handler to implement color-mode toggles
-    wireDropdown('accessibility-btn', 'accessibility-dropdown', ({ anchor }) => {
-        const mode = anchor.textContent && anchor.textContent.trim();
-        console.log('accessibility option', mode);
-        // Implement accessibility mode toggles here (contrast, color-blind modes, etc.)
-    });
-
-    // Close open dropdowns when clicking anywhere else on the document
-    document.addEventListener('click', () => {
-        closeAllDropdowns();
-    });
-
-    // LOD dropdown: commented-out code kept for future use
+    // LOD dropdown (kept commented for future use)
     /*
     const lodBtn = document.getElementById('lod-btn');
     const lodDropdown = document.getElementById('lod-dropdown');
-
     if (lodBtn && lodDropdown) {
-        lodBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
-                lodDropdown.style.display = 'block';
-            } else {
-                lodDropdown.style.display = 'none';
-            }
-        });
-
-        document.addEventListener('click', () => {
-            lodDropdown.style.display = 'none';
-
-            if (lod === 'lod_0') {
-                console.log('lod0');
-                map.setOutline('BuildingRoom','lod_0');
-            }
-        });
-
-        lodDropdown.querySelectorAll('a').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const lod = item.dataset.lod;                const lod = item.dataset.lod;
-                map.lodVis(lod);
-                lodDropdown.style.display = 'none';
-            });
-        });
+        // ...existing LOD wiring...
     }
     */
+
+    // Reveal search bar after wiring all handlers to prevent initial flash
+    // window.addEventListener('load', () => {
+    //     const searchBar = document.getElementById('search-bar');
+    //     if (searchBar) searchBar.style.visibility = 'visible';
+    // });
 });

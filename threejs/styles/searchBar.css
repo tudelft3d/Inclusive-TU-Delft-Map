@@ -1,10 +1,14 @@
+/* #search-bar {
+  visibility: hidden;
+} */
+
 #search-bar {
   --search-width: 390px;
   --search-padding-vertical: 8px;
   --search-padding-horizontal: 12px;
   --search-radius: 6px;
   position: fixed;
-  top: calc(var(--height, 64px) + 15px);
+  top: calc(var(--height, 64px) + 28px);
   opacity: 0.95;
   z-index: 10;
   width: 100%;
@@ -129,11 +133,11 @@
   .mobile-only-search {
     display: flex;
     position: fixed;
-    top: calc(var(--height, 64px) + 18px);
-    left: 12px;
+    top: calc(var(--height, 64px) + 10px);
+    left: 10px;
     z-index: 1300;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 8px;
     border: none;
     background: #f1f1f1;
@@ -144,8 +148,9 @@
   }
   .mobile-only-search img {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
   /* bottom sheet - start hidden offscreen until .mobile-open */
@@ -247,13 +252,6 @@
   #search-bar.mobile-open #search-icon {
     display: none;
   }
-}
-
-/* Make the search container click-through except for its interactive children.
-   This prevents the (invisible) parts of the #search-bar from intercepting clicks
-   on UI elements (e.g. the top-right buttons). */
-#search-bar {
-  pointer-events: none;
 }
 
 /* Interactive parts must still receive pointer events */

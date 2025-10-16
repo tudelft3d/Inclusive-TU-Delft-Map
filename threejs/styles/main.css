@@ -36,17 +36,6 @@ h1 {
   z-index: 1;
 }
 
-/* TOP RIGHT SIDEBAR CONTROLS */
-#top-right-sidebar-controls {
-  position: fixed;
-  top: calc(var(--height, 64px) + 20px);
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 30;
-}
-
 /* BOTTOM RIGHT SIDEBAR CONTROLS */
 #bottom-right-sidebar-controls {
   position: fixed;
@@ -72,8 +61,6 @@ h1 {
 /* Common button container styles */
 #reset-container,
 #accessibility-container,
-#basemap-container,
-#layers-container,
 #compass-container,
 #view-toggle-container,
 #location-container {
@@ -84,8 +71,6 @@ h1 {
 /* Common button styles */
 #reset-btn,
 #accessibility-btn,
-#basemap-btn,
-#layers-btn,
 #compass-btn,
 #view-toggle-btn,
 #location-btn,
@@ -106,8 +91,6 @@ h1 {
 
 #reset-btn:hover,
 #accessibility-btn:hover,
-#basemap-btn:hover,
-#layers-btn:hover,
 #compass-btn:hover,
 #view-toggle-btn:hover,
 #location-btn:hover,
@@ -118,9 +101,7 @@ h1 {
 }
 
 /* Dropdown styles */
-#accessibility-dropdown,
-#basemap-dropdown,
-#layers-dropdown {
+#accessibility-dropdown {
   display: none;
   position: absolute;
   top: 100%;
@@ -134,18 +115,14 @@ h1 {
   z-index: inherit;
 }
 
-#accessibility-dropdown a,
-#basemap-dropdown a,
-#layers-dropdown a {
+#accessibility-dropdown a{
   display: block;
   padding: 10px;
   text-decoration: none;
   color: black;
 }
 
-#accessibility-dropdown a:hover,
-#basemap-dropdown a:hover,
-#layers-dropdown a:hover {
+#accessibility-dropdown a:hover{
   background: #f3f3f3;
 }
 
