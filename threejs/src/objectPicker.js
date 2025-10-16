@@ -66,8 +66,8 @@ export class ObjectPicker {
      */
     pick(normalizedPosition, scene, camera) {
         // Restore the color if there was a picked object
-        if (this.picked && this.picked.material && this.picked.material.emissive) {
-            this.picked.material.emissive.setHex(this.pickedColor);
+        if (this.picked && this.picked.material && this.picked.material.color) {
+            this.picked.material.color.setHex(this.pickedColor);
             this.infoPane.hide(); // Clean separation - InfoPane handles hiding
         }
         this.picked = null;
@@ -113,10 +113,10 @@ export class ObjectPicker {
 
         // Save its color
 
-        this.pickedColor = mesh.material.emissive.getHex();
+        this.pickedColor = mesh.material.color.getHex();
 
         // Set its emissive color to picked color
-        mesh.material.emissive.setHex(pickedColor);
+        mesh.material.color.setHex(pickedColor);
 
         // Show info pane with object name - InfoPane handles everything else
         this.infoPane.show(mesh.name);
