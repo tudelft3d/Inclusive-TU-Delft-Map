@@ -300,23 +300,47 @@ export class Map {
         this.cameraManager.controls.target.copy(initTarget);
         this.cameraManager.controls.update();
 
-        const currentValues = { position: currentPosition, target: currentTarget }
+        const extra_camera_parameters = {distance: distance};
 
-        const tweenCamera = new Tween(currentValues, false)
+        this._create_tween_animation(currentPosition, currentTarget, finalPosition, finalTarget, extra_camera_parameters);
+
+    }
+
+    // Operates on the current camera
+    _create_tween_animation(
+        current_position, 
+        current_target, 
+        final_position, 
+        final_target,
+        extra_camera_parameters={}) {
+
+        // Lock the camera from changing modes
+
+        const current_values = {
+            position: current_position,
+            target: current_target
+        }
+
+        const tweenCamera = new Tween(current_values, false)
             .to({
-                position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
-                target: { x: finalTarget.x, y: finalTarget.y, z: finalTarget.z },
+                position: { x: final_position.x, y: final_position.y, z: final_position.z },
+                target: { x: final_target.x, y: final_target.y, z: final_target.z },
             }, 1000)
             .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
             .onUpdate(() => {
-                this.cameraManager.camera.position.copy(currentValues.position);
-                this.cameraManager.camera.lookAt(currentValues.target);
-                this.cameraManager.controls.target.copy(currentValues.target);
+                this.cameraManager.camera.position.copy(current_values.position);
+                this.cameraManager.camera.lookAt(current_values.target);
+                this.cameraManager.controls.target.copy(current_values.target);
                 this.cameraManager.controls.update();
             })
             .onComplete(() => {
-                this.cameraManager.controls.minDistance = distance * 0.5;
-                this.cameraManager.controls.maxDistance = distance * 3;
+
+                if (this.cameraManager.usesOrbitCamera()) {
+
+                    this.cameraManager.controls.minDistance = extra_camera_parameters.distance * 0.5;
+                    this.cameraManager.controls.maxDistance = extra_camera_parameters.distance * 3;
+
+                }
 
                 // Remove from the list of tween when completed
                 const idx = this.tweens.indexOf(tweenCamera);
@@ -341,6 +365,14 @@ export class Map {
 
         const rotation = this.cameraManager.camera.quaternion;
 
+        var current_position = this.cameraManager.camera.position.clone();
+        var current_target = new THREE.Vector3(this.cameraManager.camera.position.x, 0, this.cameraManager.camera.position.z);
+
+        const final_position = new THREE.Vector3(center.x, this.cameraManager.camera.position.y, center.z);
+        const final_target = new THREE.Vector3(center.x, 0, center.z);
+
+        this._create_tween_animation(current_position, current_target, final_position, final_target);
+
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
         // this.orthographicCamera.right = halfWidth;
@@ -356,16 +388,19 @@ export class Map {
 
         // this.cameraManager.camera.autoRotate = true;
 
-        this.cameraManager.camera.position.x = center.x;
-        this.cameraManager.camera.position.z = center.z;
 
-        this.cameraManager.camera.lookAt(center);
-        this.cameraManager.camera.applyQuaternion(rotation);
 
-        // this.cameraManager.camera.updateProjectionMatrix();
 
-        this.cameraManager.controls.target.copy(center);
-        this.cameraManager.controls.update();
+        // this.cameraManager.camera.position.x = center.x;
+        // this.cameraManager.camera.position.z = center.z;
+
+        // this.cameraManager.camera.lookAt(center);
+        // this.cameraManager.camera.applyQuaternion(rotation);
+
+        // // this.cameraManager.camera.updateProjectionMatrix();
+
+        // this.cameraManager.controls.target.copy(center);
+        // this.cameraManager.controls.update();
 
     }
 
