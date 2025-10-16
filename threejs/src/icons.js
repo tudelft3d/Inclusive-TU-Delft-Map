@@ -74,6 +74,11 @@ export function svgToDiscTexture(svgUrl, size = 256, bgColor = '#ffffff', lineWi
 
 export class Icon {
 
+    /**
+     * 
+     * @param {THREE.CanvasTexture} svgTexture 
+     * @param {THREE.Vector3} worldPos 
+     */
     constructor(svgTexture, worldPos) {
         const material = new THREE.SpriteMaterial({
             map: svgTexture,
@@ -86,7 +91,7 @@ export class Icon {
         });
 
         this.sprite = new THREE.Sprite(material);
-        this.sprite.position.copy(worldPos);
+        this.basePos = worldPos;
     }
 
     /** Set the size in world units.
@@ -95,6 +100,7 @@ export class Icon {
      */
     _setSize(size) {
         this.sprite.scale.set(size, size, 1);
+        this.sprite.position.copy(this.basePos.clone().add(new THREE.Vector3(0, size / 2, 0)));
     }
 
     /** Set the size of the sprite based on the camera position.
