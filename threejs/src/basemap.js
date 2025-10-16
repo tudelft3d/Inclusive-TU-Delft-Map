@@ -1,5 +1,52 @@
 import * as THREE from 'three';
 
+// Function to calculate viewport center in map coordinates
+function getViewportCenter(bbox) {
+  const [minX, minY, maxX, maxY] = bbox;
+  return {
+    centerX: (minX + maxX) / 2,
+    centerY: (minY + maxY) / 2
+  };
+}
+
+// Function to calculate distance from viewport center for tile prioritization
+function getTileDistance(tileRow, tileCol, centerRow, centerCol) {
+  const deltaRow = tileRow - centerRow;
+  const deltaCol = tileCol - centerCol;
+  return Math.sqrt(deltaRow * deltaRow + deltaCol * deltaCol);
+}
+
+// Function to create prioritized tile loading queue
+function createPrioritizedQueue(minRow, maxRow, minCol, maxCol, wmtsBaseURL, layer, matrixSet, zoom) {
+  const centerRow = (minRow + maxRow) / 2;
+  const centerCol = (minCol + maxCol) / 2;
+  
+  const tiles = [];
+  
+  // Create all tile objects with distance from center
+  for (let row = minRow; row <= maxRow; row++) {
+    for (let col = minCol; col <= maxCol; col++) {
+      const distance = getTileDistance(row, col, centerRow, centerCol);
+      const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
+        + `&LAYER=${layer}`
+        + `&STYLE=default`
+        + `&FORMAT=image/png`
+        + `&TILEMATRIXSET=${matrixSet}`
+        + `&TILEMATRIX=${zoom}`
+        + `&TILEROW=${row}`
+        + `&TILECOL=${col}`;
+      
+      tiles.push({ row, col, url, distance });
+    }
+  }
+  
+  // Sort by distance - closest tiles first
+  tiles.sort((a, b) => a.distance - b.distance);
+  
+  console.log(`🎯 Prioritized ${tiles.length} tiles - center-out loading strategy`);
+  return tiles;
+}
+
 // Tile cache to store loaded textures
 const tileCache = new Map();
 
@@ -248,9 +295,12 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
         activeLoads--;
         loadedTiles++;
         
-        // Log progress for slow layers
-        if (layer === 'achtergrondvisualisatie') {
-          console.log(`BGT Progress: ${loadedTiles}/${totalTiles} tiles loaded`);
+        // Enhanced progress logging for viewport-first loading
+        const progressPercent = Math.round((loadedTiles / totalTiles) * 100);
+        
+        if (loadedTiles % 5 === 0 || progressPercent <= 20) {
+          // Show more frequent updates for the first 20% (viewport tiles)
+          console.log(`🗺️ ${layer}: ${loadedTiles}/${totalTiles} tiles (${progressPercent}%) - viewport-first loading`);
         }
         
         loadNextTile(); // Load next tile
@@ -287,21 +337,17 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
     basemapGroup.add(planeMesh); // Add to group instead of scene directly
   }
 
-  // Queue all tiles for loading
-  for (let row = minRow; row <= maxRow; row++) {
-    for (let col = minCol; col <= maxCol; col++) {
-      const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
-        + `&LAYER=${layer}`
-        + `&STYLE=default`
-        + `&FORMAT=image/png`
-        + `&TILEMATRIXSET=${matrixSet}`
-        + `&TILEMATRIX=${optimizedZoom}`
-        + `&TILEROW=${row}`
-        + `&TILECOL=${col}`;
-
-      loadingQueue.push({ row, col, url });
-    }
-  }
+  // Create prioritized loading queue - center-out strategy
+  console.log(`🎯 Creating viewport-first loading strategy for ${layer}...`);
+  const prioritizedTiles = createPrioritizedQueue(
+    minRow, maxRow, minCol, maxCol, 
+    wmtsBaseURL, layer, matrixSet, optimizedZoom
+  );
+  
+  // Add prioritized tiles to loading queue
+  prioritizedTiles.forEach(tile => {
+    loadingQueue.push(tile);
+  });
 
   // Start loading tiles
   for (let i = 0; i < Math.min(optimizedMaxConcurrent, loadingQueue.length); i++) {
