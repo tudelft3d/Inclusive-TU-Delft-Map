@@ -88,6 +88,7 @@
   transform: translateY(0) scaleY(1);
   overflow-y: auto;
   padding-left: 12px;
+  padding-right: 12px;
 }
 
 #intermediate_results ul {
@@ -95,8 +96,6 @@
   padding: 0;
   margin: 0;
   width: 100%;
-  padding-left: var(--search-padding-horizontal);
-  padding-right: var(--search-padding-horizontal);
 }
 
 #intermediate_results ul li {
@@ -104,7 +103,7 @@
   width: 100%;
   border: none;
   cursor: pointer;
-  color: #222;
+  color: #000000;
   font-size: 14px;
   padding: 8px var(--search-padding-horizontal);
   transition: background 0.12s ease, color 0.12s ease;
@@ -112,12 +111,9 @@
   text-align: left;
 }
 
-#intermediate_results ul li:hover,
-#intermediate_results ul li:focus {
-  color: #000;
-  background: rgba(0,0,0,0.03);
+#intermediate_results ul li:hover {
+  background: #027eab0e !important;
 }
-
 #intermediate_results.empty {
   padding: 10px var(--search-padding-horizontal);
   color: #666;

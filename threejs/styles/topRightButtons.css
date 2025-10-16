@@ -39,7 +39,7 @@
   right: 85%;            /* place left of the control */
   transform: translateY(-32%);
   margin-right: 12px;     /* gap between button and dropdown */
-  background: white;
+  background: #f1f1f1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
   padding: 8px 0px;
@@ -56,7 +56,7 @@
   right: 85%;            /* place left of the control */
   transform: translateY(-25%);
   margin-right: 12px;     /* gap between button and dropdown */
-  background: white;
+  background: #f1f1f1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
   padding: 8px 0px;
@@ -80,7 +80,7 @@
 
 #basemap-dropdown a:hover,
 #layers-dropdown a:hover {
-  background: #f3f3f3;
+  background: #027eab0e;
 }
 
 /* Mobile adjustments for narrow screens */
