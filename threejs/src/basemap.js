@@ -224,18 +224,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
     maxConcurrentLoads = 6 // Limit concurrent tile loads
   } = options;
 
-  // Special optimizations for slow BGT Colour layer
-  let optimizedZoom = zoom;
-  let optimizedMaxConcurrent = maxConcurrentLoads;
-  
-  if (layer === 'achtergrondvisualisatie') {
-    console.log('🐌 BGT Colour layer detected - applying speed optimizations...');
-    optimizedZoom = Math.min(zoom, 9); // Force lower zoom for BGT Colour (max zoom 9)
-    optimizedMaxConcurrent = Math.min(maxConcurrentLoads, 4); // Reduce concurrent loads to avoid server throttling
-    console.log(`📊 BGT optimizations: zoom ${zoom} → ${optimizedZoom}, concurrent ${maxConcurrentLoads} → ${optimizedMaxConcurrent}`);
-  }
-
-  const resolution = resolutions[optimizedZoom];
+  const resolution = resolutions[zoom];
   const tileSpan = tileSize * resolution;
   const [minX, minY, maxX, maxY] = bbox;
 
@@ -267,7 +256,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
 
   // Function to load next tile from queue
   function loadNextTile() {
-    if (loadingQueue.length === 0 || activeLoads >= optimizedMaxConcurrent) {
+    if (loadingQueue.length === 0 || activeLoads >= maxConcurrentLoads) {
       return;
     }
 
@@ -341,7 +330,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
   console.log(`🎯 Creating viewport-first loading strategy for ${layer}...`);
   const prioritizedTiles = createPrioritizedQueue(
     minRow, maxRow, minCol, maxCol, 
-    wmtsBaseURL, layer, matrixSet, optimizedZoom
+    wmtsBaseURL, layer, matrixSet, zoom
   );
   
   // Add prioritized tiles to loading queue
@@ -349,8 +338,8 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
     loadingQueue.push(tile);
   });
 
-  // Start loading tiles
-  for (let i = 0; i < Math.min(optimizedMaxConcurrent, loadingQueue.length); i++) {
+  // Start loading tiles (viewport center loads first)
+  for (let i = 0; i < Math.min(maxConcurrentLoads, loadingQueue.length); i++) {
     loadNextTile();
   }
 
