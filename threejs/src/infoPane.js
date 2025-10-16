@@ -147,6 +147,20 @@ export class InfoPane {
             `;
         }
 
+        // Add building view controls (formerly bottom-left controls)
+        html += `
+            <div class="info-pane-bv-controls">
+                <div class="bv-controls">
+                    <button id="bv-btn"><i class="fa-solid fa-street-view"></i></button>
+                </div>
+
+                <div class="bv-storey-controls">
+                    <button id="bv-storey-btn"><i class="fa-solid fa-circle-info" alt="bv"></i></button>
+                    <div id="bv-dropdown"></div>
+                </div>
+            </div>
+        `;
+
         this.pane.innerHTML = html;
         this.pane.style.opacity = '1';
         this.pane.style.display = 'block'; // Keep it always visible, even with no info
@@ -182,6 +196,28 @@ export class InfoPane {
         if (floorplanBtn && this.buildingView) {
             floorplanBtn.addEventListener('click', () => {
                 this.buildingView.initiate_buildingView();
+            });
+        }
+
+        // Building view controls
+        const bvBtn = this.pane.querySelector('#bv-btn');
+        if (bvBtn && this.buildingView) {
+            bvBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.buildingView.initiate_buildingView();
+            });
+        }
+
+        const bvDropdownButton = this.pane.querySelector('#bv-storey-btn');
+        const bvDropdownDropdown = this.pane.querySelector('#bv-dropdown');
+        if (bvDropdownButton && bvDropdownDropdown) {
+            bvDropdownButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (bvDropdownDropdown.style.display === 'none' || bvDropdownDropdown.style.display === '') {
+                    bvDropdownDropdown.style.display = 'block';
+                } else {
+                    bvDropdownDropdown.style.display = 'none';
+                }
             });
         }
     }

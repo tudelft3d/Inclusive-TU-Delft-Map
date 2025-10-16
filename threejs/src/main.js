@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
     const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
+    map.setBuildingView(buildingView);
 
     const searcher = new Searcher();
 
@@ -268,27 +267,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const bvBtn = document.getElementById("bv-btn");
-    bvBtn.addEventListener("click", (event) => {
-
-        buildingView.initiate_buildingView();
-
-    });
-
-
-    const bvDropdown_button = document.getElementById("bv-storey-btn");
-    const bvDropdown_dropdown = document.getElementById("bv-dropdown");
-
-    bvDropdown_button.addEventListener("click", (event) => {
-
-        event.stopPropagation();
-        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
-            bvDropdown_dropdown.style.display = 'block';
-        } else {
-            bvDropdown_dropdown.style.display = 'none';
-        }
-
-    });
+//    const bvBtn = document.getElementById("bv-btn");
+//    bvBtn.addEventListener("click", (event) => {
+//
+//        buildingView.initiate_buildingView();
+//
+//    });
+//
+//
+//    const bvDropdown_button = document.getElementById("bv-storey-btn");
+//    const bvDropdown_dropdown = document.getElementById("bv-dropdown");
+//
+//    bvDropdown_button.addEventListener("click", (event) => {
+//
+//        event.stopPropagation();
+//        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
+//            bvDropdown_dropdown.style.display = 'block';
+//        } else {
+//            bvDropdown_dropdown.style.display = 'none';
+//        }
+//
+//    });
 
     // LOD DROPDOWN - Commented out
     /*
