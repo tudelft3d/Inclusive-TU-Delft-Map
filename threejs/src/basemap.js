@@ -25,15 +25,67 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
   const minRow = Math.floor((originY - maxY) / tileSpan);
   const maxRow = Math.floor((originY - minY) / tileSpan);
 
-  const loader = new THREE.TextureLoader();
-  loader.crossOrigin = "anonymous";
+  const cols = maxCol - minCol + 1;
+  const rows = maxRow - minRow + 1;
+
+  // Remove old basemap
+  const oldBasemap = scene.getObjectByName("active-basemap");
+  if (oldBasemap) {
+    scene.remove(oldBasemap);
+    oldBasemap.traverse((child) => {
+      if (child.isMesh) {
+        child.geometry?.dispose();
+        child.material?.map?.dispose();
+        child.material?.dispose();
+      }
+    });
+  }
 
   const basemapGroup = new THREE.Group();
-  basemapGroup.name = `basemap-${layer}`; // create THREE.Group for removing basemap on toggle
+  basemapGroup.name = "active-basemap";
+  scene.add(basemapGroup);
 
+  // Create ONE massive canvas for all tiles
+  const canvasWidth = cols * tileSize;
+  const canvasHeight = rows * tileSize;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  const ctx = canvas.getContext('2d', { alpha: false });
 
-  // try async?
-  // add retry process
+  // Fill with placeholder color
+  ctx.fillStyle = '#e0e0e0';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Create texture from canvas
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+
+  // Create single mesh for entire basemap
+  const totalWidth = cols * tileSpan;
+  const totalHeight = rows * tileSpan;
+
+  const geometry = new THREE.PlaneGeometry(totalWidth, totalHeight);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.DoubleSide
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+
+  geometry.rotateX(-Math.PI / 2);
+
+  const centerX = originX + (minCol + maxCol + 1) * tileSpan / 2;
+  const centerY = originY - (minRow + maxRow + 1) * tileSpan / 2;
+  mesh.position.set(centerX, yOffset, -centerY);
+
+  basemapGroup.add(mesh);
+
+  // Load all tiles in parallel, draw to canvas as they arrive
+  let loadedTiles = 0;
+  const totalTiles = rows * cols;
+
   for (let row = minRow; row <= maxRow; row++) {
     for (let col = minCol; col <= maxCol; col++) {
       const url = `${wmtsBaseURL}?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`
@@ -45,36 +97,31 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
         + `&TILEROW=${row}`
         + `&TILECOL=${col}`;
 
-      loader.load(url, (texture) => {
-        texture.minFilter = THREE.LinearFilter;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
 
-        const tileMinX = originX + col * tileSpan;
-        const tileMaxY = originY - row * tileSpan;
+      const canvasX = (col - minCol) * tileSize;
+      const canvasY = (row - minRow) * tileSize;
 
-        const tileCenterX = (tileMinX + tileMinX + tileSpan) / 2;
-        const tileCenterY = (tileMaxY + tileMaxY - tileSpan) / 2;
+      img.onload = () => {
+        // Draw tile directly to canvas
+        ctx.drawImage(img, canvasX, canvasY, tileSize, tileSize);
+        texture.needsUpdate = true;
 
-        const planeGeometry = new THREE.PlaneGeometry(tileSpan, tileSpan);
-        const planeMaterial = new THREE.MeshBasicMaterial({
-          map: texture,
-          side: THREE.DoubleSide
-        });
-        const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+        loadedTiles++;
+        if (loadedTiles === totalTiles) {
+          console.log(`Basemap loaded: ${totalTiles} tiles`);
+        }
+      };
 
-        planeMesh.rotateX(-Math.PI / 2);
-        planeMesh.position.set(tileCenterX, yOffset, -tileCenterY);
+      img.onerror = () => {
+        console.warn(`Failed to load tile: row=${row}, col=${col}`);
+        loadedTiles++;
+      };
 
-        scene.add(planeMesh);
-      });
+      img.src = url;
     }
   }
-
-  const oldBasemap = scene.getObjectByName("active-basemap");
-  if (oldBasemap) {
-    scene.remove(oldBasemap);
-  }
-  basemapGroup.name = "active-basemap";
-  scene.add(basemapGroup);
 
   return basemapGroup;
 }
