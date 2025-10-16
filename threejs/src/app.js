@@ -19,6 +19,7 @@ export class Map {
         this.activeBasemap = null;
         this.buildingView;
         this.userLocationMarker = null;
+        this.buildings = [];
         this.cityjson = cityjson;
         this.locationWatchId = null; // For tracking real-time location updates
 
@@ -465,7 +466,7 @@ export class Map {
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
-            console.log(center);
+            // console.log(center);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = this.cameraManager.camera.fov * (Math.PI / 180);
@@ -503,7 +504,9 @@ export class Map {
                 if (obj.type !== "Building") continue;
                 buildingOutline.push(obj.attributes.key);
             }
-            this.setOutline(buildingOutline, 'lod_2', 'default');
+            this.buildings = buildingOutline;
+            this.setOutline(this.buildings, 'lod_2', 'default');
+            // this.outlineManager.composers
 
         }, undefined, function (error) {
             console.error(error);
@@ -527,11 +530,6 @@ export class Map {
         this.outlineManager.render(time, this.cameraManager);
         requestAnimationFrame(this.render);
     }
-
-    // just a wrapper, not needed anymore.
-    // lodToggle(level) {
-    //     this.lodVis(level);
-    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -558,34 +556,15 @@ export class Map {
         });
     }
 
-    setOutline(objectList, lod = 'lod_2', style = 'default') {
+    setOutline(objectList, lod = 'lod_2', style) {
 
         const outlineObjects = [];
-
-        // console.log(id);
         for (const obj of objectList) {
             const target = this.scene.getObjectByName(`${obj}-${lod}`);
             if (target) outlineObjects.push(target);
         }
-        if (style == 'single') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#d9ff00',
-                hiddenEdgeColor: '#d9ff00'
-            });
-        }
-        else if (style == 'hover') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#0bff02',
-                hiddenEdgeColor: '#0bff02'
-            });
-        }
-        this.outlineManager.outlineObjects(outlineObjects);
+
+        this.outlineManager.outlineObjects(outlineObjects, style);
     }
 }
 
