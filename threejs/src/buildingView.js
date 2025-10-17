@@ -25,7 +25,9 @@ export class BuildingView {
     }
 
     set_target(key) {
-
+        // if (this.active || !key) {
+        //     return;
+        // }
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
@@ -86,6 +88,8 @@ export class BuildingView {
         this.building_key = undefined;
 
         this.active = false;
+
+        this.map.cameraManager.camera = this.map.cameraManager.previousCamera;
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
