@@ -76,6 +76,7 @@ export class ObjectPicker {
      */
     pick(normalizedPosition, scene, camera) {
         // Restore the color if there was a picked object
+
         if (this.picked.length > 0) {
             this.infoPane.hide(); // Clean separation - InfoPane handles hiding
         }
@@ -126,6 +127,7 @@ export class ObjectPicker {
 
             // Set its color to picked color
             mesh.material.color.setHex(pickedColor);
+
 
             this.picked.push(mesh);
         }

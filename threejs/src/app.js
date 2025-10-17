@@ -8,10 +8,11 @@ import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/t
 import { addBasemap, preloadAllLayers, getTileCacheStats } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
 import { OutlineManager } from "./outlines";
+import { Icon, svgToDiscTexture, IconsSceneManager } from './icons';
+import { BUILDINGS_COLOR } from './constants';
+
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-// import { lodVis } from "./utils";
-// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { Icon, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
+
 
 export class Map {
     constructor(container) {
@@ -66,34 +67,45 @@ export class Map {
 
         const iconsScene = new THREE.Scene();
         this.iconsSceneManager = new IconsSceneManager(iconsScene);
-
-        // const geometry = new THREE.BoxGeometry(100, 100, 100);
-        // const material = new THREE.MeshBasicMaterial({
-        //   color: 0x00ff00,
-        //   wireframe: true,
-        // });
-
-        // const cube = new THREE.Mesh(geometry, material);
-        // const cube_2 = new THREE.Mesh(geometry, material);
-        // cube_2.position.y = 1000;
-        // this.scene.add(cube);
     }
 
     _initLights() {
         const color = 0xFFFFFF;
-        const intensity = 1;
 
-        // First light
-        const light1 = new THREE.DirectionalLight(color, intensity);
-        light1.position.set(0, 1, 1);
-        light1.target.position.set(0, 0, 0);
-        this.scene.add(light1);
+        // // Add 4 directional lights
+        // const positions = [
+        //     [new THREE.Vector3(0, 1, 0), 0.5],
+        //     [new THREE.Vector3(0, -1, 0), 0.5],
+        //     [new THREE.Vector3(0, 0, 1), 0.5],
+        //     [new THREE.Vector3(0, 0, -1), 0.5],
+        //     [new THREE.Vector3(-1, 0, 0), 0.5],
+        //     [new THREE.Vector3(1, 0, 0), 0.5],
+        // ];
+        // for (const lightsProperties of positions) {
+        //     var position, intensity
+        //     [position, intensity] = lightsProperties;
+        //     const light = new THREE.DirectionalLight(color, intensity);
+        //     light.position.copy(position);
+        //     this.scene.add(light);
+        // }
 
-        // Second light
-        const light2 = new THREE.DirectionalLight(color, intensity);
-        light2.position.set(0, 1, -1);
-        light2.target.position.set(0, 0, 0);
-        this.scene.add(light2);
+        const ambientLight = new THREE.AmbientLight(color, 1);
+        this.scene.add(ambientLight);
+
+        this.light = new THREE.DirectionalLight(color, 3);
+        this.scene.add(this.light);
+        this.scene.add(this.light.target);
+
+
+        // const light = new THREE.DirectionalLight(color, intensity);
+        // light.position.set(0, 1000, 0);
+        // light.target.position.copy(new THREE.Vector3(1, -1, 0));
+        // this.scene.add(light);
+
+        // const light = new THREE.PointLight(color, intensity, 0, 0.001);
+        // light.position.set(85715, 30, -445780);
+        // this.scene.add(light);
+
     }
 
     setBasemap(url, layer) {
@@ -101,16 +113,16 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
-        
+
         // Start preloading other layers in the background (only once)
         if (!this.preloadingStarted) {
             this.preloadingStarted = true;
             console.log('Starting background preloading of map layers...');
-            
+
             // Start preloading after a short delay to let the initial basemap finish loading
             setTimeout(() => {
                 preloadAllLayers({
-                    zoom: 12, 
+                    zoom: 12,
                     bbox: [84000, 443500, 87500, 448000] // Same bbox as main map
                 });
             }, 3000); // 3 second delay
@@ -512,7 +524,7 @@ export class Map {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
 
-            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+            const clicked_element = document.elementFromPoint(e.changedTouches[0].pageX, e.changedTouches[0].pageY);
 
             if (clicked_element.nodeName && clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
@@ -538,8 +550,17 @@ export class Map {
         loader.load(path, (gltf) => {
             let objs = gltf.scene;
             objs.rotateX(-Math.PI / 2);
-            // objs.translateX(loadGLTFTranslateX);
-            // objs.translateY(loadGLTFTranslateY);
+            const newMaterial = new THREE.MeshStandardMaterial({
+                color: BUILDINGS_COLOR,
+                flatShading: true,
+            });
+            objs.traverse((o) => {
+                if (o.isMesh) {
+                    // o.geometry.computeVertexNormals();
+                    o.material = newMaterial;
+                    // console.log(o);
+                }
+            });
 
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
@@ -573,7 +594,7 @@ export class Map {
     }
 
     async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
+        const iconTexture = await svgToDiscTexture(path, 64, '#f5ab56', 4);
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
         const size = 20;
         position = position.add(new THREE.Vector3(0, size / 2, 0));
@@ -586,6 +607,8 @@ export class Map {
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
+        this.light.position.copy(this.cameraManager.camera.position);
+        this.light.target.position.copy(this.cameraManager.controls.target);
         requestAnimationFrame(this.render);
     }
 

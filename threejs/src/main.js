@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('view-toggle-btn').addEventListener('click', () => {
         console.log("Clicked the button")
+        buildingView.leave_buildingView();
         map.cameraManager.toggleOrthographic();
     });
 

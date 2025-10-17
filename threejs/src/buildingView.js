@@ -83,6 +83,10 @@ export class BuildingView {
 
     leave_buildingView() {
 
+        if (!this.active) {
+            return;
+        }
+
         this._hide_mesh_children(this.building_threejs);
 
         this._unhide_objects([this.map.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
