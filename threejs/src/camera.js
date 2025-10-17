@@ -163,14 +163,26 @@ export class CamerasControls {
         this.orthographicCamera.updateProjectionMatrix();
     }
 
-    /** Swith to map view */
+    /**
+     * The theoretical distance corresponding to the view of the OrthographicCamera
+     * with the fov used by the PerspectiveCameras.
+     * 
+     * @returns the distance to the plane z=0.
+     */
+    orthographicDistance() {
+        const frustrumHeight = this.orthographicCamera.top * 2;
+        const field_of_view = (this.mapCamera.fov * Math.PI) / 180;
+        const distance = frustrumHeight / (2 * Math.tan(field_of_view / 2)) / this.orthographicCamera.zoom;
+        return distance;
+    }
+
+    /** 
+     * Swith to map view
+     */
     switchToMap() {
         console.log("Switching to map");
         if (this.usesOrthographicCamera()) {
-            console.log(this.camera.quaternion);
-            const frustrumHeight = this.orthographicCamera.top * 2;
-            const field_of_view = (this.mapCamera.fov * Math.PI) / 180;
-            const distance = frustrumHeight / (2 * Math.tan(field_of_view / 2)) / this.orthographicCamera.zoom;
+            const distance = this.orthographicDistance();
 
             const newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
@@ -188,7 +200,9 @@ export class CamerasControls {
         this._changeCameraInt(MAP_CAMERA);
     }
 
-    /** Switch to orbit view */
+    /**
+     * Switch to orbit view
+     */
     switchToOrbit() {
         console.log("Switching to orbit");
         if (this.usesOrthographicCamera()) {

@@ -93,15 +93,51 @@ For everything related to the database, see [/database/README.md](/database/READ
 
 ## Web app
 
-### Set up the map
+If you have not done it yet, please follow the [instructions to set up connection to the server](../server/README.md#server-connection).
+
+### Installation
+
+Here are the steps to deploy the web page for the first time:
+
+1. Connect to the server:
+
+    ```bash
+    ssh inclusivemap
+    ```
+
+2. Install `nginx`:
+
+    ```bash
+    sudo apt-get install nginx
+    ```
+
+3. Clone the repository using `git clone`.
+4. Install `npm` by following these [instructions from Nodesource](https://deb.nodesource.com/).
+5. Install the dependencies for the app:
+
+    ```bash
+    cd Inclusive-TU-Delft-Map/threejs
+    npm ci
+    ```
+
+6. Set up HTTPS: TODO
+7. Copy the site configuration to the right place and link it properly:
+
+    ```bash
+    sudo cp ../server/nginx_site /etc/nginx/sites-available/last_version
+    sudo ln -s /etc/nginx/sites-available/last_version /etc/nginx/sites-enabled/default
+    ```
 
 ### Update the map
 
+> [!NOTE]
+> The first commands in this section must be run from your local machine.
+
 1. Copy the assets to the server.
-    This first step assumes that the local `threejs/assets/` contains the latest assets to use:
+    If you have them locally and you followed the setup guide, you can run this by replacing `<NETID>` properly:
 
     ```bash
-    scp -r threejs/assets/ abry@inclusivemap:~/Inclusive-TU-Delft-Map/threejs/
+    scp -r threejs/assets/ <NETID>@inclusivemap:~/Inclusive-TU-Delft-Map/threejs/
     ```
 
 2. Connect to the server:
@@ -111,23 +147,33 @@ For everything related to the database, see [/database/README.md](/database/READ
     cd Inclusive-TU-Delft-Map/threejs
     ```
 
-3. Create the new website content:
+3. Create the new website content from the branch you want to use (replace `<branch>`):
 
     ```bash
+    git checkout <branch>
     git pull
     npm ci
     npm run build
     ```
 
-4. Remove the current website content:
+4. Replace the current website content:
 
     ```bash
     rm -r /var/www/last_version/html/*
-    ```
-
-5. Copy the new website content to the right position:
-
-    ```bash
     cp -r dist/* /var/www/last_version/html/
     cp -r assets/* /var/www/last_version/html/assets/
     ```
+
+5. Restart the feedback server if necessary:
+
+    - If not started yet:
+
+        ```bash
+        npx pm2 start backend/index.js --name feedback-server --env production
+        ```
+
+    - If already started but requires to be updated
+
+        ```bash
+        npx pm2 restart feedback-server --update-env
+        ```

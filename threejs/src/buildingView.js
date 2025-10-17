@@ -87,9 +87,13 @@ export class BuildingView {
 
         this._unhide_objects([this.map.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
 
+        this.map.setOutline(this.map.buildings);
+
         this.building_key = undefined;
 
         this.active = false;
+
+        this.map.cameraManager.camera = this.map.cameraManager.previousCamera;
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 

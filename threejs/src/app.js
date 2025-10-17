@@ -11,7 +11,7 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { addPointerSprite, svgToCanvasTexture, svgToDiscTexture } from './icons';
+import { Icon, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
 
 export class Map {
     constructor(container) {
@@ -19,6 +19,7 @@ export class Map {
         this.activeBasemap = null;
         this.buildingView;
         this.userLocationMarker = null;
+        this.buildings = [];
         this.cityjson = cityjson;
         this.locationWatchId = null; // For tracking real-time location updates
 
@@ -34,11 +35,11 @@ export class Map {
 
         this.tweens = new Array();
 
-        this._initScene();
+        this._initScenes();
         this._initLights();
         this.setBasemap();
         this._initRenderer();
-        this.outlineManager = new OutlineManager(this.scene, this.iconsScene, this.renderer);
+        this.outlineManager = new OutlineManager(this.scene, this.iconsSceneManager, this.renderer);
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -48,7 +49,7 @@ export class Map {
         }, false);
     }
 
-    _initScene() {
+    _initScenes() {
         this.scene = new THREE.Scene();
         const loader = new THREE.CubeTextureLoader();
         loader.setPath('assets/threejs/graphics/');
@@ -62,7 +63,8 @@ export class Map {
         ]);
         this.scene.background = skyboxTexture;
 
-        this.iconsScene = new THREE.Scene();
+        const iconsScene = new THREE.Scene();
+        this.iconsSceneManager = new IconsSceneManager(iconsScene);
 
         // const geometry = new THREE.BoxGeometry(100, 100, 100);
         // const material = new THREE.MeshBasicMaterial({
@@ -437,11 +439,11 @@ export class Map {
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
 
-        const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
+        this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
-        if (foundObject) {
+        if (this.picker.isObject) {
 
-            const object = this.picker.picked;
+            const object = this.picker.picked[0];
 
             this.buildingView.set_target(object.name);
 
@@ -478,11 +480,11 @@ export class Map {
 
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
 
-            if (clicked_element.nodeName == "CANVAS") {
+            if (clicked_element.nodeName && clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
             }
 
-            
+
         });
 
         // touch handling (mirrors the mouse logic)
@@ -492,10 +494,10 @@ export class Map {
 
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
 
-            if (clicked_element.nodeName == "CANVAS") {
+            if (clicked_element.nodeName && clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
             }
-            
+
         });
 
         // // control change → re‑render
@@ -522,7 +524,7 @@ export class Map {
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
-            console.log(center);
+            // console.log(center);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = this.cameraManager.camera.fov * (Math.PI / 180);
@@ -537,46 +539,26 @@ export class Map {
             this.lodVis();
             this.scene.add(this.model);
 
-            // if (child.name.startsWith("08")) child.visible = false;
-            // if (child.name != "08-lod_2") child.visible = false;
-            // if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
-            //     child.visible = true;
-            // } else { child.visible = false; }
-            // });
-
-            // Old camera positioning based on model bounds
-            // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
-            // this.cameraManager.controls.target.copy(center);
-
-            // // New standard view position and target
-            // this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
-            // this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
-
-            // this.cameraManager.controls.update();
-            // this.cameraManager.setHomeView();
-
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
                 if (obj.type !== "Building") continue;
                 buildingOutline.push(obj.attributes.key);
             }
-            this.setOutline(buildingOutline, 'lod_2', 'default');
+            this.buildings = buildingOutline;
+            this.setOutline(this.buildings, 'lod_2', 'default');
 
         }, undefined, function (error) {
             console.error(error);
         });
-        // this.render();
     }
 
     async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path);
+        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
         const size = 20;
-        position = position.add(new THREE.Vector3(0, size, 0));
-        // var position = new THREE.Vector3(85894.6171875, 43.24994134912861, -445815.28125);
-        var sprite = addPointerSprite(this.iconsScene, iconTexture, position, size, false);
-        // console.log(sprite);
-        // console.log(this.iconsScene);
+        position = position.add(new THREE.Vector3(0, size / 2, 0));
+        const icon = new Icon(iconTexture, position);
+        this.iconsSceneManager.addIcon(icon);
     }
 
     render(time) {
@@ -586,11 +568,6 @@ export class Map {
         this.outlineManager.render(time, this.cameraManager);
         requestAnimationFrame(this.render);
     }
-
-    // just a wrapper, not needed anymore.
-    // lodToggle(level) {
-    //     this.lodVis(level);
-    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -617,34 +594,15 @@ export class Map {
         });
     }
 
-    setOutline(objectList, lod = 'lod_2', style = 'default') {
+    setOutline(objectList, lod = 'lod_2', style) {
 
         const outlineObjects = [];
-
-        // console.log(id);
         for (const obj of objectList) {
             const target = this.scene.getObjectByName(`${obj}-${lod}`);
             if (target) outlineObjects.push(target);
         }
-        if (style == 'single') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#d9ff00',
-                hiddenEdgeColor: '#d9ff00'
-            });
-        }
-        else if (style == 'hover') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#0bff02',
-                hiddenEdgeColor: '#0bff02'
-            });
-        }
-        this.outlineManager.outlineObjects(outlineObjects);
+
+        this.outlineManager.outlineObjects(outlineObjects, style);
     }
 }
 

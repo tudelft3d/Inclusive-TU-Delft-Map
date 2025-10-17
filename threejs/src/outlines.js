@@ -8,9 +8,9 @@ import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectio
 
 export class OutlineManager {
 
-    constructor(scene, iconsScene, renderer) {
+    constructor(scene, iconsSceneManager, renderer) {
         this.scene = scene;
-        this.iconsScene = iconsScene;
+        this.iconsSceneManager = iconsSceneManager;
         this.renderer = renderer
         this.composers = [];
         this.cameras = [];
@@ -41,9 +41,14 @@ export class OutlineManager {
             this._create_outline_pass(cameraManager);
             currentIndex = this.composers.length - 1;
         }
+
+        // Update the size of the icons
+        this.iconsSceneManager.beforeRender(cameraManager);
+
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
         outlinePass.selectedObjects = this.selectedObjects;
+
         composer.render(deltaTime);
     }
 
@@ -68,10 +73,11 @@ export class OutlineManager {
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
+
         composer.addPass(outlinePass);
 
         // Third pass for the icons
-        var iconsRenderPass = new RenderPass(this.iconsScene, cameraManager.camera);
+        var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
         iconsRenderPass.clear = false; // To avoid replacing everything on the screen
         composer.addPass(iconsRenderPass);
 
@@ -85,8 +91,37 @@ export class OutlineManager {
         this.outlinePasses.push(outlinePass);
         return composer;
     }
+    setStyle(code = 'default') {
+
+        for (const composer of this.composers) {
+            const outline = composer.passes[1];
+            if (code == 'default') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#ffffff');
+                outline.hiddenEdgeColor.set('#ffffff');
+            };
+            if (code == 'single') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#d9ff00');
+                outline.hiddenEdgeColor.set('#d9ff00');
+            };
+            if (code == 'hover') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#0bff02');
+                outline.hiddenEdgeColor.set('#0bff02');
+            };
+        }
+    };
 
     outlineObjects(objects, code = "default") {
+        this.setStyle(code);
+        // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
 
