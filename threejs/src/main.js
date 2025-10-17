@@ -1,12 +1,13 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
-import { outline_code } from "./layers"
+import { outline_code, load_codelist, populate_layer_buttons } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
+    populate_layer_buttons('assets/threejs/buildings/thematic_codelist.csv');
 
     // Make map globally accessible for debugging preloading
     window.mapInstance = map;
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
+
 
     const buildingView = new BuildingView(map);
 
@@ -220,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             layersDropdown.style.display = 'none';
         });
+
     });
 
     document.addEventListener('click', () => {

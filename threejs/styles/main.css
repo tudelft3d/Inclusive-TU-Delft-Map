@@ -161,14 +161,16 @@ canvas {
   display: none;
   position: absolute;
   top: 100%;
-  right: 0;
+  right: 50px;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
   padding-left: 20px;
   border-radius: 5px;
   min-width: 160px;
+  max-height: 300px;
   z-index: inherit;
+  overflow-y: auto;
 }
 
 #accessibility-dropdown a,
