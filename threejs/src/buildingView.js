@@ -25,9 +25,9 @@ export class BuildingView {
     }
 
     set_target(key) {
-        // if (this.active || !key) {
-        //     return;
-        // }
+        if (this.active || !key) {
+            return;
+        }
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively

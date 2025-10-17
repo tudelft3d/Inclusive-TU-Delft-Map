@@ -17,6 +17,7 @@ export class ObjectPicker {
         this.raycaster = new THREE.Raycaster();
         this.picked = [];
         this.pickedColor = [];
+        this.isObject = false;
 
         // Create InfoPane instance from the DOM element
         this.infoPane = new InfoPane(infoPaneElement, buildingView);
@@ -78,7 +79,9 @@ export class ObjectPicker {
         if (this.picked.length > 0) {
             this.infoPane.hide(); // Clean separation - InfoPane handles hiding
         }
+        this.isObject = false;
         this.unhighlight();
+
         // Cast a ray through the frustum
         this.raycaster.setFromCamera(normalizedPosition, camera);
         // Get the list of objects the ray intersected
@@ -100,15 +103,15 @@ export class ObjectPicker {
         if (!mesh) { return false; }
 
         if (!mesh.name) { return false; }
+        this.isObject = true;
         this.highlight([mesh]);
-        // console.log(mesh);
 
         return true;
     }
 
     highlight(meshes) {
         if (!Array.isArray(meshes)) meshes = [meshes];
-        if (this.picked.length > 0) {
+        if (!this.picked.length) {
             this.unhighlight();
         }
         for (const mesh of meshes) {

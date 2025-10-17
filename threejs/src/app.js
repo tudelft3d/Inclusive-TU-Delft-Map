@@ -382,11 +382,11 @@ export class Map {
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
 
-        const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
+        this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
-        if (foundObject) {
+        if (this.picker.isObject) {
 
-            const object = this.picker.picked;
+            const object = this.picker.picked[0];
 
             this.buildingView.set_target(object.name);
 
