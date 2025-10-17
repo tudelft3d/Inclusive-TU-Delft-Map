@@ -1,12 +1,14 @@
-import { CamerasControls } from './camera';
-import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
-import { Scene, Vector3 } from 'three';
+import { CamerasControls } from "./camera";
+import {
+    CSS2DObject,
+    CSS2DRenderer,
+} from "three/addons/renderers/CSS2DRenderer.js";
+import { Scene, Vector3 } from "three";
 
 export class IconSet {
-
     /**
      * Create a set of icons at the same position.
-     * 
+     *
      * @param {SvgIcon[]} svgIcons
      * @param {TextIcon} textIcon
      * @param {THREE.Vector3} worldPos
@@ -17,30 +19,30 @@ export class IconSet {
         this.svgIcons = [];
         svgIcons.map((svgIcon) => {
             this.svgIcons.push(svgIcon);
-        })
+        });
 
         this.textIcon = textIcon;
 
         // Main wrapper that gets moved by three.js
-        this.wrapper = document.createElement('div');
+        this.wrapper = document.createElement("div");
 
         // Inside wrapper to move the position anchor
-        this.wrapperInner = document.createElement('div');
-        this.wrapperInner.className = 'icons-centered-box';
+        this.wrapperInner = document.createElement("div");
+        this.wrapperInner.className = "icons-centered-box";
         this.wrapper.appendChild(this.wrapperInner);
 
         // Add the text
         if (!(this.textIcon.container instanceof HTMLElement)) {
-            throw new Error('text must be a string or HTMLElement');
+            throw new Error("text must be a string or HTMLElement");
         }
         this.wrapperInner.appendChild(this.textIcon.container);
 
         // Build the row of icons
-        this.svgIconsRow = document.createElement('div');
-        this.svgIconsRow.className = 'icons-svg-row';
-        this.svgIcons.forEach(svgIcon => {
+        this.svgIconsRow = document.createElement("div");
+        this.svgIconsRow.className = "icons-svg-row";
+        this.svgIcons.forEach((svgIcon) => {
             if (!(svgIcon.container instanceof HTMLElement)) {
-                throw new Error('Each icon must be an HTMLElement');
+                throw new Error("Each icon must be an HTMLElement");
             }
             this.svgIconsRow.appendChild(svgIcon.container);
         });
@@ -52,20 +54,19 @@ export class IconSet {
 
     /**
      * Set the scale in screen units.
-     * 
+     *
      * @param {number} scale
      */
     _setScale(scale) {
-        const baseOffset = new Vector3(0, 50 * (1 - scale) / 2, 0);
-        this.wrapperInner.style.transform = `scale(${scale}) translate(0, -50%)`
+        const baseOffset = new Vector3(0, (50 * (1 - scale)) / 2, 0);
+        this.wrapperInner.style.transform = `scale(${scale}) translate(0, -50%)`;
         this.wrapperObject.position.copy(this.basePos.clone().add(baseOffset));
-
     }
 
-    /** 
+    /**
      * Set the size of the sprite based on the camera position.
-     * 
-     * @param {CamerasControls} cameraManager 
+     *
+     * @param {CamerasControls} cameraManager
      */
     setSizeFromCameraManager(cameraManager) {
         const thresholdDistance = 1000;
@@ -73,7 +74,9 @@ export class IconSet {
         // Compute the distance from the camera to the object position
         var distance;
         if (cameraManager.usesMapCamera() || cameraManager.usesOrbitCamera()) {
-            const camToIcon = this.basePos.clone().sub(cameraManager.camera.position);
+            const camToIcon = this.basePos
+                .clone()
+                .sub(cameraManager.camera.position);
             const camDirection = new Vector3();
             cameraManager.camera.getWorldDirection(camDirection);
             distance = camToIcon.dot(camDirection);
@@ -86,18 +89,16 @@ export class IconSet {
         if (distance < thresholdDistance) {
             scale = 1;
         } else {
-            scale = 1 * thresholdDistance / distance
+            scale = (1 * thresholdDistance) / distance;
         }
         this._setScale(scale);
     }
 }
 
-
 export class IconsSceneManager {
-
-    /** 
+    /**
      * A class to manage a scene of icons and its specificities.
-     * 
+     *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
      */
@@ -107,9 +108,9 @@ export class IconsSceneManager {
         this.iconSets = [];
     }
 
-    /** 
+    /**
      * Add an icon to the scene.
-     * 
+     *
      * @param {IconSet} icon
      */
     addIcon(iconSet) {
@@ -117,11 +118,11 @@ export class IconsSceneManager {
         this.scene.add(iconSet.wrapperObject);
     }
 
-    /** 
+    /**
      * Resize the icons based on the camera position.
      * To call before rendering.
-     * 
-     * @param {CamerasControls} cameraManager 
+     *
+     * @param {CamerasControls} cameraManager
      */
     beforeRender(cameraManager) {
         for (const icon of this.iconSets) {
@@ -130,36 +131,37 @@ export class IconsSceneManager {
     }
 
     /**
-     * 
-     * @param {number} time 
-     * @param {CamerasControls} cameraManager 
+     *
+     * @param {number} time
+     * @param {CamerasControls} cameraManager
      */
     render(time, cameraManager) {
         this.beforeRender(cameraManager);
         this.renderer.render(this.scene, cameraManager.camera);
     }
-
 }
 
 export class TextIcon {
-
     /**
      * A wrapper for text to put in an icon.
-     * 
+     *
      * @param {string} text The text that will be shown inside the icon.
      * @param {Object} [options] Optional configuration.
      * @param {string|null} [options.color=null] Text colour (CSS value). `null` means “inherit”.
      * @param {string|null} [options.bgColor=null] Background colour (CSS value). `null` means “transparent”.
      * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
      */
-    constructor(text, { color = undefined, bgColor = undefined, cssClass = '' } = {}) {
+    constructor(
+        text,
+        { color = undefined, bgColor = undefined, cssClass = "" } = {}
+    ) {
         // Main container that is moved by three.js
-        this.container = document.createElement('div');
-        this.container.className = 'icon-text-container';
+        this.container = document.createElement("div");
+        this.container.className = "icon-text-container";
 
         // Text content
-        this.content = document.createElement('div');
-        this.content.className = 'icon-text-content';
+        this.content = document.createElement("div");
+        this.content.className = "icon-text-content";
         this.content.textContent = text;
 
         // Optional colors
@@ -176,32 +178,30 @@ export class TextIcon {
 }
 
 export class SvgIcon {
-
     /**
      * A wrapper for a SVG element to put in an icon.
-     * 
+     *
      * @param {SVGElement} svgElement The SVG element that will be shown inside the icon.
      * @param {Object} [options] Optional configuration.
      * @param {string|null} [options.size=null] Icon size (CSS value). `null` means default.
      * @param {string|null} [options.bgColor=null] Background colour (CSS value). `null` means “transparent”.
      * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
      */
-    constructor(svgElement, {
-        size = null,
-        bgColor = null,
-        cssClass = ''
-    } = {}) {
+    constructor(
+        svgElement,
+        { size = null, bgColor = null, cssClass = "" } = {}
+    ) {
         // Main container that is placed by three.js
-        this.container = document.createElement('div');
-        this.container.className = 'icon-svg-container';
+        this.container = document.createElement("div");
+        this.container.className = "icon-svg-container";
         if (size) {
             this.container.style.width = size;
             this.container.style.height = size;
         }
 
         // Background circle with a color
-        this.bgCircle = document.createElement('div');
-        this.bgCircle.className = 'icon-svg-bg';
+        this.bgCircle = document.createElement("div");
+        this.bgCircle.className = "icon-svg-bg";
         if (bgColor) {
             this.bgCircle.style.background = bgColor;
         }
@@ -210,7 +210,7 @@ export class SvgIcon {
         // Clone so we don't move the original node out of its source location
         console.log(svgElement);
         this.content = svgElement.cloneNode(true);
-        this.content.setAttribute('class', 'icon-svg-content');
+        this.content.setAttribute("class", "icon-svg-content");
 
         // Assemble the hierarchy
         this.bgCircle.appendChild(this.content);
@@ -218,9 +218,7 @@ export class SvgIcon {
     }
 }
 
-
 export class SvgLoader {
-
     constructor() {
         this.urlToSvg = {};
         this.parser = new DOMParser();
@@ -229,7 +227,7 @@ export class SvgLoader {
     /**
      * Fetch an SVG file and turn it into an SVGElement.
      * Returns a Promise that resolves to the element.
-     * 
+     *
      * @param {string} url The URL (local or on the web) of the SVG file.
      * @returns {SVGElement} The SVG element.
      */
@@ -237,20 +235,19 @@ export class SvgLoader {
         if (!(url in this.urlToSvg)) {
             // Send the request
             const resp = await fetch(url);
-            if (!resp.ok) throw new Error(`Failed to fetch ${url}: ${resp.status}`);
+            if (!resp.ok)
+                throw new Error(`Failed to fetch ${url}: ${resp.status}`);
             const text = await resp.text();
 
             // Parse the SVG
-            const doc = this.parser.parseFromString(text, 'image/svg+xml');
+            const doc = this.parser.parseFromString(text, "image/svg+xml");
             const svg = doc.documentElement;
             if (!(svg instanceof SVGElement)) {
-                throw new Error('Fetched file is not a valid SVG');
+                throw new Error("Fetched file is not a valid SVG");
             }
             this.urlToSvg[url] = svg;
         }
 
-        return this.urlToSvg[url]
+        return this.urlToSvg[url];
     }
 }
-
-
