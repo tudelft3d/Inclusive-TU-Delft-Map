@@ -306,52 +306,6 @@ export class Map {
 
     }
 
-    // Operates on the current camera
-    _create_tween_animation(
-        current_position, 
-        current_target, 
-        final_position, 
-        final_target,
-        extra_camera_parameters={}) {
-
-        // Lock the camera from changing modes
-
-        const current_values = {
-            position: current_position,
-            target: current_target
-        }
-
-        const tweenCamera = new Tween(current_values, false)
-            .to({
-                position: { x: final_position.x, y: final_position.y, z: final_position.z },
-                target: { x: final_target.x, y: final_target.y, z: final_target.z },
-            }, 1000)
-            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
-            .onUpdate(() => {
-                this.cameraManager.camera.position.copy(current_values.position);
-                this.cameraManager.camera.lookAt(current_values.target);
-                this.cameraManager.controls.target.copy(current_values.target);
-                this.cameraManager.controls.update();
-            })
-            .onComplete(() => {
-
-                if (this.cameraManager.usesOrbitCamera()) {
-
-                    this.cameraManager.controls.minDistance = extra_camera_parameters.distance * 0.5;
-                    this.cameraManager.controls.maxDistance = extra_camera_parameters.distance * 3;
-
-                }
-
-                // Remove from the list of tween when completed
-                const idx = this.tweens.indexOf(tweenCamera);
-                if (idx !== -1) this.tweens.splice(idx, 1);
-            })
-            .start()
-
-        this.tweens.push(tweenCamera);
-
-    }
-
     _zoom_orthographic(object) {
         // console.log("orthographic");
 
@@ -371,7 +325,13 @@ export class Map {
         const final_position = new THREE.Vector3(center.x, this.cameraManager.camera.position.y, center.z);
         const final_target = new THREE.Vector3(center.x, 0, center.z);
 
-        this._create_tween_animation(current_position, current_target, final_position, final_target);
+        // console.log("STARTING:")
+        // console.log(this.cameraManager.camera.rotation);
+        // console.log("########:")
+
+        const extra_camera_parameters = {z_rotation: this.cameraManager.camera.rotation.z};
+
+        this._create_tween_animation(current_position, current_target, final_position, final_target, extra_camera_parameters);
 
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
@@ -404,6 +364,68 @@ export class Map {
 
     }
 
+        // Operates on the current camera
+    _create_tween_animation(
+        current_position, 
+        current_target, 
+        final_position, 
+        final_target,
+        extra_camera_parameters={}) {
+
+        // Lock the camera from changing modes
+
+        const current_values = {
+            position: current_position,
+            target: current_target
+        }
+
+        const tweenCamera = new Tween(current_values, false)
+            .to({
+                position: { x: final_position.x, y: final_position.y, z: final_position.z },
+                target: { x: final_target.x, y: final_target.y, z: final_target.z },
+            }, 1000)
+            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
+            .onUpdate(() => {
+                this.cameraManager.camera.position.copy(current_values.position);
+                this.cameraManager.camera.lookAt(current_values.target);
+                this.cameraManager.controls.target.copy(current_values.target);
+                this.cameraManager.controls.update();
+
+                // if (this.cameraManager.usesOrthographicCamera()) {
+                //     this.cameraManager.camera.rotation.z = extra_camera_parameters.z_rotation;
+                //     console.log(this.cameraManager.camera.rotation);
+                // }
+
+            })
+            .onComplete(() => {
+
+                if (this.cameraManager.usesOrbitCamera()) {
+
+                    this.cameraManager.controls.minDistance = extra_camera_parameters.distance * 0.5;
+                    this.cameraManager.controls.maxDistance = extra_camera_parameters.distance * 3;
+
+                }
+
+                // if (this.cameraManager.usesOrthographicCamera()) {
+                //     console.log("########");
+                //     console.log("FINISHED");
+                //     console.log(this.cameraManager.camera.rotation);
+                //     console.log("########");
+                //     this.cameraManager.camera.rotation.z = extra_camera_parameters.z_rotation;
+
+                //     this.cameraManager.camera.updateProjectionMatrix();
+                // }
+
+                // Remove from the list of tween when completed
+                const idx = this.tweens.indexOf(tweenCamera);
+                if (idx !== -1) this.tweens.splice(idx, 1);
+            })
+            .start()
+
+        this.tweens.push(tweenCamera);
+
+    }
+
     zoom_on_object(object) {
         if (this.cameraManager.usesOrthographicCamera()) {
             this._zoom_orthographic(object);
@@ -426,6 +448,8 @@ export class Map {
             this.zoom_on_object(object);
 
         } else if (!this.cameraManager.usesOrthographicCamera()) {
+
+            this.buildingView.set_target(undefined);
 
             this.controlsManager.activateMap();
 
@@ -472,7 +496,6 @@ export class Map {
                 this._pickEvent(pos);
             }
             
-            this._pickEvent(pos);
         });
 
         // // control change → re‑render

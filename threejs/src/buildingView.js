@@ -26,6 +26,10 @@ export class BuildingView {
 
     set_target(key) {
 
+        if (this.active || !key) {
+            return;
+        }
+
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
@@ -60,6 +64,8 @@ export class BuildingView {
         this.storeys_json = this._isolate_storey_json();
 
         this.building_threejs = this.map.scene.getObjectByName(this.building_key);
+
+        // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
 
         this._unhide_objects_recursive(this.building_threejs);
 
