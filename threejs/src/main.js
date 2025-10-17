@@ -8,6 +8,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = new Map(container);
 
+    // Make map globally accessible for debugging preloading
+    window.mapInstance = map;
+
+    // Add console utilities for monitoring preloading
+    window.checkPreloadingStatus = () => {
+        const stats = map.getTileCacheInfo();
+        console.log('=== Tile Cache & Preloading Status ===');
+        console.log(`Cache size: ${stats.size} tiles`);
+        console.log(`Memory estimate: ${stats.memoryEstimate}`);
+        console.log(`Is preloading: ${stats.isPreloading}`);
+        console.log(`Preloaded layers: ${stats.preloadedLayers.join(', ')}`);
+        console.log(`Available layers: ${stats.availableLayers.join(', ')}`);
+        return stats;
+    };
+
+    // Log initial status
+    console.log('🗺️ TU Delft Map initialized!');
+    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
+    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
+
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
