@@ -73,12 +73,12 @@ export class OutlineManager {
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
-
         composer.addPass(outlinePass);
 
         // Third pass for the icons
         var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
         iconsRenderPass.clear = false; // To avoid replacing everything on the screen
+        iconsRenderPass.clearDepth = true;
         composer.addPass(iconsRenderPass);
 
         // Fourth pass to make everything appear

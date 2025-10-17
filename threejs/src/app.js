@@ -11,7 +11,8 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { Icon, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
+import { IconSet, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
+import { SVGRenderer, SVGObject } from 'three/addons/renderers/SVGRenderer.js';
 
 export class Map {
     constructor(container) {
@@ -101,16 +102,16 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
-        
+
         // Start preloading other layers in the background (only once)
         if (!this.preloadingStarted) {
             this.preloadingStarted = true;
             console.log('Starting background preloading of map layers...');
-            
+
             // Start preloading after a short delay to let the initial basemap finish loading
             setTimeout(() => {
                 preloadAllLayers({
-                    zoom: 12, 
+                    zoom: 12,
                     bbox: [84000, 443500, 87500, 448000] // Same bbox as main map
                 });
             }, 3000); // 3 second delay
@@ -124,6 +125,7 @@ export class Map {
 
     _initRenderer() {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // this.renderer = new SVGRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight)
         this.canvas = this.renderer.domElement;
         this.container.appendChild(this.canvas);
@@ -535,12 +537,12 @@ export class Map {
     }
 
     async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
-        var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
-        const size = 20;
-        position = position.add(new THREE.Vector3(0, size / 2, 0));
-        const icon = new Icon(iconTexture, position);
-        this.iconsSceneManager.addIcon(icon);
+        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56', 20);
+        var position = new THREE.Vector3(85193, 33, -446857);
+        const iconSet = new IconSet([iconTexture, iconTexture, iconTexture], position);
+        this.iconsSceneManager.addIcon(iconSet);
+        console.log(this.iconsSceneManager);
+
     }
 
     render(time) {
