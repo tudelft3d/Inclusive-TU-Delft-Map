@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { FXAAPass } from 'three/examples/jsm/postprocessing/FXAAPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 
 export class OutlineManager {
@@ -42,8 +43,8 @@ export class OutlineManager {
             currentIndex = this.composers.length - 1;
         }
 
-        // Update the size of the icons
-        this.iconsSceneManager.beforeRender(cameraManager);
+        // // Update the size of the icons
+        // this.iconsSceneManager.beforeRender(cameraManager);
 
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
@@ -75,15 +76,19 @@ export class OutlineManager {
 
         composer.addPass(outlinePass);
 
-        // Third pass for the icons
-        var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
-        iconsRenderPass.clear = false; // To avoid replacing everything on the screen
-        iconsRenderPass.clearDepth = true;
-        composer.addPass(iconsRenderPass);
+        // // Third pass for the icons
+        // var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
+        // iconsRenderPass.clear = false; // To avoid replacing everything on the screen
+        // iconsRenderPass.clearDepth = true;
+        // composer.addPass(iconsRenderPass);
 
         // Fourth pass to make everything appear
         var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
         composer.addPass(gammaCorrectionPass);
+
+        // // Fifth pass for antialiasing
+        // const fxaaPass = new FXAAPass();
+        // composer.addPass(fxaaPass);
 
         // Store all the objects
         this.composers.push(composer);

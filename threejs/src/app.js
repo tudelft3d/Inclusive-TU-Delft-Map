@@ -11,8 +11,9 @@ import { OutlineManager } from "./outlines";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 // import { lodVis } from "./utils";
 // import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { IconSet, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
-import { SVGRenderer, SVGObject } from 'three/addons/renderers/SVGRenderer.js';
+import { IconSet, IconsSceneManager, TextIcon, SvgIcon, SvgLoader } from './icons';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+
 
 export class Map {
     constructor(container) {
@@ -29,7 +30,7 @@ export class Map {
         // Cameras and controls
         const cameraPosition = new THREE.Vector3(85715, 1100, -445780);
         const cameraLookAt = new THREE.Vector3(85743, 30, -445791);
-        this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt);
+        this.cameraManager = new CamerasControls(this.container, cameraPosition, cameraLookAt);
 
         this.infoPane = document.getElementById('info-pane');
         this.picker = new ObjectPicker(this.infoPane, this.buildingView);
@@ -40,11 +41,14 @@ export class Map {
         this._initScenes();
         this._initLights();
         this.setBasemap();
-        this._initRenderer();
+        this._initRenderers();
         this.outlineManager = new OutlineManager(this.scene, this.iconsSceneManager, this.renderer);
+        this.iconsSceneManager = new IconsSceneManager(this.iconsScene, this.css2dRenderer);
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
+
+        this.svgLoader = new SvgLoader();
 
         window.addEventListener('resize', (e) => {
             this._resizeWindow();
@@ -65,8 +69,7 @@ export class Map {
         ]);
         this.scene.background = skyboxTexture;
 
-        const iconsScene = new THREE.Scene();
-        this.iconsSceneManager = new IconsSceneManager(iconsScene);
+        this.iconsScene = new THREE.Scene();
 
         // const geometry = new THREE.BoxGeometry(100, 100, 100);
         // const material = new THREE.MeshBasicMaterial({
@@ -123,12 +126,22 @@ export class Map {
         return getTileCacheStats();
     }
 
-    _initRenderer() {
+    _initRenderers() {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         // this.renderer = new SVGRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.canvas = this.renderer.domElement;
         this.container.appendChild(this.canvas);
+
+        // ---------- CSS2D renderer (top layer) ----------
+        this.css2dRenderer = new CSS2DRenderer();
+        this.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
+        this.css2dRenderer.domElement.style.position = 'absolute';
+        this.css2dRenderer.domElement.style.top = '0';
+        this.css2dRenderer.domElement.style.pointerEvents = 'none'; // let mouse events fall through to the WebGL canvas
+        this.container.appendChild(this.css2dRenderer.domElement);
+
         this._resizeWindow();
     }
 
@@ -472,9 +485,10 @@ export class Map {
     }
 
     _resizeWindow() {
-        const { clientWidth: w, clientHeight: h } = this.canvas;
-        this.cameraManager.resizeCameras(w, h);
-        this.renderer.setSize(w, h);
+        const { clientWidth: width, clientHeight: height } = this.canvas;
+        this.cameraManager.resizeCameras(width, height);
+        this.renderer.setSize(width, height);
+        this.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     loadGLTF(path) {
@@ -536,13 +550,41 @@ export class Map {
         // this.render();
     }
 
-    async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56', 20);
+    async loadIcon() {
+        const paths = [
+            'assets/threejs/graphics/icons/home.svg',
+            'assets/threejs/graphics/icons/cafe.svg',
+            'assets/threejs/graphics/icons/library.svg',
+        ];
+        const bgColors = [
+            '#f7c286ff',
+            '#f786f3ff',
+            '#86f790ff'
+        ]
         var position = new THREE.Vector3(85193, 33, -446857);
-        const iconSet = new IconSet([iconTexture, iconTexture, iconTexture], position);
-        this.iconsSceneManager.addIcon(iconSet);
-        console.log(this.iconsSceneManager);
 
+        // Kick off all fetches at once
+        const svgs = await Promise.all(
+            paths.map(p => this.svgLoader.getSvg(p))
+        );
+
+        // Make the icons
+        const icons = [];
+        for (var i = 0; i < paths.length; i++) {
+            const svg = svgs[i];
+            const bgColor = bgColors[i];
+            const icon = new SvgIcon(svg, { bgColor: bgColor });
+            icons.push(icon);
+        }
+
+        // Add the text
+        const text = new TextIcon('Bouwkunde');
+
+        // Put everything together
+        const iconSet = new IconSet(icons, text, position);
+
+        // Add it to the scene
+        this.iconsSceneManager.addIcon(iconSet);
     }
 
     render(time) {
@@ -550,6 +592,7 @@ export class Map {
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
+        this.iconsSceneManager.render(time, this.cameraManager);
         requestAnimationFrame(this.render);
     }
 
