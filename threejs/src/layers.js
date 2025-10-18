@@ -17,7 +17,26 @@ export class LayerManager {
 
 		this.active_layers = [];
 
+		this.campus_buildings_json = this._isolate_building_json();
 
+		console.log(this.campus_buildings_json);
+
+
+	}
+
+	_isolate_building_json() {
+
+		const campus_buildings_json = {};
+
+		for (const [key, value] of Object.entries(cityjson.CityObjects)) {
+
+			if (value.type == "Building") {
+				campus_buildings_json[value.attributes.key] = value;
+			}
+
+		}
+
+		return campus_buildings_json;
 	}
 
 	switch_to_building_view(building_key, building_storey_code) {
