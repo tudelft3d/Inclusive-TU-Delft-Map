@@ -16,7 +16,7 @@ export class ControlsManager {
     }
 
     _listenForChanges() {
-        this.camManager.controls.addEventListener('change', () => {
+        this.camManager.controls.addEventListener("change", () => {
             this.cameraMovedDuringTouch = true;
         });
     }
@@ -45,8 +45,8 @@ export class ControlsManager {
         this._listenForChanges();
     }
 
-    /** Register a callback that runs whenever the active controls fire a change */
-    onChange(cb) {
-        this.camManager.controls.addEventListener('change', cb);
-    }
+    // /** Register a callback that runs whenever the active controls fire a change */
+    // onChange(cb) {
+    //     this.camManager.controls.addEventListener("change", cb);
+    // }
 }

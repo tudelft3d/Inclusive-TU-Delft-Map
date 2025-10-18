@@ -24,6 +24,10 @@ import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 
 export class Map {
+    /**
+     *
+     * @param {HTMLElement} container
+     */
     constructor(container) {
         this.mainContainer = container;
         this.activeBasemap = null;
@@ -58,7 +62,9 @@ export class Map {
         this._initRenderers();
         this.iconsSceneManager = new IconsSceneManager(
             this.iconsScene,
-            this.css2dRenderer
+            this.css2dRenderer,
+            this.css2dContainer,
+            this.mainContainer
         );
         this.outlineManager = new OutlineManager(
             this.scene,
@@ -574,7 +580,7 @@ export class Map {
     _attachEvents() {
         // // mouse move → hover
         // window.addEventListener('mousemove', (e) => {
-        //     const pos = getCanvasRelativePosition(e, this.canvas);
+        //     const pos = getCanvasRelativePosition(e, this.glContainer);
         //     this.picker.hover(pos, this.scene, this.cameraManager.camera);
         //     this.render();
         // });
@@ -691,11 +697,50 @@ export class Map {
         // Add the text
         const text = new TextIcon("Bouwkunde");
 
+        // Click event listener
+        const onClick = (e) => {
+            const building = this.scene.getObjectByName(
+                "Building_08-Building-08-lod_2"
+            );
+            this.zoom_on_object(building);
+            console.log(`Clicked on a icon!`);
+        };
+
         // Put everything together
-        const iconSet = new IconSet("BK", icons, text, position);
+        const iconSet = new IconSet("BK", icons, text, position, onClick);
 
         // Add it to the scene
         this.iconsSceneManager.addIconSet(iconSet);
+
+        // const logIconClick = (e, evtType) => {
+        //     if (iconSet.wrapper.contains(e.target)) {
+        //         console.log(evtType);
+        //     }
+        // };
+
+        // const events = ["pointerdown", "pointermove", "pointerup"];
+        // events.map((evtType) =>
+        //     this.mainContainer.addEventListener(evtType, (e) => {
+        //         if (evtType == "pointerdown") {
+        //             e.target.setPointerCapture(e.pointerId);
+        //         }
+        //         logIconClick(e, evtType);
+        //     })
+        // );
+
+        // this.mainContainer.addEventListener("pointerdown", (e) => {
+        //     e.target.setPointerCapture(e.pointerId);
+        //     console.log("pointerdown", e.target);
+        // });
+        // this.mainContainer.addEventListener("pointermove", (e) => {
+        //     console.log("pointermove", e.target);
+        // });
+        // this.mainContainer.addEventListener("pointerup", (e) => {
+        //     console.log("pointerup", e.target);
+        // });
+        // this.mainContainer.addEventListener("click", (e) => {
+        //     console.log("click", e.target);
+        // });
     }
 
     render(time) {

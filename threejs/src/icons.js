@@ -13,10 +13,12 @@ export class IconSet {
      * @param {SvgIcon[]} svgIcons
      * @param {TextIcon} textIcon
      * @param {THREE.Vector3} worldPos
+     * @param {*} onClick
      */
-    constructor(key, svgIcons, textIcon, worldPos) {
+    constructor(key, svgIcons, textIcon, worldPos, onClick) {
         this.key = key;
         this.basePos = worldPos;
+        this.onClick = onClick;
 
         this.svgIcons = {};
         svgIcons.map((svgIcon) => {
@@ -33,7 +35,7 @@ export class IconSet {
 
         // Main wrapper that gets moved by three.js
         this.wrapper = document.createElement("div");
-        // this.wrapper.className = "icons-container";
+        this.wrapper.className = "icons-container";
 
         // Inside wrapper to move the position anchor
         this.wrapperInner = document.createElement("div");
@@ -50,6 +52,10 @@ export class IconSet {
         this._makeIconsRow();
 
         this.wrapperObject = new CSS2DObject(this.wrapper);
+        this.wrapper.addEventListener("click", (e) => {
+            console.log("HERE");
+            onClick(e);
+        });
     }
 
     addSvgIcon(svgIcon) {
@@ -140,11 +146,40 @@ export class IconsSceneManager {
      *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
+     * @param {HTMLElement} mainContainer
+     * @param {HTMLElement} mainContainer
      */
-    constructor(scene, renderer) {
+    constructor(scene, renderer, iconContainer, mainContainer) {
         this.scene = scene;
         this.renderer = renderer;
+        this.iconContainer = iconContainer;
+        this.mainContainer = mainContainer;
         this.iconSets = {};
+        console.log(this.iconContainer);
+        this._setUpEventListeners();
+    }
+
+    _setUpEventListeners() {
+        this.movedDuringPointer = false;
+        this.mainContainer.addEventListener("pointerdown", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            this.movedDuringPointer = false;
+            e.target.setPointerCapture(e.pointerId);
+        });
+        this.mainContainer.addEventListener("pointermove", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            this.movedDuringPointer = true;
+        });
+        this.mainContainer.addEventListener("pointerup", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            if (this.movedDuringPointer) return;
+
+            // var el = e.target;
+            // while (el.parentElement != this.iconContainer) {
+            //     el = el.parentElement;
+            // }
+            // el.dispatchEvent(new Event("click"));
+        });
     }
 
     /**
