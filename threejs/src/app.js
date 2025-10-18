@@ -25,7 +25,7 @@ import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {
 
 export class Map {
     constructor(container) {
-        this.container = container;
+        this.mainContainer = container;
         this.activeBasemap = null;
         this.buildingView;
         this.userLocationMarker = null;
@@ -38,7 +38,7 @@ export class Map {
         const cameraPosition = new THREE.Vector3(85715, 1100, -445780);
         const cameraLookAt = new THREE.Vector3(85743, 30, -445791);
         this.cameraManager = new CamerasControls(
-            this.container,
+            this.mainContainer,
             cameraPosition,
             cameraLookAt
         );
@@ -46,7 +46,7 @@ export class Map {
         this.infoPane = document.getElementById("info-pane");
         this.picker = new ObjectPicker(this.infoPane, this.buildingView);
         this.controlsManager = new ControlsManager(
-            this.container,
+            this.mainContainer,
             this.cameraManager
         );
 
@@ -63,21 +63,12 @@ export class Map {
         this.outlineManager = new OutlineManager(
             this.scene,
             this.iconsSceneManager,
-            this.renderer
+            this.glRenderer
         );
+        this.svgLoader = new SvgLoader();
         this._attachEvents();
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
-
-        this.svgLoader = new SvgLoader();
-
-        window.addEventListener(
-            "resize",
-            (e) => {
-                this._resizeWindow();
-            },
-            false
-        );
     }
 
     _initScenes() {
@@ -172,20 +163,19 @@ export class Map {
     }
 
     _initRenderers() {
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        // this.renderer = new SVGRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.canvas = this.renderer.domElement;
-        this.container.appendChild(this.canvas);
+        // WebGL renderer for 3D objects
+        this.glRenderer = new THREE.WebGLRenderer({ antialias: true });
+        this.glRenderer.setPixelRatio(window.devicePixelRatio);
+        this.glContainer = this.glRenderer.domElement;
+        this.mainContainer.appendChild(this.glContainer);
 
-        // ---------- CSS2D renderer (top layer) ----------
+        // CSS2D renderer for icons and text
         this.css2dRenderer = new CSS2DRenderer();
-        this.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
-        this.css2dRenderer.domElement.style.position = "absolute";
-        this.css2dRenderer.domElement.style.top = "0";
-        this.css2dRenderer.domElement.style.pointerEvents = "none"; // let mouse events fall through to the WebGL canvas
-        this.container.appendChild(this.css2dRenderer.domElement);
+        this.css2dContainer = this.css2dRenderer.domElement;
+        this.css2dContainer.style.position = "absolute";
+        this.css2dContainer.style.top = "0";
+        this.css2dContainer.style.pointerEvents = "none";
+        this.mainContainer.appendChild(this.css2dContainer);
 
         this._resizeWindow();
     }
@@ -594,10 +584,8 @@ export class Map {
             this.controlsManager.resetTouchState();
         });
         window.addEventListener("mouseup", (e) => {
-            const pos = getCanvasRelativePosition(e, this.canvas);
-
+            const pos = getCanvasRelativePosition(e, this.glContainer);
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
-
             if (
                 clicked_element.nodeName &&
                 clicked_element.nodeName == "CANVAS"
@@ -605,37 +593,20 @@ export class Map {
                 this._pickEvent(pos);
             }
         });
-
-        // touch handling (mirrors the mouse logic)
-        window.addEventListener("touchend", (e) => {
-            const touch = e.changedTouches[0];
-            const pos = getCanvasRelativePosition(touch, this.canvas);
-
-            const clicked_element = document.elementFromPoint(
-                e.changedTouches[0].pageX,
-                e.changedTouches[0].pageY
-            );
-
-            if (
-                clicked_element.nodeName &&
-                clicked_element.nodeName == "CANVAS"
-            ) {
-                this._pickEvent(pos);
-            }
-        });
-
-        // // control change → re‑render
-        // this.controlsManager.onChange(() => this.render());
-
-        // // window resize
-        // window.addEventListener('resize', () => this.render());
+        window.addEventListener(
+            "resize",
+            (e) => {
+                this._resizeWindow();
+            },
+            false
+        );
     }
 
     _resizeWindow() {
-        const { clientWidth: width, clientHeight: height } = this.canvas;
+        const { clientWidth: width, clientHeight: height } = this.glContainer;
         this.cameraManager.resizeCameras(width, height);
-        this.renderer.setSize(width, height);
-        this.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
+        this.glRenderer.setSize(width, height);
+        this.css2dRenderer.setSize(width, height);
     }
 
     loadGLTF(path) {
@@ -698,6 +669,7 @@ export class Map {
             "assets/threejs/graphics/icons/cafe.svg",
             "assets/threejs/graphics/icons/library.svg",
         ];
+        const keys = ["home", "cafe", "library"];
         const bgColors = ["#f7c286ff", "#f786f3ff", "#86f790ff"];
         var position = new THREE.Vector3(85193, 33, -446857);
 
@@ -710,8 +682,9 @@ export class Map {
         const icons = [];
         for (var i = 0; i < paths.length; i++) {
             const svg = svgs[i];
+            const key = keys[i];
             const bgColor = bgColors[i];
-            const icon = new SvgIcon(svg, { bgColor: bgColor });
+            const icon = new SvgIcon(key, svg, { bgColor: bgColor });
             icons.push(icon);
         }
 
@@ -719,16 +692,16 @@ export class Map {
         const text = new TextIcon("Bouwkunde");
 
         // Put everything together
-        const iconSet = new IconSet(icons, text, position);
+        const iconSet = new IconSet("BK", icons, text, position);
 
         // Add it to the scene
-        this.iconsSceneManager.addIcon(iconSet);
+        this.iconsSceneManager.addIconSet(iconSet);
     }
 
     render(time) {
         // this._resizeRenderer();
         this.tweens.forEach((tween) => tween.update(time));
-        // this.renderer.render(this.scene, this.cameraManager.camera);
+        // this.glRenderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
         this.light.position.copy(this.cameraManager.camera.position);
