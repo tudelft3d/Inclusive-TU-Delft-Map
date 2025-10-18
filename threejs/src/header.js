@@ -36,10 +36,6 @@ function initHeaderToggle() {
     const href = a.getAttribute('href');
     // Close the menu immediately
     close();
-    // If a normal HTML page link and something else may block navigation, ensure navigation:
-    // if (href && !href.startsWith('#') && !a.hasAttribute('target')) {
-    //   setTimeout(() => { window.location.href = href; }, 100);
-    // }
   });
 
   // tighten document click: only close when clicking outside nav/toggle

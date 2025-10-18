@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  /* --------------------------------------------------------------
-   *  DOM references – keep them together for easy maintenance
-   * -------------------------------------------------------------- */
+  /* DOM references */
   const refs = {
     form: document.getElementById('feedback_form'),
     suggestion: document.getElementById('suggestion'),
@@ -12,21 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMsg: document.getElementById('error_message')
   };
 
-  /* --------------------------------------------------------------
-   *  Configuration
-   * -------------------------------------------------------------- */
+
   const CONFIG = {
-    // Change this when you move to production (or proxy via Nginx)
     endpoint: '/api/feedback',
-    // Timeout for auto‑hiding success messages (ms)
     successHideDelay: 6000
   };
 
-  /* --------------------------------------------------------------
-   *  UI helpers – tiny, pure‑function style
-   * -------------------------------------------------------------- */
   const ui = {
-    /** Enable/disable the submit button and toggle aria‑busy */
+    /* Enable/disable the submit button and toggle aria‑busy */
     setSubmitting(isSubmitting) {
       const btn = refs.form?.querySelector('button[type="submit"]');
       if (!btn) return;
@@ -36,14 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
     },
 
-    /** Show a transient status (green) or persistent error (red) */
+    /* Show status */
     showMessage(msg, kind = 'success', autoHide = true) {
       const el = kind === 'error' ? refs.errorMsg : refs.statusMsg;
       if (!el) return;
       el.textContent = msg;
       el.className = kind === 'success' ? 'status-success' : 'status-error';
 
-      // Auto‑hide only success messages (optional)
+      // Auto‑hide only success messages
       if (autoHide && kind === 'success') {
         setTimeout(() => {
           el.textContent = '';
@@ -52,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    /** Clear both status and error containers */
+    /* Clear both status and error containers */
     clearAll() {
       [refs.statusMsg, refs.errorMsg].forEach(el => {
         if (el) {
@@ -63,17 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  /* --------------------------------------------------------------
-   *  Validation helpers
-   * -------------------------------------------------------------- */
+  /* Validation helpers */
   const validators = {
     /** Very small email regex – good enough for UI validation */
     isValidEmail(email) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     },
-
-    /** Gather and validate the form fields, returning either
-     *  an object { ok: true, payload } or { ok: false, message }   */
+    /* Build and validate payload from form inputs */
     buildPayload() {
       const suggestion = refs.suggestion?.value?.trim() ?? '';
       const type = refs.type?.value ?? '';
@@ -101,9 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  /* --------------------------------------------------------------
-   *  Network layer – isolated so you can swap fetch for axios, etc.
-   * -------------------------------------------------------------- */
+  /* Network layer */
   async function postFeedback(payload) {
     try {
       ui.setSubmitting(true);
@@ -127,9 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  /* --------------------------------------------------------------
-   *  Main submit handler – bound once to the form element
-   * -------------------------------------------------------------- */
+  /* Form submit handler */
+  
   async function handleSubmit(event) {
     event?.preventDefault();          // stop native navigation
     ui.clearAll();
