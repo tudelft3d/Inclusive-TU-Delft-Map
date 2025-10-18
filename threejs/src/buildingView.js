@@ -26,6 +26,10 @@ export class BuildingView {
 
     set_target(key) {
 
+        if (this.active || !key) {
+            return;
+        }
+
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
@@ -61,6 +65,8 @@ export class BuildingView {
 
         this.building_threejs = this.map.scene.getObjectByName(this.building_key);
 
+        // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
+
         this._unhide_objects_recursive(this.building_threejs);
 
         this._hide_mesh_children(this.building_threejs);
@@ -77,6 +83,10 @@ export class BuildingView {
 
     leave_buildingView() {
 
+        if (!this.active) {
+            return;
+        }
+
         this._hide_mesh_children(this.building_threejs);
 
         this._unhide_objects([this.map.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
@@ -86,6 +96,8 @@ export class BuildingView {
         this.building_key = undefined;
 
         this.active = false;
+
+        this.map.cameraManager.camera = this.map.cameraManager.previousCamera;
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 

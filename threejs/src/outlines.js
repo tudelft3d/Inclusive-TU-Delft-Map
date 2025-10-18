@@ -1,18 +1,17 @@
 // outlineManager.js
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { FXAAPass } from 'three/examples/jsm/postprocessing/FXAAPass.js';
-import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
+import { GammaCorrectionShader } from "three/examples/jsm/shaders/GammaCorrectionShader.js";
 
 export class OutlineManager {
-
     constructor(scene, iconsSceneManager, renderer) {
         this.scene = scene;
         this.iconsSceneManager = iconsSceneManager;
-        this.renderer = renderer
+        this.renderer = renderer;
         this.composers = [];
         this.cameras = [];
         this.outlinePasses = [];
@@ -21,11 +20,11 @@ export class OutlineManager {
             edgeStrength: 5,
             edgeGlow: 0.25,
             edgeThickness: 0.3,
-            visibleEdgeColor: '#ffffff',
-            hiddenEdgeColor: '#ffffff'
+            visibleEdgeColor: "#ffffff",
+            hiddenEdgeColor: "#ffffff",
         };
         this._resizeListener = () => this.onResize();
-        window.addEventListener('resize', this._resizeListener);
+        window.addEventListener("resize", this._resizeListener);
     }
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
@@ -54,14 +53,14 @@ export class OutlineManager {
     }
 
     _create_outline_pass(cameraManager) {
-        var composer = new EffectComposer(this.renderer);
+        const composer = new EffectComposer(this.renderer);
 
         // First pass for the 3D objects
-        var renderPass = new RenderPass(this.scene, cameraManager.camera);
+        const renderPass = new RenderPass(this.scene, cameraManager.camera);
         composer.addPass(renderPass);
 
         // Second pass for the outline of the 3D objects
-        var outlinePass = new OutlinePass(
+        const outlinePass = new OutlinePass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
             this.scene,
             cameraManager.camera
@@ -83,7 +82,7 @@ export class OutlineManager {
         // composer.addPass(iconsRenderPass);
 
         // Fourth pass to make everything appear
-        var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
+        const gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
         composer.addPass(gammaCorrectionPass);
 
         // // Fifth pass for antialiasing
@@ -96,40 +95,38 @@ export class OutlineManager {
         this.outlinePasses.push(outlinePass);
         return composer;
     }
-    setStyle(code = 'default') {
-
+    setStyle(code = "default") {
         for (const composer of this.composers) {
             const outline = composer.passes[1];
-            if (code == 'default') {
+            if (code == "default") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#ffffff');
-                outline.hiddenEdgeColor.set('#ffffff');
-            };
-            if (code == 'single') {
+                outline.visibleEdgeColor.set("#ffffff");
+                outline.hiddenEdgeColor.set("#ffffff");
+            }
+            if (code == "single") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#d9ff00');
-                outline.hiddenEdgeColor.set('#d9ff00');
-            };
-            if (code == 'hover') {
+                outline.visibleEdgeColor.set("#d9ff00");
+                outline.hiddenEdgeColor.set("#d9ff00");
+            }
+            if (code == "hover") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#0bff02');
-                outline.hiddenEdgeColor.set('#0bff02');
-            };
+                outline.visibleEdgeColor.set("#0bff02");
+                outline.hiddenEdgeColor.set("#0bff02");
+            }
         }
-    };
+    }
 
     outlineObjects(objects, code = "default") {
         this.setStyle(code);
         // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
-
     }
 
     clearOutline() {
@@ -140,12 +137,14 @@ export class OutlineManager {
     onResize() {
         for (var i = 0; i < this.composers.length; i++) {
             this.composers[i].setSize(window.innerWidth, window.innerHeight);
-            this.outlinePasses[i].setSize(window.innerWidth, window.innerHeight);
+            this.outlinePasses[i].setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
         }
     }
 
     dispose() {
-        window.removeEventListener('resize', this._resizeListener);
+        window.removeEventListener("resize", this._resizeListener);
     }
-
 }

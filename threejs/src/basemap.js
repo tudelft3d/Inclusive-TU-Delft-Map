@@ -179,7 +179,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
       },
       undefined,
       (error) => {
-        console.warn(`Failed to preload tile for ${layerName}: ${url}`, error);
+        // console.warn(`Failed to preload tile for ${layerName}: ${url}`, error);
         activePreloads--;
         preloadNextTile();
       }
@@ -297,7 +297,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
       },
       undefined,
       (error) => {
-        console.warn(`Failed to load tile: ${url}`, error);
+        // console.warn(`Failed to load tile: ${url}`, error);
         activeLoads--;
         loadNextTile(); // Continue with next tile even if one fails
       }
