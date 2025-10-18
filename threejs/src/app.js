@@ -11,12 +11,7 @@ import {
 import { addBasemap, preloadAllLayers, getTileCacheStats } from "./basemap";
 import proj4 from "https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm";
 import { OutlineManager } from "./outlines";
-import { Icon, svgToDiscTexture, IconsSceneManager } from "./icons";
 import { BUILDINGS_COLOR } from "./constants";
-
-import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
-// import { lodVis } from "./utils";
-// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
 import {
     IconSet,
     IconsSceneManager,
@@ -25,6 +20,8 @@ import {
     SvgLoader,
 } from "./icons";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 
 export class Map {
     constructor(container) {
