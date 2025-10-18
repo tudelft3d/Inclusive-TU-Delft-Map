@@ -9,7 +9,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = new Map(container);
 
-    // Make map globally accessible for debugging / preloading inspection
+    // Make map globally accessible for debugging preloading
+    window.mapInstance = map;
+
+    // Add console utilities for monitoring preloading
+    window.checkPreloadingStatus = () => {
+        const stats = map.getTileCacheInfo();
+        console.log('=== Tile Cache & Preloading Status ===');
+        console.log(`Cache size: ${stats.size} tiles`);
+        console.log(`Memory estimate: ${stats.memoryEstimate}`);
+        console.log(`Is preloading: ${stats.isPreloading}`);
+        console.log(`Preloaded layers: ${stats.preloadedLayers.join(', ')}`);
+        console.log(`Available layers: ${stats.availableLayers.join(', ')}`);
+        return stats;
+    };
+
+    // Log initial status
+    console.log('🗺️ TU Delft Map initialized!');
+    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
+    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
+
+    // map.loadGLTF('assets/campus/geom/model.glb');
+    // map.loadGLTF('assets/campus/geom/geometry.glb');
+    map.loadGLTF('assets/threejs/buildings/geometry.glb');
+    map.loadIcon('assets/threejs/graphics/icons/home.svg');
+
+    // Make map globally accessible for debugging preloading
+    window.mapInstance = map;
+
+    // Add console utilities for monitoring preloading
+    window.checkPreloadingStatus = () => {
+        const stats = map.getTileCacheInfo();
+        console.log('=== Tile Cache & Preloading Status ===');
+        console.log(`Cache size: ${stats.size} tiles`);
+        console.log(`Memory estimate: ${stats.memoryEstimate}`);
+        console.log(`Is preloading: ${stats.isPreloading}`);
+        console.log(`Preloaded layers: ${stats.preloadedLayers.join(', ')}`);
+        console.log(`Available layers: ${stats.availableLayers.join(', ')}`);
+        return stats;
+    };
+
+    // Log initial status
+    console.log('🗺️ TU Delft Map initialized!');
+    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
+    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
+
     window.mapInstance = map;
 
     // Console helper to inspect tile cache / preloading status
@@ -33,24 +77,31 @@ document.addEventListener('DOMContentLoaded', () => {
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
     const buildingView = new BuildingView(map);
+
     map.buildingView = buildingView;
 
     const searcher = new Searcher();
 
-    // Search behaviour tuning
-    const search_delay = 250;         // milliseconds debounce before searching
-    const search_result_count = 5;    // max intermediate results to show
+    // The amount of time the searchbar will wait before searcing in miliseconds
+    const search_delay = 250;
 
-    // Compass icon wiring: find an inner element to rotate
+    // The number of results that are returned for partials searches
+    const search_result_count = 5;
+
+    // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
         document.querySelector('#compass-btn img') ||
         document.querySelector('#compass-btn .compass-icon');
 
     if (compassIcon) {
         map.cameraManager.setCompassElement(compassIcon);
+
+        // Add controls change listener to update compass rotation
         map.cameraManager.controls.addEventListener('change', () => {
             map.cameraManager.updateCompassRotation();
         });
+
+        // Initial compass update
         map.cameraManager.updateCompassRotation();
     }
 

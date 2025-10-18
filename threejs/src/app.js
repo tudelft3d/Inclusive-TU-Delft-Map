@@ -5,13 +5,14 @@ import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition, cj2gltf } from "./utils";
 import { ControlsManager } from "./controls";
 import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
-import { addBasemap } from "./basemap";
+import { addBasemap, preloadAllLayers, getTileCacheStats } from "./basemap";
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm';
 import { OutlineManager } from "./outlines";
+import { Icon, svgToDiscTexture, IconsSceneManager } from './icons';
+import { BUILDINGS_COLOR } from './constants';
+
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-// import { lodVis } from "./utils";
-// import { loadGLTFTranslateX, loadGLTFTranslateY } from "./constants";
-import { Icon, svgToCanvasTexture, svgToDiscTexture, IconsSceneManager } from './icons';
+
 
 export class Map {
     constructor(container) {
@@ -19,8 +20,10 @@ export class Map {
         this.activeBasemap = null;
         this.buildingView;
         this.userLocationMarker = null;
+        this.buildings = [];
         this.cityjson = cityjson;
         this.locationWatchId = null; // For tracking real-time location updates
+        this.preloadingStarted = false; // Flag to ensure preloading starts only once
 
 
         // Cameras and controls
@@ -64,34 +67,45 @@ export class Map {
 
         const iconsScene = new THREE.Scene();
         this.iconsSceneManager = new IconsSceneManager(iconsScene);
-
-        // const geometry = new THREE.BoxGeometry(100, 100, 100);
-        // const material = new THREE.MeshBasicMaterial({
-        //   color: 0x00ff00,
-        //   wireframe: true,
-        // });
-
-        // const cube = new THREE.Mesh(geometry, material);
-        // const cube_2 = new THREE.Mesh(geometry, material);
-        // cube_2.position.y = 1000;
-        // this.scene.add(cube);
     }
 
     _initLights() {
         const color = 0xFFFFFF;
-        const intensity = 1;
 
-        // First light
-        const light1 = new THREE.DirectionalLight(color, intensity);
-        light1.position.set(0, 1, 1);
-        light1.target.position.set(0, 0, 0);
-        this.scene.add(light1);
+        // // Add 4 directional lights
+        // const positions = [
+        //     [new THREE.Vector3(0, 1, 0), 0.5],
+        //     [new THREE.Vector3(0, -1, 0), 0.5],
+        //     [new THREE.Vector3(0, 0, 1), 0.5],
+        //     [new THREE.Vector3(0, 0, -1), 0.5],
+        //     [new THREE.Vector3(-1, 0, 0), 0.5],
+        //     [new THREE.Vector3(1, 0, 0), 0.5],
+        // ];
+        // for (const lightsProperties of positions) {
+        //     var position, intensity
+        //     [position, intensity] = lightsProperties;
+        //     const light = new THREE.DirectionalLight(color, intensity);
+        //     light.position.copy(position);
+        //     this.scene.add(light);
+        // }
 
-        // Second light
-        const light2 = new THREE.DirectionalLight(color, intensity);
-        light2.position.set(0, 1, -1);
-        light2.target.position.set(0, 0, 0);
-        this.scene.add(light2);
+        const ambientLight = new THREE.AmbientLight(color, 1);
+        this.scene.add(ambientLight);
+
+        this.light = new THREE.DirectionalLight(color, 3);
+        this.scene.add(this.light);
+        this.scene.add(this.light.target);
+
+
+        // const light = new THREE.DirectionalLight(color, intensity);
+        // light.position.set(0, 1000, 0);
+        // light.target.position.copy(new THREE.Vector3(1, -1, 0));
+        // this.scene.add(light);
+
+        // const light = new THREE.PointLight(color, intensity, 0, 0.001);
+        // light.position.set(85715, 30, -445780);
+        // this.scene.add(light);
+
     }
 
     setBasemap(url, layer) {
@@ -99,6 +113,25 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
+
+        // Start preloading other layers in the background (only once)
+        if (!this.preloadingStarted) {
+            this.preloadingStarted = true;
+            console.log('Starting background preloading of map layers...');
+
+            // Start preloading after a short delay to let the initial basemap finish loading
+            setTimeout(() => {
+                preloadAllLayers({
+                    zoom: 12,
+                    bbox: [84000, 443500, 87500, 448000] // Same bbox as main map
+                });
+            }, 3000); // 3 second delay
+        }
+    }
+
+    // Method to get tile cache statistics and preloading progress
+    getTileCacheInfo() {
+        return getTileCacheStats();
     }
 
     _initRenderer() {
@@ -301,31 +334,9 @@ export class Map {
         this.cameraManager.controls.target.copy(initTarget);
         this.cameraManager.controls.update();
 
-        const currentValues = { position: currentPosition, target: currentTarget }
+        const extra_camera_parameters = {distance: distance};
 
-        const tweenCamera = new Tween(currentValues, false)
-            .to({
-                position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
-                target: { x: finalTarget.x, y: finalTarget.y, z: finalTarget.z },
-            }, 1000)
-            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
-            .onUpdate(() => {
-                this.cameraManager.camera.position.copy(currentValues.position);
-                this.cameraManager.camera.lookAt(currentValues.target);
-                this.cameraManager.controls.target.copy(currentValues.target);
-                this.cameraManager.controls.update();
-            })
-            .onComplete(() => {
-                this.cameraManager.controls.minDistance = distance * 0.5;
-                this.cameraManager.controls.maxDistance = distance * 3;
-
-                // Remove from the list of tween when completed
-                const idx = this.tweens.indexOf(tweenCamera);
-                if (idx !== -1) this.tweens.splice(idx, 1);
-            })
-            .start()
-
-        this.tweens.push(tweenCamera);
+        this._create_tween_animation(currentPosition, currentTarget, finalPosition, finalTarget, extra_camera_parameters);
 
     }
 
@@ -342,6 +353,20 @@ export class Map {
 
         const rotation = this.cameraManager.camera.quaternion;
 
+        var current_position = this.cameraManager.camera.position.clone();
+        var current_target = new THREE.Vector3(this.cameraManager.camera.position.x, 0, this.cameraManager.camera.position.z);
+
+        const final_position = new THREE.Vector3(center.x, this.cameraManager.camera.position.y, center.z);
+        const final_target = new THREE.Vector3(center.x, 0, center.z);
+
+        // console.log("STARTING:")
+        // console.log(this.cameraManager.camera.rotation);
+        // console.log("########:")
+
+        const extra_camera_parameters = {z_rotation: this.cameraManager.camera.rotation.z};
+
+        this._create_tween_animation(current_position, current_target, final_position, final_target, extra_camera_parameters);
+
         // this.orthographicCamera.top = halfHeight;
         // this.orthographicCamera.bottom = -halfHeight;
         // this.orthographicCamera.right = halfWidth;
@@ -357,16 +382,81 @@ export class Map {
 
         // this.cameraManager.camera.autoRotate = true;
 
-        this.cameraManager.camera.position.x = center.x;
-        this.cameraManager.camera.position.z = center.z;
 
-        this.cameraManager.camera.lookAt(center);
-        this.cameraManager.camera.applyQuaternion(rotation);
 
-        // this.cameraManager.camera.updateProjectionMatrix();
 
-        this.cameraManager.controls.target.copy(center);
-        this.cameraManager.controls.update();
+        // this.cameraManager.camera.position.x = center.x;
+        // this.cameraManager.camera.position.z = center.z;
+
+        // this.cameraManager.camera.lookAt(center);
+        // this.cameraManager.camera.applyQuaternion(rotation);
+
+        // // this.cameraManager.camera.updateProjectionMatrix();
+
+        // this.cameraManager.controls.target.copy(center);
+        // this.cameraManager.controls.update();
+
+    }
+
+        // Operates on the current camera
+    _create_tween_animation(
+        current_position, 
+        current_target, 
+        final_position, 
+        final_target,
+        extra_camera_parameters={}) {
+
+        // Lock the camera from changing modes
+
+        const current_values = {
+            position: current_position,
+            target: current_target
+        }
+
+        const tweenCamera = new Tween(current_values, false)
+            .to({
+                position: { x: final_position.x, y: final_position.y, z: final_position.z },
+                target: { x: final_target.x, y: final_target.y, z: final_target.z },
+            }, 1000)
+            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
+            .onUpdate(() => {
+                this.cameraManager.camera.position.copy(current_values.position);
+                this.cameraManager.camera.lookAt(current_values.target);
+                this.cameraManager.controls.target.copy(current_values.target);
+                this.cameraManager.controls.update();
+
+                // if (this.cameraManager.usesOrthographicCamera()) {
+                //     this.cameraManager.camera.rotation.z = extra_camera_parameters.z_rotation;
+                //     console.log(this.cameraManager.camera.rotation);
+                // }
+
+            })
+            .onComplete(() => {
+
+                if (this.cameraManager.usesOrbitCamera()) {
+
+                    this.cameraManager.controls.minDistance = extra_camera_parameters.distance * 0.5;
+                    this.cameraManager.controls.maxDistance = extra_camera_parameters.distance * 3;
+
+                }
+
+                // if (this.cameraManager.usesOrthographicCamera()) {
+                //     console.log("########");
+                //     console.log("FINISHED");
+                //     console.log(this.cameraManager.camera.rotation);
+                //     console.log("########");
+                //     this.cameraManager.camera.rotation.z = extra_camera_parameters.z_rotation;
+
+                //     this.cameraManager.camera.updateProjectionMatrix();
+                // }
+
+                // Remove from the list of tween when completed
+                const idx = this.tweens.indexOf(tweenCamera);
+                if (idx !== -1) this.tweens.splice(idx, 1);
+            })
+            .start()
+
+        this.tweens.push(tweenCamera);
 
     }
 
@@ -381,17 +471,19 @@ export class Map {
     _pickEvent(pos) {
         if (this.controlsManager.cameraMovedDuringTouch) { return }
 
-        const foundObject = this.picker.pick(pos, this.scene, this.cameraManager.camera);
+        this.picker.pick(pos, this.scene, this.cameraManager.camera);
 
-        if (foundObject) {
+        if (this.picker.isObject) {
 
-            const object = this.picker.picked;
+            const object = this.picker.picked[0];
 
             this.buildingView.set_target(object.name);
 
             this.zoom_on_object(object);
 
         } else if (!this.cameraManager.usesOrthographicCamera()) {
+
+            this.buildingView.set_target(undefined);
 
             this.controlsManager.activateMap();
 
@@ -420,7 +512,7 @@ export class Map {
 
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
 
-            if (clicked_element.nodeName == "CANVAS") {
+            if (clicked_element.nodeName && clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
             }
 
@@ -432,13 +524,12 @@ export class Map {
             const touch = e.changedTouches[0];
             const pos = getCanvasRelativePosition(touch, this.canvas);
 
-            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+            const clicked_element = document.elementFromPoint(e.changedTouches[0].pageX, e.changedTouches[0].pageY);
 
-            if (clicked_element.nodeName == "CANVAS") {
+            if (clicked_element.nodeName && clicked_element.nodeName == "CANVAS") {
                 this._pickEvent(pos);
             }
 
-            this._pickEvent(pos);
         });
 
         // // control change → re‑render
@@ -459,13 +550,22 @@ export class Map {
         loader.load(path, (gltf) => {
             let objs = gltf.scene;
             objs.rotateX(-Math.PI / 2);
-            // objs.translateX(loadGLTFTranslateX);
-            // objs.translateY(loadGLTFTranslateY);
+            const newMaterial = new THREE.MeshStandardMaterial({
+                color: BUILDINGS_COLOR,
+                flatShading: true,
+            });
+            objs.traverse((o) => {
+                if (o.isMesh) {
+                    // o.geometry.computeVertexNormals();
+                    o.material = newMaterial;
+                    // console.log(o);
+                }
+            });
 
             const box = new THREE.Box3().setFromObject(objs);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
-            console.log(center);
+            // console.log(center);
 
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = this.cameraManager.camera.fov * (Math.PI / 180);
@@ -480,39 +580,21 @@ export class Map {
             this.lodVis();
             this.scene.add(this.model);
 
-            // if (child.name.startsWith("08")) child.visible = false;
-            // if (child.name != "08-lod_2") child.visible = false;
-            // if (child.name == "world" || child.name == "08" || child.name == "08-lod_2" || child.name == "") {
-            //     child.visible = true;
-            // } else { child.visible = false; }
-            // });
-
-            // Old camera positioning based on model bounds
-            // this.cameraManager.camera.position.set(center.x, center.y + maxDim * 0.5, center.z + cameraZ);
-            // this.cameraManager.controls.target.copy(center);
-
-            // // New standard view position and target
-            // this.cameraManager.camera.position.set(85715.53268458637, 1099.5279016009758, -445779.7690020757);
-            // this.cameraManager.controls.target.set(85743.30835529274, 43.249941349128534, -445791.2428672409);
-
-            // this.cameraManager.controls.update();
-            // this.cameraManager.setHomeView();
-
             const buildingOutline = [];
             for (const [id, obj] of Object.entries(this.cityjson.CityObjects)) {
                 if (obj.type !== "Building") continue;
                 buildingOutline.push(obj.attributes.key);
             }
-            this.setOutline(buildingOutline, 'lod_2', 'default');
+            this.buildings = buildingOutline;
+            this.setOutline(this.buildings, 'lod_2', 'default');
 
         }, undefined, function (error) {
             console.error(error);
         });
-        // this.render();
     }
 
     async loadIcon(path) {
-        const iconTexture = await svgToDiscTexture(path, 256, '#f5ab56');
+        const iconTexture = await svgToDiscTexture(path, 64, '#f5ab56', 4);
         var position = new THREE.Vector3(85190.36380133804, 33.5478593669161, -446862.7335885112);
         const size = 20;
         position = position.add(new THREE.Vector3(0, size / 2, 0));
@@ -525,13 +607,10 @@ export class Map {
         this.tweens.forEach(tween => tween.update(time));
         // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
+        this.light.position.copy(this.cameraManager.camera.position);
+        this.light.target.position.copy(this.cameraManager.controls.target);
         requestAnimationFrame(this.render);
     }
-
-    // just a wrapper, not needed anymore.
-    // lodToggle(level) {
-    //     this.lodVis(level);
-    // }
 
     lodVis(lod = 'lod_2') {
         this.model.traverse((child) => {
@@ -558,34 +637,15 @@ export class Map {
         });
     }
 
-    setOutline(objectList, lod = 'lod_2', style = 'default') {
+    setOutline(objectList, lod = 'lod_2', style) {
 
         const outlineObjects = [];
-
-        // console.log(id);
         for (const obj of objectList) {
             const target = this.scene.getObjectByName(`${obj}-${lod}`);
             if (target) outlineObjects.push(target);
         }
-        if (style == 'single') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#d9ff00',
-                hiddenEdgeColor: '#d9ff00'
-            });
-        }
-        else if (style == 'hover') {
-            Object.assign(this.outlineManager.style = {
-                edgeStrength: 5,
-                edgeGlow: 0.25,
-                edgeThickness: 0.3,
-                visibleEdgeColor: '#0bff02',
-                hiddenEdgeColor: '#0bff02'
-            });
-        }
-        this.outlineManager.outlineObjects(outlineObjects);
+
+        this.outlineManager.outlineObjects(outlineObjects, style);
     }
 }
 

@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { FXAAPass } from 'three/examples/jsm/postprocessing/FXAAPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 
 export class OutlineManager {
@@ -48,18 +49,19 @@ export class OutlineManager {
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
         outlinePass.selectedObjects = this.selectedObjects;
+
         composer.render(deltaTime);
     }
 
     _create_outline_pass(cameraManager) {
-        var composer = new EffectComposer(this.renderer);
+        const composer = new EffectComposer(this.renderer);
 
         // First pass for the 3D objects
-        var renderPass = new RenderPass(this.scene, cameraManager.camera);
+        const renderPass = new RenderPass(this.scene, cameraManager.camera);
         composer.addPass(renderPass);
 
         // Second pass for the outline of the 3D objects
-        var outlinePass = new OutlinePass(
+        const outlinePass = new OutlinePass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
             this.scene,
             cameraManager.camera
@@ -72,16 +74,21 @@ export class OutlineManager {
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
+
         composer.addPass(outlinePass);
 
         // Third pass for the icons
-        var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
+        const iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
         iconsRenderPass.clear = false; // To avoid replacing everything on the screen
         composer.addPass(iconsRenderPass);
 
         // Fourth pass to make everything appear
-        var gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
+        const gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
         composer.addPass(gammaCorrectionPass);
+
+        // // Fifth pass for antialiasing
+        // const fxaaPass = new FXAAPass();
+        // composer.addPass(fxaaPass);
 
         // Store all the objects
         this.composers.push(composer);
@@ -89,8 +96,37 @@ export class OutlineManager {
         this.outlinePasses.push(outlinePass);
         return composer;
     }
+    setStyle(code = 'default') {
+
+        for (const composer of this.composers) {
+            const outline = composer.passes[1];
+            if (code == 'default') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#ffffff');
+                outline.hiddenEdgeColor.set('#ffffff');
+            };
+            if (code == 'single') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#d9ff00');
+                outline.hiddenEdgeColor.set('#d9ff00');
+            };
+            if (code == 'hover') {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set('#0bff02');
+                outline.hiddenEdgeColor.set('#0bff02');
+            };
+        }
+    };
 
     outlineObjects(objects, code = "default") {
+        this.setStyle(code);
+        // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
 
