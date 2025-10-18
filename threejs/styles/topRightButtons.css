@@ -37,7 +37,7 @@
   position: absolute;
   top: 100%;               /* center vertically relative to the button */
   right: 85%;            /* place left of the control */
-  transform: translateY(-32%);
+  transform: translateY(-20%);
   margin-right: 12px;     /* gap between button and dropdown */
   background: #f1f1f1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -60,7 +60,7 @@
   position: absolute;
   top: 100%;               /* center vertically relative to the button */
   right: 85%;            /* place left of the control */
-  transform: translateY(-25%);
+  transform: translateY(-19%);
   margin-right: 12px;     /* gap between button and dropdown */
   background: #f1f1f1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -129,7 +129,7 @@
     padding: 6px 0px;
     top: 50%;
     right: 100%;
-    transform: translateY(-13%);
+    transform: translateY(-10%);
   }
 
   #layers-dropdown {
@@ -138,6 +138,6 @@
     padding: 6px 0px;
     top: 50%;
     right: 100%;
-    transform: translateY(-34%);
+    transform: translateY(-33%);
   }
 }
