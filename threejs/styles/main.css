@@ -36,17 +36,6 @@ h1 {
   z-index: 1;
 }
 
-/* BOTTOM RIGHT SIDEBAR CONTROLS */
-#bottom-right-sidebar-controls {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 30;
-}
-
 /* BOTTOM LEFT SIDEBAR CONTROLS */
 #bottom-left-sidebar-controls {
   position: fixed;
@@ -58,49 +47,7 @@ h1 {
   z-index: 30;
 }
 
-/* Common button container styles */
-#reset-container,
-#accessibility-container,
-#compass-container,
-#view-toggle-container,
-#location-container {
-  position: relative;
-  z-index: 31;
-}
-
-/* Common button styles */
-#reset-btn,
-#accessibility-btn,
-#compass-btn,
-#view-toggle-btn,
-#location-btn,
-#zoom-in-btn,
-#zoom-out-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: background 0.2s ease, transform 0.1s ease;
-}
-
-#reset-btn:hover,
-#accessibility-btn:hover,
-#compass-btn:hover,
-#view-toggle-btn:hover,
-#location-btn:hover,
-#zoom-in-btn:hover,
-#zoom-out-btn:hover {
-  background: #f3f3f3;
-  transform: translateY(-1px);
-}
-
-/* Dropdown styles */
+/* Dropdown styles
 #accessibility-dropdown {
   display: none;
   position: absolute;
@@ -124,14 +71,7 @@ h1 {
 
 #accessibility-dropdown a:hover{
   background: #f3f3f3;
-}
-
-/* Zoom controls */
-#zoom-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+} */
 
 
 #bv-btn,
@@ -290,7 +230,7 @@ h1 {
   z-index: 40;
 }*/
 
-/* Intermediate search results */
+/* Intermediate search results
 #intermediate_results {
   border: 1px dotted #ccc;
   padding: 3px;
@@ -309,7 +249,7 @@ h1 {
 
 #intermediate_results ul li:hover {
   background: #eee;
-}
+} */
 
 /* Tooltip styles */
 [data-tooltip] {
@@ -351,21 +291,6 @@ h1 {
 [data-tooltip]:hover::before,
 [data-tooltip]:hover::after {
   opacity: 1;
-}
-
-/* SVG icon sizing */
-#reset-btn img,
-#accessibility-btn img,
-#basemap-btn img,
-#layers-btn img,
-#compass-btn img,
-#view-toggle-btn img,
-#location-btn img,
-#zoom-in-btn img,
-#zoom-out-btn img {
-  width: 26px;
-  height: 26px;
-  display: block;
 }
 
 #info-pane {

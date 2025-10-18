@@ -1,7 +1,7 @@
 #basemap-btn,
 #layer-btn{
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -16,7 +16,7 @@
 
 #top-right-sidebar-controls {
   position: fixed;
-  top: calc(var(--height, 64px) + 28px);
+  top: calc(var(--height, 64px) + 14px);
   right: 28px;
   display: flex;
   flex-direction: column;
@@ -47,6 +47,12 @@
   min-width: 200px;
   z-index: 999;
   box-sizing: border-box;
+}
+
+#basemap-btn:hover,
+#layer-btn:hover {
+  background: #026e95;
+  transform: translateY(-1px);
 }
 
 #layers-dropdown {
@@ -94,15 +100,22 @@
   }
 
   /* smaller icons inside buttons */
-  #basemap-btn img,
   #layer-btn img,
-  #basemap-btn svg,
   #layer-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+  }
+
+  #basemap-btn img,
+  #basemap-btn svg {
     width: 18px;
     height: 18px;
     display: block;
     object-fit: contain;
   }
+
 
   #top-right-sidebar-controls {
     right: 10px;

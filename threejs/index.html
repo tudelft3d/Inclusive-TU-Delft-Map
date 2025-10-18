@@ -13,6 +13,7 @@
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
     <link href="./styles/topRightButtons.css" rel="stylesheet" type="text/css">
+    <link href="./styles/bottomRightButtons.css" rel="stylesheet" type="text/css">
 
     <script type="module" src="./src/header.js" defer></script>
     <script type="module" src="./src/main.js"></script>
@@ -36,7 +37,6 @@
             <div id="intermediate_results"></div>
         </form>
     </div>
-    
 
     <!-- TOP RIGHT SIDEBAR CONTROLS -->
     <div id="top-right-sidebar-controls">
@@ -64,12 +64,7 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- BOTTOM RIGHT SIDEBAR CONTROLS -->
-    <div id="bottom-right-sidebar-controls">
-
-        <div id="accessibility-container">
+        <!-- <div id="accessibility-container">
             <button id="accessibility-btn" data-tooltip="Accessibility options"><img
                     src="assets/threejs/graphics/icons/accessibility.svg" /></button>
             <div id="accessibility-dropdown">
@@ -77,31 +72,41 @@
                 <a href="#">Blue-Yellow Color Blind</a>
                 <a href="#">High Contrast</a>
             </div>
+        </div> -->
+
+    </div>
+
+    <!-- BOTTOM RIGHT SIDEBAR CONTROLS -->
+    <div id="bottom-right-sidebar-controls">
+        <div id="reset-container">
+            <button id="reset-btn" data-tooltip="Reset view"><img
+                    src="assets/threejs/graphics/icons/reset_white.svg" /></button>
+        </div>
+
+        <div id="zoom-btn" role="group" aria-label="Zoom controls">
+            <button class="zoom-half" id="zoom-in-btn" aria-label="Zoom in">
+                <img src="assets/threejs/graphics/icons/plus_white.svg" alt="Zoom in" />
+            </button>
+            <button class="zoom-half" id="zoom-out-btn" aria-label="Zoom out">
+                <img src="assets/threejs/graphics/icons/minus_white.svg" alt="Zoom out" />
+            </button>
         </div>
 
         <div id="compass-container">
             <button id="compass-btn" data-tooltip="Reset compass"><img
-                    src="assets/threejs/graphics/icons/compass.svg" /></button>
-        </div>
-
-        <div id="view-toggle-container">
-            <button id="view-toggle-btn" data-tooltip="Toggle 3D/2D view"><img
-                    src="assets/threejs/graphics/icons/cube.svg" /></button>
+                    src="assets/threejs/graphics/icons/compass_white.svg" /></button>
         </div>
 
         <div id="location-container">
             <button id="location-btn" data-tooltip="Find my location"><img
-                    src="assets/threejs/graphics/icons/locate.svg" /></button>
+                    src="assets/threejs/graphics/icons/locate_white.svg" /></button>
         </div>
 
-        <div id="zoom-controls">
-            <button id="zoom-in-btn" data-tooltip="Zoom in"><img
-                    src="assets/threejs/graphics/icons/plus-sign.svg" /></button>
-            <button id="zoom-out-btn" data-tooltip="Zoom out"><img
-                    src="assets/threejs/graphics/icons/minus-sign.svg" /></button>
-        </div>
-
-
+         <div id="view-toggle-container">
+            <div>
+                <button id="view-toggle-btn" data-tooltip="Toggle 3D/2D view" aria-pressed="false" title="Toggle 3D/2D view">2D</button>
+            </div>
+         </div>
 
     </div>
 
@@ -119,7 +124,6 @@
 
     <div id="scene-container">
         <div id="info-pane"></div>
-        <!-- Our <canvas> will be inserted here -->
     </div>
 
     <div id="basemap-aerial"></div>

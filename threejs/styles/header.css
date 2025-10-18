@@ -39,9 +39,7 @@ body.menu-open {
   touch-action: none;
 }
 
-/* Top site header container
-   - sticky so it stays visible while scrolling
-*/
+/* Top site header container*/
 .site-header {
   background: var(--bg);
   border-bottom: 1px solid var(--border);
@@ -137,21 +135,23 @@ body.menu-open {
 /* Language switcher layout */
 .lang-switch {
   display: inline-flex;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
 }
 
 /* Language button styling */
 .lang-btn {
+  width: 32px;
+  height: 30px;
   background: var(--lang-inactive);
   border: 1px solid var(--lang-active);
-  padding: 6px 8px;
+  padding: 2px 2px 2px 2px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   color: #000000;
   cursor: pointer;
-  min-width: 36px;
+  min-width: 30px;
   text-align: center;
 }
 
@@ -226,12 +226,12 @@ body.menu-open {
     top: var(--height);
     right: 0;
     height: calc(100vh - var(--height));
-    width: min(50%);
+    width: min(69%);
     max-width: 100%;
     transform: translateX(100%);
     /* hidden off-screen to the right */
     transition: transform 280ms ease;
-    padding: 6px 3px;
+    padding: 3px 3px;
     background: var(--bg);
     border-left: 1px solid var(--border);
     box-shadow: -2px 5px 8px rgba(0, 124, 195, 0.175);
@@ -275,14 +275,19 @@ body.menu-open {
     width: 100%;
     justify-content: flex-end;
     gap: 6px;
-    padding: 8px 16px 0 8px;
+    padding: 8px 12px 0px 12px;
     box-sizing: border-box;
     margin-top: 6px;
   }
 
-  .main-nav .nav-lang .lang-btn {
-    padding: 6px 10px;
+  .main-nav .nav-lang{
+    padding: 6px 18px;
     min-width: auto;
     margin: 0;
+  }
+
+  .lang-btn {
+    padding: 6px 6px;
+    min-width: auto;
   }
 }

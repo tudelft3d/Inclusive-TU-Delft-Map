@@ -68,12 +68,57 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.zoomOut();
     });
 
-    // 2D/3D toggle
+    // 2D/3D view toggle button
     const viewToggleBtn = document.getElementById('view-toggle-btn');
-    if (viewToggleBtn) viewToggleBtn.addEventListener('click', () => {
-        console.log('Clicked the button');
-        map.cameraManager.toggleOrthographic();
-    });
+
+    function getIsOrthographic() {
+        try {
+            if (!map.cameraManager) return false;
+            if (typeof map.cameraManager.isOrthographic === 'function') return map.cameraManager.isOrthographic();
+            if (map.cameraManager.camera) {
+                if ('isOrthographicCamera' in map.cameraManager.camera) return !!map.cameraManager.camera.isOrthographicCamera;
+                if ('isPerspectiveCamera' in map.cameraManager.camera) return !map.cameraManager.camera.isPerspectiveCamera;
+            }
+        } catch (e) { /* ignore */ }
+        return false;
+    }
+
+    function updateViewToggleUI() {
+        if (!viewToggleBtn) return;
+        const isOrtho = getIsOrthographic();
+        // when in 3D show "2D"
+        const label = isOrtho ? '3D' : '2D';
+        viewToggleBtn.textContent = label;
+        viewToggleBtn.setAttribute('aria-pressed', (!isOrtho).toString());
+        viewToggleBtn.title = `${label} view`;
+        // change appearance when the button shows "2D"
+        viewToggleBtn.classList.toggle('shows-2d', label === '2D');
+    }
+
+    if (viewToggleBtn) {
+        updateViewToggleUI();
+
+        viewToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (map && map.cameraManager && typeof map.cameraManager.toggleOrthographic === 'function') {
+                map.cameraManager.toggleOrthographic();
+            } else {
+                console.warn('toggleOrthographic not available on cameraManager');
+            }
+            // update UI after camera change (with slight delay to allow for camera update)
+            setTimeout(updateViewToggleUI, 80);
+        });
+
+        // keep UI in sync with external camera changes
+        if (map && map.cameraManager && map.cameraManager.controls && typeof map.cameraManager.controls.addEventListener === 'function') {
+            map.cameraManager.controls.addEventListener('change', updateViewToggleUI);
+        }
+
+        const mq = window.matchMedia('(max-width:620px)');
+        mq.addEventListener?.('change', updateViewToggleUI);
+        window.addEventListener('resize', updateViewToggleUI);
+    }
 
     // Initialize search bar UI (handles intermediate results, mobile sheet, overlay)
     initSearchBar({ map, searcher, search_delay, search_result_count });
@@ -143,18 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Accessibility dropdown wiring
-    const accessibilityBtn = document.getElementById('accessibility-btn');
-    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
-    if (accessibilityBtn && accessibilityDropdown) {
-        accessibilityBtn.addEventListener('click', (event) => {
-            event.stopImmediatePropagation();
-            accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
-        });
+    // const accessibilityBtn = document.getElementById('accessibility-btn');
+    // const accessibilityDropdown = document.getElementById('accessibility-dropdown');
+    // if (accessibilityBtn && accessibilityDropdown) {
+    //     accessibilityBtn.addEventListener('click', (event) => {
+    //         event.stopImmediatePropagation();
+    //         accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
+    //     });
 
-        document.addEventListener('click', () => {
-            accessibilityDropdown.style.display = 'none';
-        });
-    }
+    //     document.addEventListener('click', () => {
+    //         accessibilityDropdown.style.display = 'none';
+    //     });
+    // }
 
     // Reset view button
     const resetBtn = document.getElementById('reset-btn');

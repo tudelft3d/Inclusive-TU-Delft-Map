@@ -4,11 +4,11 @@
 
 #search-bar {
   --search-width: 390px;
-  --search-padding-vertical: 8px;
+  --search-padding-vertical: 6px;
   --search-padding-horizontal: 12px;
-  --search-radius: 6px;
+  --search-radius: 3px;
   position: fixed;
-  top: calc(var(--height, 64px) + 28px);
+  top: calc(var(--height, 64px) + 14px);
   opacity: 0.95;
   z-index: 10;
   width: 100%;
@@ -30,9 +30,9 @@
   padding: var(--search-padding-vertical) var(--search-padding-horizontal);
   font-size: 14px;
   font-family: "Open Sans", sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   width: 100%;
-  border-radius: var(--search-radius);
+  border-radius: var(--search-radius) var(--search-radius) 0 0;
   border: 1px solid #4a4e55;
   background-color: #f1f1f1;
   color: black;
@@ -64,10 +64,10 @@
 
 #intermediate_results {
   position: absolute;
-  top: calc(100% + 3px);
+  top: calc(100% + 0px);
   left: 0;
   right: 0;
-  background: #f1f1f1;
+  background: #eaeaea;
   border-radius: var(--search-radius) var(--search-radius);
   border-top: none;
   box-sizing: border-box;
@@ -84,11 +84,12 @@
 
 #intermediate_results.open {
   max-height: 260px;
-  opacity: 0.98 ;
+  opacity: 1 ;
   transform: translateY(0) scaleY(1);
   overflow-y: auto;
-  padding-left: 12px;
-  padding-right: 12px;
+  border-radius: 0 0 var(--search-radius) var(--search-radius);
+  padding-left: 1px;
+  padding-right: 1px;
 }
 
 #intermediate_results ul {
@@ -154,6 +155,7 @@
     left: 0;
     right: 0;
     bottom: 0;
+    /* top: 60%; */
     top: auto;
     width: 100%;
     margin: 0;
@@ -250,21 +252,18 @@
   }
 }
 
-/* Interactive parts must still receive pointer events */
-#search-bar form,
+/* #search-bar form,
 #search-bar input,
 #search-icon,
 #intermediate_results {
   pointer-events: auto;
-}
+} */
 
-/* Force search sheet to be click-through so it doesn't block top-right controls */
 #search-bar {
   pointer-events: none !important;
   z-index: 5 !important; /* below top-right controls (z-index:30) */
 }
 
-/* Interactive children must still be interactive */
 #search-bar form,
 #search-bar input,
 #search-icon,
