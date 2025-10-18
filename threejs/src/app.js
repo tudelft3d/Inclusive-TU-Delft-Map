@@ -731,6 +731,8 @@ export class Map {
         // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
+        this.light.position.copy(this.cameraManager.camera.position);
+        this.light.target.position.copy(this.cameraManager.controls.target);
         requestAnimationFrame(this.render);
     }
 
