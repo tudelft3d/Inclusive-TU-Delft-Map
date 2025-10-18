@@ -9,22 +9,31 @@ export class IconSet {
     /**
      * Create a set of icons at the same position.
      *
+     * @param {string} key
      * @param {SvgIcon[]} svgIcons
      * @param {TextIcon} textIcon
      * @param {THREE.Vector3} worldPos
      */
-    constructor(svgIcons, textIcon, worldPos) {
+    constructor(key, svgIcons, textIcon, worldPos) {
+        this.key = key;
         this.basePos = worldPos;
 
-        this.svgIcons = [];
+        this.svgIcons = {};
         svgIcons.map((svgIcon) => {
-            this.svgIcons.push(svgIcon);
+            const key = svgIcon.key;
+            if (key in this.svgIcons) {
+                console.error(
+                    `There is already a SvgIcon with this key ('${key}')`
+                );
+            }
+            this.svgIcons[key] = svgIcon;
         });
 
         this.textIcon = textIcon;
 
         // Main wrapper that gets moved by three.js
         this.wrapper = document.createElement("div");
+        // this.wrapper.className = "icons-container";
 
         // Inside wrapper to move the position anchor
         this.wrapperInner = document.createElement("div");
@@ -38,18 +47,48 @@ export class IconSet {
         this.wrapperInner.appendChild(this.textIcon.container);
 
         // Build the row of icons
+        this._makeIconsRow();
+
+        this.wrapperObject = new CSS2DObject(this.wrapper);
+    }
+
+    addSvgIcon(svgIcon) {
+        const key = svgIcon.key;
+        if (key in this.svgIcons) {
+            console.error(
+                `There is already a SvgIcon with this key ('${key}')`
+            );
+        }
+        this.svgIcons[key] = svgIcon;
+        this._makeIconsRow();
+    }
+
+    removeSvgIcon(key) {
+        if (!(key in this.svgIcons)) {
+            console.error(`There is no SvgIcon with this key ('${key}')`);
+            return;
+        }
+
+        delete this.svgIcons[key];
+        this._makeIconsRow();
+    }
+
+    _makeIconsRow() {
+        // Remove the previous row
+        if (this.svgIconsRow) {
+            this.wrapperInner.removeChild(this.svgIconsRow);
+        }
+
+        // Build the row of icons
         this.svgIconsRow = document.createElement("div");
         this.svgIconsRow.className = "icons-svg-row";
-        this.svgIcons.forEach((svgIcon) => {
+        for (const [key, svgIcon] of Object.entries(this.svgIcons)) {
             if (!(svgIcon.container instanceof HTMLElement)) {
                 throw new Error("Each icon must be an HTMLElement");
             }
             this.svgIconsRow.appendChild(svgIcon.container);
-        });
-
+        }
         this.wrapperInner.appendChild(this.svgIconsRow);
-
-        this.wrapperObject = new CSS2DObject(this.wrapper);
     }
 
     /**
@@ -105,17 +144,48 @@ export class IconsSceneManager {
     constructor(scene, renderer) {
         this.scene = scene;
         this.renderer = renderer;
-        this.iconSets = [];
+        this.iconSets = {};
     }
 
     /**
-     * Add an icon to the scene.
+     * Add an icon to the scene with an identifier.
      *
      * @param {IconSet} icon
      */
-    addIcon(iconSet) {
-        this.iconSets.push(iconSet);
+    addIconSet(iconSet) {
+        const key = iconSet.key;
+        if (key in this.iconSets) {
+            console.error(
+                `There is already an IconSet with this key ('${key}')`
+            );
+        }
+        this.iconSets[key] = iconSet;
         this.scene.add(iconSet.wrapperObject);
+    }
+
+    /**
+     * Remove an IconSet from the scene based on its identifier.
+     *
+     * @param {string} key
+     */
+    removeIconSet(key) {
+        if (!(key in this.iconSets)) {
+            console.error(`There is no IconSet with this key ('${key}')`);
+            return;
+        }
+        const iconSet = this.iconSets[key];
+        this.scene.remove(iconSet.wrapperObject);
+        delete this.iconSets[key];
+    }
+
+    /**
+     * Remove all IconSets from the scene.
+     *
+     */
+    removeAllIconSets() {
+        for (const [key, icon] of Object.entries(this.iconSets)) {
+            this.removeIconSet(key);
+        }
     }
 
     /**
@@ -125,7 +195,7 @@ export class IconsSceneManager {
      * @param {CamerasControls} cameraManager
      */
     beforeRender(cameraManager) {
-        for (const icon of this.iconSets) {
+        for (const [key, icon] of Object.entries(this.iconSets)) {
             icon.setSizeFromCameraManager(cameraManager);
         }
     }
@@ -181,6 +251,7 @@ export class SvgIcon {
     /**
      * A wrapper for a SVG element to put in an icon.
      *
+     * @param {string} key The unique identifier of this SvgIcon.
      * @param {SVGElement} svgElement The SVG element that will be shown inside the icon.
      * @param {Object} [options] Optional configuration.
      * @param {string|null} [options.size=null] Icon size (CSS value). `null` means default.
@@ -188,9 +259,12 @@ export class SvgIcon {
      * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
      */
     constructor(
+        key,
         svgElement,
         { size = null, bgColor = null, cssClass = "" } = {}
     ) {
+        this.key = key;
+
         // Main container that is placed by three.js
         this.container = document.createElement("div");
         this.container.className = "icon-svg-container";
@@ -208,7 +282,6 @@ export class SvgIcon {
 
         // Icon content
         // Clone so we don't move the original node out of its source location
-        console.log(svgElement);
         this.content = svgElement.cloneNode(true);
         this.content.setAttribute("class", "icon-svg-content");
 
