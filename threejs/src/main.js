@@ -1,13 +1,12 @@
 import { Map } from "./app";
 import { Searcher } from "./search";
-import { BuildingView } from "./buildingView"
-import { outline_code, load_codelist, populate_layer_buttons } from "./layers"
+import { BuildingView } from "./buildingView";
+import { LayerManager } from "./layers.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
-    populate_layer_buttons('assets/threejs/buildings/thematic_codelist.csv');
 
     // Make map globally accessible for debugging preloading
     window.mapInstance = map;
@@ -36,8 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const buildingView = new BuildingView(map);
-
     map.buildingView = buildingView;
+
+    // csv path: 'assets/threejs/buildings/thematic_codelist.csv'
+    // not currently used
+    const layerManager = new LayerManager();
 
     const searcher = new Searcher();
 
@@ -214,16 +216,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    layersDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
+    // layersDropdown.querySelectorAll('a').forEach(item => {
+    //     item.addEventListener('click', (e) => {
+    //         e.preventDefault();
 
-            outline_code(item.dataset.code, map);
+    //         outline_code(item.dataset.code, map);
 
-            layersDropdown.style.display = 'none';
-        });
+    //         layersDropdown.style.display = 'none';
+    //     });
 
-    });
+    // });
 
     document.addEventListener('click', () => {
         layersDropdown.style.display = 'none';

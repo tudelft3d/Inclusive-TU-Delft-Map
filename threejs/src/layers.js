@@ -1,14 +1,47 @@
 import { Map } from "./app";
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import { estimateBytesUsed } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
 import Papa from 'papaparse';
 
 
 export class LayerManager {
+
 	constructor() {
 
+		this.layer_codes = layers_json.filter((element) => {
+			return element["Include"] == "Y";
+		});
+
+		this._populate_layer_buttons();
+
+		this.active_layers = [];
+
+
 	}
+
+	switch_to_building_view(building_key, building_storey_code) {
+
+	}
+
+	switch_to_campus_view() {
+
+	}
+
+	_update_active_layers(layer_code) {
+
+		const index = this.active_layers.indexOf(layer_code);
+
+		if (index != -1) {
+			this.active_layers.splice(index, 1);
+		} else {
+			this.active_layers.push(layer_code);
+		}
+
+		console.log(this.active_layers);
+
+	}
+
 	// this class needs to track the global status of:
 	// 1. track building view versus 3d view - handle the visibility of indoor vs label icons 
 	// 		function to transition between both 
@@ -17,6 +50,40 @@ export class LayerManager {
 	// 3. incorporate the already existing functions below
 	//		load codelist
 	//		populate layer dropdown
+
+	_populate_layer_buttons(path) {
+
+		var layers_dropdown = document.getElementById("layers-dropdown");
+		layers_dropdown.innerHTML = "";
+
+		for (let i = 0; i < this.layer_codes.length; i++) {
+
+			var a = document.createElement("a");
+
+			a.appendChild(document.createTextNode(this.layer_codes[i]["Name-EN"]));
+
+			a.addEventListener("click", (event) => {
+				// if building view: toggle icons of objects that are in the current floor
+				// remove 3d view icons for only the current building, and vice versa when leaving building view
+				// this is to keep the icons for other buildings there
+				// consider how to deal with external icons (above should solve it)
+				// if 3d view: toggle icons with the building ID labels, above the building
+
+
+				// hide or unhide layers (toggle function)
+				
+				this._update_active_layers(this.layer_codes[i]["Code"]);
+
+			});
+
+			a.href = "#";
+
+			layers_dropdown.appendChild(a);
+
+		}
+
+}
+
 }
 
 export async function populate_layer_buttons(path) {
