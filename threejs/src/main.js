@@ -31,15 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // map.loadGLTF('assets/campus/geom/model.glb');
     // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon();
+    // map.loadIcon();
 
+    const layerManager = new LayerManager(map);
 
-    const buildingView = new BuildingView(map);
+    const buildingView = new BuildingView(map, layerManager);
     map.buildingView = buildingView;
 
     // csv path: 'assets/threejs/buildings/thematic_codelist.csv'
     // not currently used
-    const layerManager = new LayerManager();
+    
 
     const searcher = new Searcher();
 

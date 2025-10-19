@@ -6,11 +6,12 @@ import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {
 
 export class BuildingView {
 
-    constructor(map) {
+    constructor(map, layer_manager) {
 
         this.active = false;
 
         this.map = map;
+        this.layer_manager = layer_manager;
 
         this.building_key;
 
@@ -72,8 +73,12 @@ export class BuildingView {
         this._hide_mesh_children(this.building_threejs);
 
 
-        const storey_00_room_threejs = this._retrieve_room_threejs_objects("00");
+        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects("00");
         this._unhide_objects(storey_00_room_threejs);
+
+
+        this.layer_manager.switch_to_building_view(this.building_key, storey_00_room_keys);
+
 
         this._apply_outlines(storey_00_room_threejs, "lod_0", "default");
 
@@ -103,6 +108,8 @@ export class BuildingView {
 
         storey_dropdown.innerHTML = "";
 
+        this.layer_manager.switch_to_campus_view();
+
     }
 
     _apply_outlines(threejs_objects, lod, style) {
@@ -121,11 +128,13 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        const new_storey_threejs = this._retrieve_room_threejs_objects(storey_code);
+        const [new_storey_keys, new_storey_threejs] = this._retrieve_room_keys_and_room_threejs_objects(storey_code);
 
         this._unhide_objects(new_storey_threejs);
 
         this._apply_outlines(new_storey_threejs, "lod_0", "default");
+
+        this.layer_manager.enable_storey_icons(new_storey_keys);
 
     }
 
@@ -163,7 +172,7 @@ export class BuildingView {
 
     }
 
-    _retrieve_room_threejs_objects(storey_code) {
+    _retrieve_room_keys_and_room_threejs_objects(storey_code) {
 
         if (!(storey_code in this.storeys_json)) {
             console.log("Invalid storey code, returning empty array");
@@ -184,15 +193,13 @@ export class BuildingView {
 
         building_room_keys.forEach((room_key) => {
 
-            // const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
-
             const threejs_object_name = room_key.concat("-lod_0");
 
             room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
 
         });
 
-        return room_threejs_objects;
+        return [building_room_keys, room_threejs_objects];
 
     }
 
