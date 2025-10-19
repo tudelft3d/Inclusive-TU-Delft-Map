@@ -169,11 +169,13 @@ Here are the steps to deploy the web page for the first time:
     - If not started yet:
 
         ```bash
-        npx pm2 start backend/index.js --name feedback-server --env production
+        sudo cp ../server/feedback-service.service /etc/systemd/system/feedback-server.service
+        sudo systemctl enable feedback-server.service
+        sudo systemctl start feedback-server.service
         ```
 
     - If already started but requires to be updated
 
         ```bash
-        npx pm2 restart feedback-server --update-env
+        sudo systemctl restart feedback-server.service
         ```
