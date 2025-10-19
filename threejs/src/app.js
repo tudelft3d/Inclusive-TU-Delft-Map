@@ -96,38 +96,10 @@ export class Map {
         this.scene.background = skyboxTexture;
 
         this.iconsScene = new THREE.Scene();
-
-        // const geometry = new THREE.BoxGeometry(100, 100, 100);
-        // const material = new THREE.MeshBasicMaterial({
-        //   color: 0x00ff00,
-        //   wireframe: true,
-        // });
-
-        // const cube = new THREE.Mesh(geometry, material);
-        // const cube_2 = new THREE.Mesh(geometry, material);
-        // cube_2.position.y = 1000;
-        // this.scene.add(cube);
     }
 
     _initLights() {
         const color = 0xffffff;
-
-        // // Add 4 directional lights
-        // const positions = [
-        //     [new THREE.Vector3(0, 1, 0), 0.5],
-        //     [new THREE.Vector3(0, -1, 0), 0.5],
-        //     [new THREE.Vector3(0, 0, 1), 0.5],
-        //     [new THREE.Vector3(0, 0, -1), 0.5],
-        //     [new THREE.Vector3(-1, 0, 0), 0.5],
-        //     [new THREE.Vector3(1, 0, 0), 0.5],
-        // ];
-        // for (const lightsProperties of positions) {
-        //     var position, intensity
-        //     [position, intensity] = lightsProperties;
-        //     const light = new THREE.DirectionalLight(color, intensity);
-        //     light.position.copy(position);
-        //     this.scene.add(light);
-        // }
 
         const ambientLight = new THREE.AmbientLight(color, 1);
         this.scene.add(ambientLight);
@@ -135,15 +107,6 @@ export class Map {
         this.light = new THREE.DirectionalLight(color, 3);
         this.scene.add(this.light);
         this.scene.add(this.light.target);
-
-        // const light = new THREE.DirectionalLight(color, intensity);
-        // light.position.set(0, 1000, 0);
-        // light.target.position.copy(new THREE.Vector3(1, -1, 0));
-        // this.scene.add(light);
-
-        // const light = new THREE.PointLight(color, intensity, 0, 0.001);
-        // light.position.set(85715, 30, -445780);
-        // this.scene.add(light);
     }
 
     setBasemap(url, layer) {
@@ -386,17 +349,6 @@ export class Map {
     }
 
     _attachEvents() {
-        // // mouse move → hover
-        // window.addEventListener('mousemove', (e) => {
-        //     const pos = getCanvasRelativePosition(e, this.glContainer);
-        //     this.picker.hover(pos, this.scene, this.cameraManager.camera);
-        //     this.render();
-        // });
-
-        // // click → pick
-        // window.addEventListener('mousedown', (e) => {
-        //     this.controlsManager.resetTouchState();
-        // });
         var hasMouseMoved = false;
         window.addEventListener("mousedown", (e) => {
             hasMouseMoved = false;
@@ -558,36 +510,6 @@ export class Map {
 
         // Add it to the scene
         this.iconsSceneManager.addIconSet(iconSet);
-
-        // const logIconClick = (e, evtType) => {
-        //     if (iconSet.wrapper.contains(e.target)) {
-        //         console.log(evtType);
-        //     }
-        // };
-
-        // const events = ["pointerdown", "pointermove", "pointerup"];
-        // events.map((evtType) =>
-        //     this.mainContainer.addEventListener(evtType, (e) => {
-        //         if (evtType == "pointerdown") {
-        //             e.target.setPointerCapture(e.pointerId);
-        //         }
-        //         logIconClick(e, evtType);
-        //     })
-        // );
-
-        // this.mainContainer.addEventListener("pointerdown", (e) => {
-        //     e.target.setPointerCapture(e.pointerId);
-        //     console.log("pointerdown", e.target);
-        // });
-        // this.mainContainer.addEventListener("pointermove", (e) => {
-        //     console.log("pointermove", e.target);
-        // });
-        // this.mainContainer.addEventListener("pointerup", (e) => {
-        //     console.log("pointerup", e.target);
-        // });
-        // this.mainContainer.addEventListener("click", (e) => {
-        //     console.log("click", e.target);
-        // });
     }
 
     render(time) {
