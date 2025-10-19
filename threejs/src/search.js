@@ -4,6 +4,7 @@ import Fuse from "fuse.js";
 import * as THREE from 'three';
 import { CamerasControls } from "./camera";
 import { Scene } from "three";
+import { BuildingView } from "./buildingView";
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
@@ -14,8 +15,9 @@ export class Searcher {
      * @param {CamerasControls} cameraManager  
      * @param {ObjectPicker} picker 
      * @param {Scene} scene 
+     * @param {BuildingView} buildingView
      */
-    constructor(cameraManager, picker, scene) {
+    constructor(cameraManager, picker, scene, buildingView) {
 
         // what to do when searching for a room type that will have multiple instances?
         // Highlight all bathrooms?
@@ -25,6 +27,8 @@ export class Searcher {
         this.cameraManager = cameraManager;
         this.picker = picker;
         this.scene = scene;
+        this.buildingView = buildingView;
+
         this.raw_json = cityjson;
 
         this.processed_json = this._process_json(cityjson);
@@ -100,6 +104,11 @@ export class Searcher {
 
         this.picker.highlight(threejs_object);
         this.cameraManager.zoomToObject(threejs_object);
+
+        // Set the building as target for building view
+        if (this.buildingView && threejs_object) {
+            this.buildingView.set_target(threejs_object.name);
+        }
 
     }
 

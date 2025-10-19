@@ -10,6 +10,7 @@ import { Icon, svgToDiscTexture, IconsSceneManager } from './icons';
 import { BUILDINGS_COLOR } from './constants';
 import { initSearchBar } from "./searchBar"
 import { Searcher } from "./search";
+import { BuildingView } from "./buildingView"
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
@@ -18,7 +19,6 @@ export class Map {
     constructor(container) {
         this.container = container;
         this.activeBasemap = null;
-        this.buildingView;
         this.userLocationMarker = null;
         this.buildings = [];
         this.cityjson = cityjson;
@@ -32,7 +32,6 @@ export class Map {
         this.cameraManager = new CamerasControls(container, cameraPosition, cameraLookAt);
 
         this.infoPane = document.getElementById('info-pane');
-        this.picker = new ObjectPicker(this.infoPane, this.buildingView);
 
         this.tweens = new Array();
 
@@ -40,7 +39,6 @@ export class Map {
         this._initLights();
         this.setBasemap();
         this._initRenderer();
-        this._initSearcher();
         this.outlineManager = new OutlineManager(this.scene, this.iconsSceneManager, this.renderer);
         this._attachEvents();
         this.render = this.render.bind(this);
@@ -49,6 +47,10 @@ export class Map {
         window.addEventListener('resize', (e) => {
             this._resizeWindow();
         }, false);
+
+        this._initBuildingView();
+        this.picker = new ObjectPicker(this.infoPane, this.buildingView);
+        this._initSearcher();
     }
 
     _initScenes() {
@@ -143,10 +145,14 @@ export class Map {
     }
 
     _initSearcher() {
-        this.searcher = new Searcher(this.cameraManager, this.picker, this.scene);
+        this.searcher = new Searcher(this.cameraManager, this.picker, this.scene, this.buildingView);
         const search_delay = 250;
         const search_result_count = 5;
         initSearchBar(this.searcher, search_delay, search_result_count);
+    }
+
+    _initBuildingView() {
+        this.buildingView = new BuildingView(this.cameraManager, this.scene, this.buildings, this.outlineManager);
     }
 
     /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
@@ -293,6 +299,7 @@ export class Map {
         markerGroup.add(dot);
 
         markerGroup.position.set(x, 1, z); // Position just above ground
+        markerGroup.name = "user-location-marker"; // Name the user location marker
 
         this.userLocationMarker = markerGroup;
         this.scene.add(this.userLocationMarker);
@@ -405,6 +412,7 @@ export class Map {
 
             // load only lod2 on startup
             this.model = objs;
+            this.model.name = "buildings-3d-model"; // Name the buildings group
             this.lodVis();
             this.scene.add(this.model);
 
@@ -414,7 +422,7 @@ export class Map {
                 buildingOutline.push(obj.attributes.key);
             }
             this.buildings = buildingOutline;
-            this.setOutline(this.buildings, 'lod_2', 'default');
+            this.outlineManager.setOutline(this.buildings, 'lod_2', 'default');
 
         }, undefined, function (error) {
             console.error(error);
@@ -463,17 +471,6 @@ export class Map {
                 }
             }
         });
-    }
-
-    setOutline(objectList, lod = 'lod_2', style) {
-
-        const outlineObjects = [];
-        for (const obj of objectList) {
-            const target = this.scene.getObjectByName(`${obj}-${lod}`);
-            if (target) outlineObjects.push(target);
-        }
-
-        this.outlineManager.outlineObjects(outlineObjects, style);
     }
 }
 

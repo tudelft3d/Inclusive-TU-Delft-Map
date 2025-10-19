@@ -1,5 +1,4 @@
 import { Map } from "./app";
-import { BuildingView } from "./buildingView"
 import { outline_code } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,58 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Log initial status
     console.log('🗺️ TU Delft Map initialized!');
     console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
-    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
-
-    // map.loadGLTF('assets/campus/geom/model.glb');
-    // map.loadGLTF('assets/campus/geom/geometry.glb');
-    map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    // Make map globally accessible for debugging preloading
-    window.mapInstance = map;
-
-    // Add console utilities for monitoring preloading
-    window.checkPreloadingStatus = () => {
-        const stats = map.getTileCacheInfo();
-        console.log('=== Tile Cache & Preloading Status ===');
-        console.log(`Cache size: ${stats.size} tiles`);
-        console.log(`Memory estimate: ${stats.memoryEstimate}`);
-        console.log(`Is preloading: ${stats.isPreloading}`);
-        console.log(`Preloaded layers: ${stats.preloadedLayers.join(', ')}`);
-        console.log(`Available layers: ${stats.availableLayers.join(', ')}`);
-        return stats;
-    };
-
-    // Log initial status
-    console.log('🗺️ TU Delft Map initialized!');
-    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
-    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
-
-    window.mapInstance = map;
-
-    // Console helper to inspect tile cache / preloading status
-    window.checkPreloadingStatus = () => {
-        const stats = map.getTileCacheInfo ? map.getTileCacheInfo() : {};
-        console.log('=== Tile Cache & Preloading Status ===');
-        console.log(`Cache size: ${stats.size ?? 'n/a'} tiles`);
-        console.log(`Memory estimate: ${stats.memoryEstimate ?? 'n/a'}`);
-        console.log(`Is preloading: ${stats.isPreloading ?? 'n/a'}`);
-        console.log(`Preloaded layers: ${(stats.preloadedLayers || []).join(', ')}`);
-        console.log(`Available layers: ${(stats.availableLayers || []).join(', ')}`);
-        return stats;
-    };
-
-    console.log('🗺️ TU Delft Map initialized!');
-    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
-    // Load assets
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -215,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         layersDropdown.querySelectorAll('a').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                outline_code(item.dataset.code, map);
+                outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
                 layersDropdown.style.display = 'none';
             });
         });
@@ -270,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bvBtn = document.getElementById("bv-btn");
     if (bvBtn) {
         bvBtn.addEventListener("click", () => {
-            buildingView.initiate_buildingView();
+            map.buildingView.initiate_buildingView();
         });
     }
 
