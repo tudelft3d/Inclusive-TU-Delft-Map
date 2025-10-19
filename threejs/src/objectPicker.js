@@ -19,17 +19,18 @@ export class ObjectPicker {
         pickHighlighter,
         scene,
         cameraManager,
-        buildingView = null
+        buildingView
     ) {
         this.pickHighlighter = pickHighlighter;
         this.hoverHightlighter = new Highlighter(HOVERED_COLOR);
         this.scene = scene;
         this.cameraManager = cameraManager;
+        this.buildingView = buildingView;
 
         this.raycaster = new Raycaster();
 
         // Create InfoPane instance from the DOM element
-        this.infoPane = new InfoPane(infoPaneElement, buildingView);
+        this.infoPane = new InfoPane(infoPaneElement, this.buildingView);
     }
 
     _raycastPosition(normalizedPosition) {

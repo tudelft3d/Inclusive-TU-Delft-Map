@@ -173,6 +173,24 @@ export class InfoPane {
      * Attach event listeners to pane elements
      */
     _attachEventListeners() {
+        // Necessary to make the events happen
+        this.mainContainer = document.getElementById("scene-container");
+        this.movedDuringPointer = false;
+        this.mainContainer.addEventListener("pointerdown", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = false;
+            e.target.setPointerCapture(e.pointerId);
+        });
+        this.mainContainer.addEventListener("pointermove", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = true;
+        });
+        this.mainContainer.addEventListener("pointerup", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            if (this.movedDuringPointer) return;
+        });
+
+        // Close the pane
         const closeBtn = this.pane.querySelector('.info-pane-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.hide());

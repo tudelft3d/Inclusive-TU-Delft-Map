@@ -63,21 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2D/3D view toggle button
     const viewToggleBtn = document.getElementById('view-toggle-btn');
 
-    function getIsOrthographic() {
-        try {
-            if (!map.cameraManager) return false;
-            if (typeof map.cameraManager.isOrthographic === 'function') return map.cameraManager.isOrthographic();
-            if (map.cameraManager.camera) {
-                if ('isOrthographicCamera' in map.cameraManager.camera) return !!map.cameraManager.camera.isOrthographicCamera;
-                if ('isPerspectiveCamera' in map.cameraManager.camera) return !map.cameraManager.camera.isPerspectiveCamera;
-            }
-        } catch (e) { /* ignore */ }
-        return false;
-    }
-
     function updateViewToggleUI() {
         if (!viewToggleBtn) return;
-        const isOrtho = getIsOrthographic();
+        const isOrtho = map.cameraManager.usesOrthographicCamera();
         // when in 3D show "2D"
         const label = isOrtho ? '3D' : '2D';
         viewToggleBtn.textContent = label;

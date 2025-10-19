@@ -111,7 +111,7 @@ export class BuildingView {
 
         this.active = false;
 
-        this.cameraManager.camera = this.cameraManager.previousCamera;
+        this.cameraManager.switchToOrbit();
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
@@ -339,7 +339,7 @@ export class BuildingView {
                 //console.log(`Hidden: ${building.name}`);
             } else {
                 building.visible = true;
-                console.log(`Keeping visible: ${building.name}`);
+                // console.log(`Keeping visible: ${building.name}`);
             }
         });
 
@@ -360,7 +360,7 @@ export class BuildingView {
         // Make all buildings visible again
         worldGroup.children.forEach((building) => {
             building.visible = true;
-            console.log(`Shown: ${building.name}`);
+            // console.log(`Shown: ${building.name}`);
         });
 
         console.log(`All buildings are now visible`);
