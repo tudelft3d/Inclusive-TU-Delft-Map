@@ -220,11 +220,15 @@ def load_custom_building(
         # Load the geometry from glTF
         cj_file = full_building_from_gltf(gltf_path=input_gltf_path)
 
+        logging.info("Load the CSV attributes...")
+
         all_attributes = []
         for path, id_col in zip(attributes_paths, attributes_id_cols):
             all_attributes.append(
                 load_attributes_from_csv(csv_path=path, id_column=id_col)
             )
+
+        logging.info("Add the attributes to the spaces...")
 
         # Add the attributes to the CityJSON spaces
         for city_object in cj_file.city_objects:
@@ -234,6 +238,8 @@ def load_custom_building(
                         new_attributes=attributes.get(city_object.space_id, {})
                     )
 
+        logging.info("Load the units...")
+
         # Load the units
         load_units_from_csv(
             cj_file=cj_file,
@@ -242,8 +248,12 @@ def load_custom_building(
             spaces_column=units_spaces_column,
         )
 
+        logging.info("Check the hierarchy...")
+
         # Check the correctness of the hierarchy
         cj_file.check_objects_hierarchy(n_components=2)
+
+        logging.info("Write the file...")
 
         # Write to CityJSON
         file_json = cj_file.to_json()

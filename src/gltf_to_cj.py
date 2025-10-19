@@ -1,6 +1,5 @@
-import csv
+import logging
 from collections import defaultdict
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +12,6 @@ from cj_objects import (
     Building,
     BuildingPart,
     BuildingRoom,
-    BuildingRoot,
     BuildingStorey,
     BuildingUnit,
     BuildingUnitContainer,
@@ -23,7 +21,7 @@ from cj_objects import (
     CityJSONSpace,
     CityJSONSpaceSubclass,
 )
-from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
+from csv_utils import csv_read_attributes
 from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
 
 
@@ -62,6 +60,8 @@ def _geom_and_name_from_scene_id(
 
 
 def _unit_code_to_parent(code: str) -> str:
+    if len(code) == 0:
+        raise ValueError(f"Code '{code}' is not a correct value.")
     if code == BuildingUnitContainer.main_parent:
         raise ValueError(f"BuildingUnitContainer.main_parent does not have a parent.")
     elif len(code) == 1:
@@ -235,6 +235,8 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
             lod_0_mesh = flatten_trimesh(base_mesh)
             object_geoms.append(MultiSurface.from_mesh(lod=0, mesh=lod_0_mesh))
 
+    logging.info("Add the missing hierarchy.")
+
     # Add the missing hierarchy without geometry
     current_objects = list(all_objects_geoms.keys())
     for obj_name in current_objects:
@@ -244,6 +246,8 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
             if parent_name not in all_objects_geoms.keys():
                 all_objects_geoms[parent_name] = []
             last_dot_position = parent_name.rfind(".")
+
+    logging.info("Transform into actual CityJSON objects.")
 
     # Store the geometry into actual objects
     all_objects_cj: dict[str, CityJSONObjectSubclass] = {}
@@ -269,6 +273,8 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
     # # Add the root group
     # root = BuildingRoot(object_id=f"Root-08")
 
+    logging.info("Apply the parent-child relationships.")
+
     # Apply the parent-child relationships
     for obj_name in all_objects_cj.keys():
         last_dot_position = obj_name.rfind(".")
@@ -286,5 +292,7 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
     )
     # cj_file.add_cityjson_objects([root])
     cj_file.add_cityjson_objects(list(all_objects_cj.values()))
+
+    logging.info("Done processing the full building.")
 
     return cj_file

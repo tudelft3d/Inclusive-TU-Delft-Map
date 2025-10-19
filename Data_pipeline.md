@@ -161,8 +161,8 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
     uv run python cli.py load_3dbag \
         ../threejs/assets/processing_input/bag_geometry/subset.city.json \
         ../threejs/assets/processing_output/3dbag.city.json \
-        -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv \
-        -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv \
+        -b ../threejs/assets/processing_input/attributes/buildings.csv \
+        -s ../threejs/assets/processing_input/attributes/subdivisions.csv \
         --bag "3D BAG Buildings IDs [list,str]" \
         --id "Number [str]" \
         --skip "Skip [bool]" \
@@ -180,9 +180,9 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
         -u ../threejs/assets/processing_input/attributes/units.csv \
         --units-code-column "Type Code [str]" \
         --units-spaces-column "Numbers [list,str]" \
-        -a ../threejs/assets/processing_input/attributes/rooms_attributes.csv \
+        -a ../threejs/assets/processing_input/attributes/rooms.csv \
         -c "Number [str]" \
-        -a ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv \
+        -a ../threejs/assets/processing_input/attributes/buildings.csv \
         -c "Number [str]" \
         --overwrite \
         -v
@@ -219,13 +219,13 @@ The current pipeline looks like this:
 2. Process 3DBAG data:
 
     ```bash
-    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/3dbag.city.json -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
+    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/3dbag.city.json -b ../threejs/assets/processing_input/attributes/buildings.csv -s ../threejs/assets/processing_input/attributes/subdivisions.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
     ```
 
 3. Process custom geometry:
 
     ```bash
-    uv run python cli.py load_custom_building ../threejs/assets/processing_input/custom_geometry/08.glb ../threejs/assets/processing_output/08.city.json -u ../threejs/assets/processing_input/attributes/units.csv --units-code-column "Type Code [str]" --units-spaces-column "Numbers [list,str]" -a ../threejs/assets/processing_input/attributes/rooms_attributes.csv -c "Number [str]" -a ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -c "Number [str]"
+    uv run python cli.py load_custom_building ../threejs/assets/processing_input/custom_geometry/08.glb ../threejs/assets/processing_output/08.city.json -u ../threejs/assets/processing_input/attributes/units.csv --units-code-column "Type Code [str]" --units-spaces-column "Numbers [list,str]" -a ../threejs/assets/processing_input/attributes/rooms.csv -c "Number [str]" -a ../threejs/assets/processing_input/attributes/buildings.csv -c "Number [str]"
     ```
 
 4. Prepare the database arguments:
