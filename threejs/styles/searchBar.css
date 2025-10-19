@@ -17,7 +17,7 @@
 
 #search-bar form {
   position: relative;
-  padding: 0; 
+  padding: 0;
   display: block;
   width: var(--search-width);
   max-width: calc(100% - 40px);
@@ -42,7 +42,7 @@
   pointer-events: auto;
 }
 
-#search-bar input:focus{
+#search-bar input:focus {
   outline: none;
   border: none;
 }
@@ -71,7 +71,8 @@
   border-radius: var(--search-radius) var(--search-radius);
   border-top: none;
   box-sizing: border-box;
-  max-height: 0;                 /* start closed */
+  max-height: 0;
+  /* start closed */
   overflow: hidden;
   opacity: 0;
   transform-origin: top center;
@@ -79,12 +80,12 @@
   transition: max-height 220ms ease, opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   z-index: 20;
   text-align: left;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 #intermediate_results.open {
   max-height: 260px;
-  opacity: 1 ;
+  opacity: 1;
   transform: translateY(0) scaleY(1);
   overflow-y: auto;
   border-radius: 0 0 var(--search-radius) var(--search-radius);
@@ -115,12 +116,19 @@
 #intermediate_results ul li:hover {
   background: #027eab0e !important;
 }
+
 #intermediate_results.empty {
   padding: 10px var(--search-padding-horizontal);
   color: #666;
   font-size: 14px;
   max-height: 60px;
   opacity: 0.95;
+}
+
+/* Keep the search button invisible if not used */
+.mobile-only-search {
+  width: 0px;
+  height: 0px;
 }
 
 /* Mobile version of search bar */
@@ -138,17 +146,18 @@
     border-radius: 8px;
     border: none;
     background: #f1f1f1;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     align-items: center;
     justify-content: center;
     padding: 6px;
   }
+
   .mobile-only-search img {
-  display: block;
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-}
+    display: block;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
 
   /* bottom sheet - start hidden offscreen until .mobile-open */
   #search-bar {
@@ -173,7 +182,7 @@
     visibility: visible;
     pointer-events: auto;
     transform: translateY(0);
-    transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+    transition: transform 260ms cubic-bezier(.2, .9, .2, 1);
   }
 
   #search-bar form {
@@ -202,7 +211,7 @@
     transform-origin: top center;
     transform: translateY(6px) scaleY(0.98);
     transition: max-height 260ms ease, opacity 200ms ease, transform 200ms ease;
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.14);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.14);
   }
 
   #intermediate_results.open {
@@ -229,7 +238,11 @@
     transition: opacity 180ms ease;
     pointer-events: none;
   }
-  #search-overlay.visible { opacity: 1; pointer-events: auto; }
+
+  #search-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
   /* hide other UI while mobile search active */
   body.search-active-mobile #top-right-sidebar-controls,
@@ -261,7 +274,8 @@
 
 #search-bar {
   pointer-events: none !important;
-  z-index: 5 !important; /* below top-right controls (z-index:30) */
+  z-index: 5 !important;
+  /* below top-right controls (z-index:30) */
 }
 
 #search-bar form,
@@ -279,8 +293,6 @@
 /* Mobile open sheet should allow full interactions */
 #search-bar.mobile-open {
   pointer-events: auto !important;
-  z-index: 1400 !important; /* keep original mobile behavior */
+  z-index: 1400 !important;
+  /* keep original mobile behavior */
 }
-
-
-

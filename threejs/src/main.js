@@ -81,11 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         viewToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            if (map && map.cameraManager && typeof map.cameraManager.toggleOrthographic === 'function') {
-                map.cameraManager.toggleOrthographic();
-            } else {
-                console.warn('toggleOrthographic not available on cameraManager');
-            }
+            map.cameraManager.toggleOrthographic();
             // update UI after camera change (with slight delay to allow for camera update)
             setTimeout(updateViewToggleUI, 80);
         });
