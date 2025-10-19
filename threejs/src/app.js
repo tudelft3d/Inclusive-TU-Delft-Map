@@ -160,7 +160,7 @@ export class Map {
             this.cameraManager,
             this.scene,
             this.buildings,
-            this.outlineManager
+            this.outlineManager,
         );
     }
 
@@ -173,6 +173,7 @@ export class Map {
             this.cameraManager,
             this.buildingView
         );
+        this.buildingView.picker = this.picker;
     }
 
     _initSearcher() {

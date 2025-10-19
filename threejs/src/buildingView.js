@@ -24,6 +24,7 @@ export class BuildingView {
         this.buildings = buildings;
         this.outlineManager = outlineManager;
 
+        this.selectedKey;
         this.building_key;
         this.building_json;
         this.building_threejs;
@@ -37,6 +38,7 @@ export class BuildingView {
             return;
         }
 
+        this.selectedKey = key;
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
@@ -98,7 +100,8 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        this._unhide_objects([this.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
+        const selectedBuilding = this.scene.getObjectByName(this.selectedKey);
+        this._unhide_objects([selectedBuilding]);
 
         this.outlineManager.setOutline(this.buildings);
 
@@ -112,6 +115,7 @@ export class BuildingView {
         this.active = false;
 
         this.cameraManager.switchToOrbit();
+        this.picker.pickMesh(selectedBuilding);
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
