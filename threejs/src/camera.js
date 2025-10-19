@@ -1,5 +1,6 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MapControls } from 'three/addons/controls/MapControls.js';
+import { Tween, Easing } from 'https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js'
 
 import * as THREE from 'three';
 
@@ -31,6 +32,7 @@ export class CamerasControls {
         this._initControls(target);
 
         this.cameraInt = MAP_CAMERA;
+        this.tweens = [];
 
         // Initial compass rotation
         this.compassElement = null;
@@ -181,21 +183,29 @@ export class CamerasControls {
      */
     switchToMap() {
         console.log("Switching to map");
+        if (this.usesMapCamera()) {
+            return;
+        }
+
+        var newTarget;
+        var newPosition;
         if (this.usesOrthographicCamera()) {
             const distance = this.orthographicDistance();
-
-            const newTarget = this.orthographicControls.target.clone();
+            newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
-            const newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
-
-            this.mapCamera.position.copy(newPosition);
-            this.mapControls.target.copy(newTarget);
-
-            this.mapCamera.updateProjectionMatrix();
-            this.mapControls.update();
+            newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
         } else if (this.usesOrbitCamera()) {
-            // Nothing to do
+            newTarget = this.orbitControls.target.clone();
+            newPosition = this.orbitCamera.position.clone();
+        } else {
+            console.error("Not using any of the expected cameras!");
         }
+
+        this.mapCamera.position.copy(newPosition);
+        this.mapControls.target.copy(newTarget);
+
+        this.mapCamera.updateProjectionMatrix();
+        this.mapControls.update();
 
         this._changeCameraInt(MAP_CAMERA);
     }
@@ -205,11 +215,29 @@ export class CamerasControls {
      */
     switchToOrbit() {
         console.log("Switching to orbit");
-        if (this.usesOrthographicCamera()) {
-            this.switchToMap();
-        } else if (this.usesMapCamera()) {
-            // Nothing to do
+        if (this.usesOrbitCamera()) {
+            return;
         }
+
+        var newTarget;
+        var newPosition;
+        if (this.usesOrthographicCamera()) {
+            const distance = this.orthographicDistance();
+            newTarget = this.orthographicControls.target.clone();
+            newTarget.y = 0;
+            newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
+        } else if (this.usesMapCamera()) {
+            newTarget = this.mapControls.target.clone();
+            newPosition = this.mapCamera.position.clone();
+        } else {
+            console.error("Not using any of the expected cameras!");
+        }
+
+        this.orbitCamera.position.copy(newPosition);
+        this.orbitControls.target.copy(newTarget);
+
+        this.orbitCamera.updateProjectionMatrix();
+        this.orbitControls.update();
 
         this._changeCameraInt(ORBIT_CAMERA);
     }
@@ -342,5 +370,84 @@ export class CamerasControls {
 
         this.camera.lookAt(this.controls.target);
         this.controls.update();
+    }
+
+    _zoomPerspective(object) {
+        this.switchToOrbit();
+
+        // Compute final distance to the building with its bounding sphere
+        const sphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        const margin = 1.2;
+        const fov = this.camera.fov * (Math.PI / 180);
+        const distance = sphere.radius / Math.tan(fov / 2) * margin;
+
+        // Set camera position & orientation
+        const initTarget = this.controls.target.clone();
+        const initPosition = this.camera.position.clone();
+        const initDirection = initPosition.clone().sub(initTarget).normalize();
+        const finalTarget = sphere.center;
+        const finalPosition = finalTarget.clone().addScaledVector(initDirection, distance);
+
+        this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000);
+
+    }
+
+    _zoomOrthographic(object) {
+        // Bounding sphere
+        const sphere = new THREE.Sphere();
+        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+
+        // Set camera position & orientation
+        const initTarget = this.controls.target.clone();
+        const initPosition = this.camera.position.clone();
+        const initTargetToPosition = initPosition.clone().sub(initTarget);
+        const finalTarget = sphere.center;
+        const finalPosition = finalTarget.clone().add(initTargetToPosition);
+
+        this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 500);
+    }
+
+    _createAnimation(
+        initPosition,
+        initTarget,
+        finalPosition,
+        finalTarget,
+        duration = 1000
+    ) {
+        const current_values = {
+            position: initPosition,
+            target: initTarget
+        }
+
+        const tweenCamera = new Tween(current_values, false)
+            .to({
+                position: { x: finalPosition.x, y: finalPosition.y, z: finalPosition.z },
+                target: { x: finalTarget.x, y: finalTarget.y, z: finalTarget.z },
+            }, duration)
+            .easing(Easing.Quadratic.InOut) // Use an easing function to make the animation smooth.
+            .onUpdate(() => {
+                this.camera.position.copy(current_values.position);
+                this.controls.target.copy(current_values.target);
+
+                this.camera.updateProjectionMatrix();
+                this.controls.update();
+            })
+            .onComplete(() => {
+                // Remove from the list of tween when completed
+                const idx = this.tweens.indexOf(tweenCamera);
+                if (idx !== -1) this.tweens.splice(idx, 1);
+            })
+            .start()
+
+        this.tweens.push(tweenCamera);
+    }
+
+    zoomToObject(object) {
+        if (this.usesOrthographicCamera()) {
+            this._zoomOrthographic(object);
+        } else {
+            this._zoomPerspective(object);
+        }
     }
 }

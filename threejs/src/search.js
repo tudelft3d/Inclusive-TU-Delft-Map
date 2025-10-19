@@ -2,18 +2,29 @@ import { Map } from "./app";
 import { ObjectPicker } from "./objectPicker"
 import Fuse from "fuse.js";
 import * as THREE from 'three';
+import { CamerasControls } from "./camera";
+import { Scene } from "three";
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
 export class Searcher {
 
-    constructor() {
+    /**
+     * 
+     * @param {CamerasControls} cameraManager  
+     * @param {ObjectPicker} picker 
+     * @param {Scene} scene 
+     */
+    constructor(cameraManager, picker, scene) {
 
         // what to do when searching for a room type that will have multiple instances?
         // Highlight all bathrooms?
 
         // Can also search within arrays <- use for nicknames
 
+        this.cameraManager = cameraManager;
+        this.picker = picker;
+        this.scene = scene;
         this.raw_json = cityjson;
 
         this.processed_json = this._process_json(cityjson);
@@ -42,7 +53,7 @@ export class Searcher {
 
     // Perhaps make lod extractable from the map
     // Will have to change this if not all searchable objects have a space_id
-    _retrieve_threejs_objects(object_list, map, lod = "infer") {
+    _retrieve_threejs_objects(object_list, scene, lod = "infer") {
 
         const threejs_objects = [];
 
@@ -62,7 +73,7 @@ export class Searcher {
 
             const threejs_object_name = current_object.item.attributes["key"].concat(lod);
 
-            threejs_objects.push(map.scene.getObjectByName(threejs_object_name));
+            threejs_objects.push(scene.getObjectByName(threejs_object_name));
 
         }
 
@@ -81,14 +92,14 @@ export class Searcher {
     }
 
 
-    search_and_zoom(pattern, map) {
+    search_and_zoom(pattern) {
 
         const result = this._search_pattern(pattern, 1);
 
-        const threejs_object = this._retrieve_threejs_objects(result, map)[0];
+        const threejs_object = this._retrieve_threejs_objects(result, this.scene)[0];
 
-        map.picker.highlight(threejs_object);
-        map.zoom_on_object(threejs_object);
+        this.picker.highlight(threejs_object);
+        this.cameraManager.zoomToObject(threejs_object);
 
     }
 

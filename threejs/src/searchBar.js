@@ -1,4 +1,12 @@
-export function initSearchBar({ map, searcher, search_delay = 250, search_result_count = 5 } = {}) {
+
+/**
+ * 
+ * @param {*} searcher 
+ * @param {*} search_delay The amount of time the searchbar will wait before searcing in miliseconds
+ * @param {*} search_result_count The number of results that are returned for partials searches
+ * @returns 
+ */
+export function initSearchBar(searcher, search_delay = 250, search_result_count = 5) {
 
     const input = document.getElementById('search');
     const container = document.getElementById('search-bar');
@@ -77,12 +85,12 @@ export function initSearchBar({ map, searcher, search_delay = 250, search_result
             li.textContent = keys[i];
             li.tabIndex = 0;
             li.addEventListener('click', () => {
-                searcher.search_and_zoom(keys[i], map);
+                searcher.search_and_zoom(keys[i]);
                 closePanel();
             });
             li.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    searcher.search_and_zoom(keys[i], map);
+                    searcher.search_and_zoom(keys[i]);
                     closePanel();
                 }
             });
@@ -102,7 +110,7 @@ export function initSearchBar({ map, searcher, search_delay = 250, search_result
             return;
         }
         if (event.key === 'Enter') {
-            searcher.search_and_zoom(value, map);
+            searcher.search_and_zoom(value);
             closePanel();
             return;
         }
@@ -125,7 +133,7 @@ export function initSearchBar({ map, searcher, search_delay = 250, search_result
         }, 120);
     });
 
-     // open sheet when mobile button pressed
+    // open sheet when mobile button pressed
     if (mobileBtn) {
         mobileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
