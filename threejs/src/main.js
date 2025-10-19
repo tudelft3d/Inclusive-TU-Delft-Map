@@ -72,9 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
-    // Load assets
-    map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
 
     const buildingView = new BuildingView(map);
 
