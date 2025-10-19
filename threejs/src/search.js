@@ -102,7 +102,8 @@ export class Searcher {
 
         const threejs_object = this._retrieve_threejs_objects(result, this.scene)[0];
 
-        this.picker.highlight(threejs_object);
+        console.log(threejs_object);
+        this.picker.pickMesh(threejs_object);
         this.cameraManager.zoomToObject(threejs_object);
 
         // Set the building as target for building view

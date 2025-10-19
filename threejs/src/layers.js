@@ -2,7 +2,17 @@ import { Map } from "./app";
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import { estimateBytesUsed } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { Scene } from "three";
+import { ObjectPicker } from "./objectPicker";
+import { OutlineManager } from "./outlines";
 
+/**
+ * 
+ * @param {string} code 
+ * @param {Scene} scene 
+ * @param {ObjectPicker} picker 
+ * @param {OutlineManager} outlineManager 
+ */
 export function outline_code(code, scene, picker, outlineManager) {
 
 	var object_attribute_list = [];
@@ -30,6 +40,6 @@ export function outline_code(code, scene, picker, outlineManager) {
 	});
 	console.log(object_names);
 	outlineManager.setOutline(keys, "lod_0", "single");
-	picker.highlight(object_names);
+	picker.pickMesh(object_names);
 
 }

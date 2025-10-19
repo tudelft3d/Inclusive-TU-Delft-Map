@@ -373,6 +373,11 @@ export class CamerasControls {
     }
 
     _zoomPerspective(object) {
+        if (!object) {
+            this.switchToMap();
+            return;
+        }
+
         this.switchToOrbit();
 
         // Compute final distance to the building with its bounding sphere
@@ -394,6 +399,10 @@ export class CamerasControls {
     }
 
     _zoomOrthographic(object) {
+        if (!object) {
+            return;
+        }
+
         // Bounding sphere
         const sphere = new THREE.Sphere();
         new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
@@ -406,6 +415,14 @@ export class CamerasControls {
         const finalPosition = finalTarget.clone().add(initTargetToPosition);
 
         this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 500);
+    }
+
+    zoomToObject(object) {
+        if (this.usesOrthographicCamera()) {
+            this._zoomOrthographic(object);
+        } else {
+            this._zoomPerspective(object);
+        }
     }
 
     _createAnimation(
@@ -443,11 +460,4 @@ export class CamerasControls {
         this.tweens.push(tweenCamera);
     }
 
-    zoomToObject(object) {
-        if (this.usesOrthographicCamera()) {
-            this._zoomOrthographic(object);
-        } else {
-            this._zoomPerspective(object);
-        }
-    }
 }

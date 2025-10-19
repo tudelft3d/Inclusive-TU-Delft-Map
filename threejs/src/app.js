@@ -18,7 +18,8 @@ import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { initSearchBar } from "./searchBar";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
-
+import { Highlighter } from "./highlighter";
+import { PICKED_COLOR } from "./constants";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 
 export class Map {
@@ -65,8 +66,6 @@ export class Map {
         );
         this.svgLoader = new SvgLoader();
         this._attachEvents();
-        this.render = this.render.bind(this);
-        requestAnimationFrame(this.render);
 
         window.addEventListener(
             "resize",
@@ -77,8 +76,11 @@ export class Map {
         );
 
         this._initBuildingView();
-        this.picker = new ObjectPicker(this.infoPane, this.buildingView);
+        this._initPicker();
         this._initSearcher();
+
+        this.render = this.render.bind(this);
+        requestAnimationFrame(this.render);
     }
 
     _initScenes() {
@@ -153,6 +155,26 @@ export class Map {
         this._resizeWindow();
     }
 
+    _initBuildingView() {
+        this.buildingView = new BuildingView(
+            this.cameraManager,
+            this.scene,
+            this.buildings,
+            this.outlineManager
+        );
+    }
+
+    _initPicker() {
+        this.pickHighlighter = new Highlighter(PICKED_COLOR);
+        this.picker = new ObjectPicker(
+            this.infoPane,
+            this.pickHighlighter,
+            this.scene,
+            this.cameraManager,
+            this.buildingView
+        );
+    }
+
     _initSearcher() {
         this.searcher = new Searcher(
             this.cameraManager,
@@ -163,15 +185,6 @@ export class Map {
         const search_delay = 250;
         const search_result_count = 5;
         initSearchBar(this.searcher, search_delay, search_result_count);
-    }
-
-    _initBuildingView() {
-        this.buildingView = new BuildingView(
-            this.cameraManager,
-            this.scene,
-            this.buildings,
-            this.outlineManager
-        );
     }
 
     /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
@@ -335,26 +348,27 @@ export class Map {
         );
     }
 
-    _pickEvent(pos) {
-        this.picker.pick(pos, this.scene, this.cameraManager.camera);
-
-        if (this.picker.isObject) {
-            const object = this.picker.picked[0];
-            this.buildingView.set_target(object.name);
-            this.cameraManager.zoomToObject(object);
-        } else if (this.cameraManager.usesOrbitCamera()) {
-            this.buildingView.set_target(undefined);
-            this.cameraManager.switchToMap();
-        }
-    }
-
     _attachEvents() {
         var hasMouseMoved = false;
+        this.hasMouseMovedInFrame = false;
         window.addEventListener("mousedown", (e) => {
             hasMouseMoved = false;
         });
         window.addEventListener("mousemove", (e) => {
             hasMouseMoved = true;
+
+            // if (this.hasMouseMovedInFrame) return;
+
+            // this.hasMouseMovedInFrame = true;
+            // const pos = getCanvasRelativePosition(e, this.glContainer);
+            // const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+            // if (
+            //     clicked_element.nodeName &&
+            //     clicked_element.nodeName == "CANVAS"
+            // ) {
+            //     console.log("Hovering");
+            //     this.picker.hoverPosition(pos);
+            // }
         });
         window.addEventListener("mouseup", (e) => {
             if (hasMouseMoved) return;
@@ -365,7 +379,7 @@ export class Map {
                 clicked_element.nodeName &&
                 clicked_element.nodeName == "CANVAS"
             ) {
-                this._pickEvent(pos);
+                this.picker.pickPosition(pos);
             }
         });
 
@@ -388,7 +402,7 @@ export class Map {
                 clicked_element.nodeName &&
                 clicked_element.nodeName == "CANVAS"
             ) {
-                this._pickEvent(pos);
+                this.picker.pickPosition(pos);
             }
         });
 
@@ -513,14 +527,16 @@ export class Map {
     }
 
     render(time) {
-        // this._resizeRenderer();
+        // this.hasMouseMovedInFrame = false;
         this.cameraManager.tweens.forEach((tween) => tween.update(time));
-        // this.renderer.render(this.scene, this.cameraManager.camera);
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
         this.light.position.copy(this.cameraManager.camera.position);
         this.light.target.position.copy(this.cameraManager.controls.target);
-        requestAnimationFrame(this.render);
+        setTimeout(() => {
+            requestAnimationFrame(this.render);
+        }, 1000 / 144);
+
     }
 
     lodVis(lod = "lod_2") {
