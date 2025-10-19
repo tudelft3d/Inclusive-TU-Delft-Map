@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.setCompassElement(compassIcon);
 
         // Add controls change listener to update compass rotation
-        map.cameraManager.controls.addEventListener('change', () => {
+        map.cameraManager.addEventListenerControls('change', () => {
             map.cameraManager.updateCompassRotation();
         });
 
@@ -103,9 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // keep UI in sync with external camera changes
-        if (map && map.cameraManager && map.cameraManager.controls && typeof map.cameraManager.controls.addEventListener === 'function') {
-            map.cameraManager.controls.addEventListener('change', updateViewToggleUI);
-        }
+        map.cameraManager.addEventListenerControls('change', updateViewToggleUI);
 
         const mq = window.matchMedia('(max-width:620px)');
         mq.addEventListener?.('change', updateViewToggleUI);

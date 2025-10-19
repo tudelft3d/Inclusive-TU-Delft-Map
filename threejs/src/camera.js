@@ -38,6 +38,52 @@ export class CamerasControls {
         this.compassElement = null;
     }
 
+    _initCameras(position) {
+        const aspect = window.innerWidth / window.innerHeight;
+        this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        this.orthographicCamera = new THREE.OrthographicCamera((frustumSize * aspect) / - 2, (frustumSize * aspect) / 2, frustumSize / 2, frustumSize / - 2, 0, 100000);
+
+        this.camera = this.mapCamera;
+        this.previousCamera = this.mapCamera;
+
+        this.initialPosition = new THREE.Vector3().copy(position);
+        this.camera.position.copy(this.initialPosition);
+        this.camera.updateProjectionMatrix();
+
+        this.allCameras = [this.mapCamera, this.orbitCamera, this.orthographicCamera];
+    }
+
+
+    _initControls(target) {
+        this.mapControls = new MapControls(this.mapCamera, this.container);
+        this.mapControls.target.copy(target);
+        this.mapControls.maxPolarAngle = 0.49 * Math.PI;
+        this.mapControls.update();
+
+        this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
+        this.orbitControls.target.copy(target);
+        this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
+        this.orbitControls.enablePan = false;
+        this.orbitControls.update();
+
+        this.orthographicControls = new MapControls(this.orthographicCamera, this.container);
+        this.orthographicControls.target.copy(target);
+        this.orthographicControls.screenSpacePanning = true;
+        this.orthographicControls.maxPolarAngle = 0.0 * Math.PI;
+        this.orthographicControls.enableDampening = true;
+        this.orthographicControls.update()
+
+        this.controls = this.mapControls;
+        this.previousControls = this.mapControls;
+
+        this.initialTarget = target.clone();
+        this.controls.target.copy(this.initialTarget);
+        this.controls.update();
+
+        this.allControls = [this.mapControls, this.orbitControls, this.orthographicControls];
+    }
+
     _changeCameraInt(newCameraInt) {
         if (![MAP_CAMERA, ORBIT_CAMERA, ORTHOGRAPHIC_CAMERA].includes(newCameraInt)) {
             console.error("Unexpected input to '_changeCameraInt'.");
@@ -72,6 +118,24 @@ export class CamerasControls {
         return this.cameraInt == ORTHOGRAPHIC_CAMERA;
     }
 
+    /**
+     * Adds a listener to an event type to all cameras.
+     */
+    addEventListenerCameras(type, listener) {
+        for (const camera of this.allCameras) {
+            camera.addEventListener(type, listener)
+        }
+    }
+
+    /**
+     * Adds a listener to an event type to all controls.
+     */
+    addEventListenerControls(type, listener) {
+        for (const control of this.allControls) {
+            control.addEventListener(type, listener)
+        }
+    }
+
     // Method to set the compass element
     setCompassElement(element) {
         this.compassElement = element;
@@ -95,49 +159,6 @@ export class CamerasControls {
 
         // Apply rotation to compass
         this.compassElement.style.transform = `rotate(${degrees}deg)`;
-    }
-
-    _initCameras(position) {
-        const aspect = window.innerWidth / window.innerHeight;
-        this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-        this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-        this.orthographicCamera = new THREE.OrthographicCamera((frustumSize * aspect) / - 2, (frustumSize * aspect) / 2, frustumSize / 2, frustumSize / - 2, 0, 100000);
-
-        this.camera = this.mapCamera;
-        this.previousCamera = this.mapCamera;
-
-        this.initialPosition = new THREE.Vector3().copy(position);
-        this.camera.position.copy(this.initialPosition);
-        this.camera.updateProjectionMatrix();
-    }
-
-
-    _initControls(target) {
-        this.mapControls = new MapControls(this.mapCamera, this.container);
-        this.mapControls.target.copy(target);
-        this.mapControls.maxPolarAngle = 0.49 * Math.PI;
-        this.mapControls.update();
-
-        this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
-        this.orbitControls.target.copy(target);
-        this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
-        this.orbitControls.enablePan = false;
-        this.orbitControls.update();
-
-        this.orthographicControls = new MapControls(this.orthographicCamera, this.container);
-        this.orthographicControls.target.copy(target);
-        this.orthographicControls.screenSpacePanning = true;
-        this.orthographicControls.maxPolarAngle = 0.0 * Math.PI;
-        this.orthographicControls.enableDampening = true;
-        this.orthographicControls.update()
-
-        this.controls = this.mapControls;
-        this.previousControls = this.mapControls;
-
-        this.initialTarget = target.clone();
-        this.controls.target.copy(this.initialTarget);
-        this.controls.update();
-
     }
 
     resizeCameras(width, height) {
