@@ -514,8 +514,7 @@ export class Map {
             const building = this.scene.getObjectByName(
                 "Building_08-Building-08-lod_2"
             );
-            this.buildingView.set_target(building.name);
-            this.cameraManager.zoomToObject(building);
+            this.picker.pickMesh(building);
             console.log(`Clicked on a icon!`);
         };
 
