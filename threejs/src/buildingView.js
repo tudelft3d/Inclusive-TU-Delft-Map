@@ -1,27 +1,34 @@
 import { Map } from "./app";
 import { ObjectPicker } from "./objectPicker"
 import * as THREE from 'three';
+import { CamerasControls } from "./camera";
+import { Scene } from "three";
+import { OutlineManager } from "./outlines";
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
 export class BuildingView {
 
-    constructor(map) {
-
+    /**
+     * 
+     * @param {CamerasControls} cameraManager 
+     * @param {Scene} scene 
+     * @param {[]} buildings 
+     * @param {OutlineManager} outlineManager
+     */
+    constructor(cameraManager, scene, buildings, outlineManager) {
         this.active = false;
 
-        this.map = map;
+        this.cameraManager = cameraManager;
+        this.scene = scene;
+        this.buildings = buildings;
+        this.outlineManager = outlineManager;
 
         this.building_key;
-
         this.building_json;
-
         this.building_threejs;
-
         this.storeys_json;
-
         this.current_storey;
-
     }
 
     set_target(key) {
@@ -33,7 +40,7 @@ export class BuildingView {
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
-        // this.building_key = this.map.scene.getObjectByName(key).parent.name;
+        // this.building_key = this.scene.getObjectByName(key).parent.name;
 
     }
 
@@ -56,7 +63,7 @@ export class BuildingView {
         this.active = true;
 
 
-        this.map.cameraManager.switchToOrthographic();
+        this.cameraManager.switchToOrthographic();
 
         // Hide all other buildings except the current one
         this._hideOtherBuildings();
@@ -65,7 +72,7 @@ export class BuildingView {
 
         this.storeys_json = this._isolate_storey_json();
 
-        this.building_threejs = this.map.scene.getObjectByName(this.building_key);
+        this.building_threejs = this.scene.getObjectByName(this.building_key);
 
         // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
 
@@ -91,9 +98,9 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        this._unhide_objects([this.map.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
+        this._unhide_objects([this.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
 
-        this.map.setOutline(this.map.buildings);
+        this.outlineManager.setOutline(this.buildings);
 
         // Show all other buildings again
         this._showOtherBuildings();
@@ -104,7 +111,7 @@ export class BuildingView {
 
         this.active = false;
 
-        this.map.cameraManager.camera = this.map.cameraManager.previousCamera;
+        this.cameraManager.camera = this.cameraManager.previousCamera;
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
@@ -120,7 +127,7 @@ export class BuildingView {
             keys.push(current_object.name.split("-").slice(0, 3).join("-"));
         });
 
-        this.map.setOutline(keys, lod, style);
+        this.outlineManager.setOutline(keys, lod, style);
 
     }
 
@@ -194,9 +201,9 @@ export class BuildingView {
             // const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
 
             const threejs_object_name = room_key.concat("-lod_0");
-            
-            const roomObject = this.map.scene.getObjectByName(threejs_object_name);
-            
+
+            const roomObject = this.scene.getObjectByName(threejs_object_name);
+
             if (roomObject) {
 
                 // if the Z value of the layer (picked from the lowest point of the room) is negative
@@ -204,7 +211,7 @@ export class BuildingView {
                     // set the position to the absolute value
                     roomObject.position.z = Math.abs(roomObject.geometry.boundingBox.min.z);
                 }
-               
+
             }
 
             room_threejs_objects.push(roomObject);
@@ -295,7 +302,7 @@ export class BuildingView {
             a.addEventListener("click", (event) => {
 
                 this._switch_to_storey(storey_codes[i]);
-                
+
                 // Close the dropdown after selecting a storey
                 const bvDropdown = document.getElementById("bv-dropdown");
                 if (bvDropdown) {
@@ -314,18 +321,18 @@ export class BuildingView {
 
     _hideOtherBuildings() {
         // Find the world group that contains all buildings
-        const worldGroup = this.map.scene.getObjectByName('world');
-        
+        const worldGroup = this.scene.getObjectByName('world');
+
         if (!worldGroup) {
             console.log('World group not found');
             return;
         }
 
         console.log(`Found world group with ${worldGroup.children.length} buildings`);
-        
+
         // Check each building in the world group
         worldGroup.children.forEach((building, index) => {
-            
+
             // Hide all buildings except the current one
             if (building.name !== this.building_key) {
                 building.visible = false;
@@ -335,14 +342,14 @@ export class BuildingView {
                 console.log(`Keeping visible: ${building.name}`);
             }
         });
-        
+
         console.log(`✅ Hidden all buildings except: ${this.building_key}`);
     }
 
     _showOtherBuildings() {
         // Find the world group that contains all buildings
-        const worldGroup = this.map.scene.getObjectByName('world');
-        
+        const worldGroup = this.scene.getObjectByName('world');
+
         if (!worldGroup) {
             console.log('World group not found');
             return;
@@ -355,7 +362,7 @@ export class BuildingView {
             building.visible = true;
             console.log(`Shown: ${building.name}`);
         });
-        
+
         console.log(`All buildings are now visible`);
     }
 

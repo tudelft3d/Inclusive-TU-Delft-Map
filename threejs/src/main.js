@@ -1,8 +1,5 @@
 import { Map } from "./app";
-import { Searcher } from "./search";
-import { BuildingView } from "./buildingView"
 import { outline_code } from "./layers"
-import { initSearchBar } from "./searchBar"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -31,18 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
     map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
-
-    const searcher = new Searcher();
-
-    // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 250;
-
-    // The number of results that are returned for partials searches
-    const search_result_count = 5;
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -127,9 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', updateViewToggleUI);
     }
 
-    // Initialize search bar UI (handles intermediate results, mobile sheet, overlay)
-    initSearchBar({ map, searcher, search_delay, search_result_count });
-
     // Basemap dropdown wiring
     const basemapBtn = document.getElementById('basemap-btn');
     const basemapDropdown = document.getElementById('basemap-dropdown');
@@ -184,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         layersDropdown.querySelectorAll('a').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                outline_code(item.dataset.code, map);
+                outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
                 layersDropdown.style.display = 'none';
             });
         });
@@ -239,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bvBtn = document.getElementById("bv-btn");
     if (bvBtn) {
         bvBtn.addEventListener("click", () => {
-            buildingView.initiate_buildingView();
+            map.buildingView.initiate_buildingView();
         });
     }
 

@@ -124,6 +124,18 @@ export class OutlineManager {
         }
     };
 
+    setOutline(objectList, lod = 'lod_2', style) {
+
+        const outlineObjects = [];
+        for (const obj of objectList) {
+            const target = this.scene.getObjectByName(`${obj}-${lod}`);
+            if (target) outlineObjects.push(target);
+        }
+
+        this.outlineObjects(outlineObjects, style);
+    }
+
+
     outlineObjects(objects, code = "default") {
         this.setStyle(code);
         // this.renderer.update();
