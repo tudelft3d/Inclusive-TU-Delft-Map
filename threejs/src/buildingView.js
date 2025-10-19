@@ -58,6 +58,8 @@ export class BuildingView {
 
         this.map.cameraManager.switchToOrthographic();
 
+        // Hide all other buildings except the current one
+        this._hideOtherBuildings();
 
         this.building_json = cityjson.CityObjects[this.building_key];
 
@@ -93,6 +95,8 @@ export class BuildingView {
 
         this.map.setOutline(this.map.buildings);
 
+        // Show all other buildings again
+        this._showOtherBuildings();
 
         // I disabled this because I expect when I exit orthographic view, 
         // the building remains selected (target)
@@ -190,8 +194,20 @@ export class BuildingView {
             // const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
 
             const threejs_object_name = room_key.concat("-lod_0");
+            
+            const roomObject = this.map.scene.getObjectByName(threejs_object_name);
+            
+            if (roomObject) {
 
-            room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
+                // if the Z value of the layer (picked from the lowest point of the room) is negative
+                if (roomObject.geometry.boundingBox.min.z < 0) {
+                    // set the position to the absolute value
+                    roomObject.position.z = Math.abs(roomObject.geometry.boundingBox.min.z);
+                }
+               
+            }
+
+            room_threejs_objects.push(roomObject);
 
         });
 
@@ -294,6 +310,53 @@ export class BuildingView {
 
         }
 
+    }
+
+    _hideOtherBuildings() {
+        // Find the world group that contains all buildings
+        const worldGroup = this.map.scene.getObjectByName('world');
+        
+        if (!worldGroup) {
+            console.log('World group not found');
+            return;
+        }
+
+        console.log(`Found world group with ${worldGroup.children.length} buildings`);
+        
+        // Check each building in the world group
+        worldGroup.children.forEach((building, index) => {
+            
+            // Hide all buildings except the current one
+            if (building.name !== this.building_key) {
+                building.visible = false;
+                //console.log(`Hidden: ${building.name}`);
+            } else {
+                building.visible = true;
+                console.log(`Keeping visible: ${building.name}`);
+            }
+        });
+        
+        console.log(`✅ Hidden all buildings except: ${this.building_key}`);
+    }
+
+    _showOtherBuildings() {
+        // Find the world group that contains all buildings
+        const worldGroup = this.map.scene.getObjectByName('world');
+        
+        if (!worldGroup) {
+            console.log('World group not found');
+            return;
+        }
+
+        console.log(`Showing all ${worldGroup.children.length} buildings`);
+
+        // Make all buildings visible again
+        worldGroup.children.forEach((building) => {
+            building.visible = true;
+            console.log(`Shown: ${building.name}`);
+        });
+        
+        console.log(`All buildings are now visible`);
     }
 
 }
