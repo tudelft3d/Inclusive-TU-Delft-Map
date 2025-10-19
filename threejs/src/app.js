@@ -286,6 +286,7 @@ export class Map {
         markerGroup.add(dot);
 
         markerGroup.position.set(x, 1, z); // Position just above ground
+        markerGroup.name = "user-location-marker"; // Name the user location marker
 
         this.userLocationMarker = markerGroup;
         this.scene.add(this.userLocationMarker);
@@ -577,6 +578,7 @@ export class Map {
 
             // load only lod2 on startup
             this.model = objs;
+            this.model.name = "buildings-3d-model"; // Name the buildings group
             this.lodVis();
             this.scene.add(this.model);
 
