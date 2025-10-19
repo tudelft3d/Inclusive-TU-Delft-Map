@@ -93,7 +93,10 @@ export class BuildingView {
 
         this.map.setOutline(this.map.buildings);
 
-        this.building_key = undefined;
+
+        // I disabled this because I expect when I exit orthographic view, 
+        // the building remains selected (target)
+        // this.building_key = undefined; 
 
         this.active = false;
 
@@ -276,6 +279,12 @@ export class BuildingView {
             a.addEventListener("click", (event) => {
 
                 this._switch_to_storey(storey_codes[i]);
+                
+                // Close the dropdown after selecting a storey
+                const bvDropdown = document.getElementById("bv-dropdown");
+                if (bvDropdown) {
+                    bvDropdown.style.display = 'none';
+                }
 
             });
 

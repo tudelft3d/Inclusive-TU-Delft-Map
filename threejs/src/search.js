@@ -89,6 +89,11 @@ export class Searcher {
 
         map.picker.highlight(threejs_object);
         map.zoom_on_object(threejs_object);
+        
+        // Set the building as target for building view
+        if (map.buildingView && threejs_object) {
+            map.buildingView.set_target(threejs_object.name);
+        }
 
     }
 
