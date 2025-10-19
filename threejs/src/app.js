@@ -139,7 +139,7 @@ export class Map {
 
     _initRenderers() {
         // WebGL renderer for 3D objects
-        this.glRenderer = new THREE.WebGLRenderer({ antialias: true });
+        this.glRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.glRenderer.setPixelRatio(window.devicePixelRatio);
         this.glContainer = this.glRenderer.domElement;
         this.mainContainer.appendChild(this.glContainer);
@@ -526,16 +526,16 @@ export class Map {
     }
 
     render(time) {
+        setTimeout(() => {
+            requestAnimationFrame(this.render);
+        }, 1000 / 144);
+
         // this.hasMouseMovedInFrame = false;
         this.cameraManager.tweens.forEach((tween) => tween.update(time));
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
         this.light.position.copy(this.cameraManager.camera.position);
         this.light.target.position.copy(this.cameraManager.controls.target);
-        setTimeout(() => {
-            requestAnimationFrame(this.render);
-        }, 1000 / 144);
-
     }
 
     lodVis(lod = "lod_2") {

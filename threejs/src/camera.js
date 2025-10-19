@@ -300,8 +300,10 @@ export class CamerasControls {
     toggleOrthographic() {
         if (this.cameraInt != ORTHOGRAPHIC_CAMERA) {
             this.switchToOrthographic();
+            this.updateCompassRotation();
         } else {
             this.switchToMap();
+            this.updateCompassRotation();
         }
     }
 
