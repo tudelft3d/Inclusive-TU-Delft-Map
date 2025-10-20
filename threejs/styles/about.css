@@ -71,6 +71,8 @@ p {
   height:220px;
   max-width:350px;
   object-fit:contain;
+  align-items: start !important;
+  justify-self: center;
   background-color:transparent !important; 
   box-shadow:none;
   border-radius:0;
@@ -130,10 +132,10 @@ p {
   border-radius: 10px;
   box-shadow: var(--shadow);
   color: var(--muted);
-  min-height: 120px;
-  display:inline-flex;
-  flex-direction:column;
-  justify-content:space-between;
+  min-height: 140px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 .user-card h3{ 
   margin:0 0 8px; 
@@ -141,7 +143,7 @@ p {
   font-size:16px; 
 }
 .user-card p{ 
-  margin:0x 0 12px; 
+  margin:0 0 12px; 
   font-size:14px; 
   color:var(--muted); 
   line-height:1.4;
@@ -150,7 +152,8 @@ p {
   color:var(--accent-dark); 
   text-decoration:none; 
   font-weight:600; 
-  font-size:14px; 
+  font-size:14px;
+  margin-top: auto; 
 }
 .user-link:hover{ text-decoration:underline; }
 
@@ -163,6 +166,8 @@ p {
   padding-top: 20px; 
   padding-bottom: 10px; 
 }
+
+/* Vertical line of the timeline */
 .timeline-list { 
   list-style: none; 
   margin: 20px 0 0; 
@@ -203,7 +208,7 @@ p {
   flex-shrink: 0;
 }
 
-/* ensure marker sits on the vertical line */
+/* marker sits on the vertical line */
 .timeline-item .marker { 
   position: relative; 
   z-index: 2; 
