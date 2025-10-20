@@ -1,11 +1,8 @@
 import { Map } from "./app";
-<<<<<<< HEAD
-import { Searcher } from "./search";
+// import { Searcher } from "./search";
 import { BuildingView } from "./buildingView"
 import { outline_code, load_codelist, populate_layer_buttons } from "./layers"
-=======
-import { outline_code } from "./layers"
->>>>>>> main
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -34,24 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-<<<<<<< HEAD
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-
-    const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
-
-    const searcher = new Searcher();
-
-    // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 250;
-
-    // The number of results that are returned for partials searches
-    const search_result_count = 5;
-=======
     map.loadIcon();
->>>>>>> main
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
