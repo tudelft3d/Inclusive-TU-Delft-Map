@@ -1,16 +1,18 @@
 import logging
 import subprocess
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Mapping, Optional
 
 import typer
 
 from bag_to_cj import Bag2Cityjson
-from cj_objects import CityJSONObject, CityJSONSpace
+from cj_objects import Building, BuildingRoom, CityJSONSpace
 from cj_to_gltf import Cityjson2Gltf
+from csv_utils import BdgAttr, BdgRoomAttr
 from gltf_to_cj import (
     full_building_from_gltf,
-    load_attributes_from_csv,
+    load_bdg_attr_from_csv,
+    load_bdg_room_attr_from_csv,
     load_units_from_csv,
 )
 
@@ -80,34 +82,34 @@ def load_bag(
             exists=True,
         ),
     ] = None,
-    bag_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--bag",
-            help="The CSV column that specifies which 3DBAG entities are part of the building/building subdivision.",
-        ),
-    ] = None,
-    id_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--id",
-            help="The CSV column that specifies the id to use for the exported building/building subdivision.",
-        ),
-    ] = None,
-    skip_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--skip",
-            help="The CSV column that specifies whether to skip this building/building subdivision. Useful for objects with custom geometry to avoid duplicates.",
-        ),
-    ] = None,
-    parent_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--parent",
-            help="The CSV column that specifies the parent of this building subdivision, referring to the id_column of the buildings attributes.",
-        ),
-    ] = None,
+    # bag_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--bag",
+    #         help="The CSV column that specifies which 3DBAG entities are part of the building/building subdivision.",
+    #     ),
+    # ] = None,
+    # id_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--id",
+    #         help="The CSV column that specifies the id to use for the exported building/building subdivision.",
+    #     ),
+    # ] = None,
+    # skip_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--skip",
+    #         help="The CSV column that specifies whether to skip this building/building subdivision. Useful for objects with custom geometry to avoid duplicates.",
+    #     ),
+    # ] = None,
+    # parent_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--parent",
+    #         help="The CSV column that specifies the parent of this building subdivision, referring to the id_column of the buildings attributes.",
+    #     ),
+    # ] = None,
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -132,10 +134,10 @@ def load_bag(
             cj_path=input_cj_path,
             bdgs_attr_path=bdgs_attr_path,
             bdgs_sub_attr_path=bdgs_sub_attr_path,
-            bag_column=bag_column,
-            id_column=id_column,
-            skip_column=skip_column,
-            parent_column=parent_column,
+            # bag_column=bag_column,
+            # id_column=id_column,
+            # skip_column=skip_column,
+            # parent_column=parent_column,
         )
         cj_bag_data.export(output_cj_path)
 
@@ -154,7 +156,7 @@ def load_custom_building(
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
     units_path: Annotated[
-        Path,
+        Optional[Path],
         typer.Option(
             "-u",
             "--units",
@@ -162,35 +164,44 @@ def load_custom_building(
             exists=True,
         ),
     ],
-    units_code_column: Annotated[
-        str,
+    # units_code_column: Annotated[
+    #     str,
+    #     typer.Option(
+    #         help="Column storing the code associated to each unit.",
+    #     ),
+    # ],
+    # units_spaces_column: Annotated[
+    #     str,
+    #     typer.Option(
+    #         help="Column storing the spaces associated to each unit.",
+    #     ),
+    # ],
+    buidlings_path: Annotated[
+        Optional[Path],
         typer.Option(
-            help="Column storing the code associated to each unit.",
-        ),
-    ],
-    units_spaces_column: Annotated[
-        str,
-        typer.Option(
-            help="Column storing the spaces associated to each unit.",
-        ),
-    ],
-    attributes_paths: Annotated[
-        List[Path],
-        typer.Option(
-            "-a",
-            "--attributes",
-            help="Paths to attributes in CSV format.",
+            "-b",
+            "--buildings",
+            help="Paths to buildings attributes in CSV format.",
             exists=True,
         ),
-    ] = [],
-    attributes_id_cols: Annotated[
-        List[str],
+    ],
+    rooms_path: Annotated[
+        Optional[Path],
         typer.Option(
-            "-c",
-            "--columns",
-            help="Column storing the identifier for each attribute path.",
+            "-r",
+            "--rooms",
+            help="Paths to rooms attributes in CSV format.",
+            exists=True,
         ),
-    ] = [],
+    ],
+    # attributes_id_cols: Annotated[
+    #     List[str],
+    #     typer.Option(
+    #         "-c",
+    #         "--columns",
+    #         help="Column storing the identifier for each attribute path.",
+    #     ),
+    # ] = [],
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -205,10 +216,10 @@ def load_custom_building(
         raise ValueError("The input path should end with '.glb' or '.gltf'.")
     if not output_cj_path.suffix == ".json":
         raise ValueError("The output path should end with '.json'.")
-    if len(attributes_paths) != len(attributes_id_cols):
-        raise ValueError(
-            "The arguments `attributes_paths` and `attributes_id_cols` should have the same number of elements."
-        )
+    # if len(attributes_paths) != len(attributes_id_cols):
+    #     raise ValueError(
+    #         "The arguments `attributes_paths` and `attributes_id_cols` should have the same number of elements."
+    #     )
 
     if output_cj_path.exists() and not overwrite:
         raise ValueError(
@@ -222,11 +233,11 @@ def load_custom_building(
 
         logging.info("Load the CSV attributes...")
 
-        all_attributes = []
-        for path, id_col in zip(attributes_paths, attributes_id_cols):
-            all_attributes.append(
-                load_attributes_from_csv(csv_path=path, id_column=id_col)
-            )
+        all_attributes: list[Mapping[str, BdgAttr | BdgRoomAttr]] = []
+        if buidlings_path is not None:
+            all_attributes.append(load_bdg_attr_from_csv(csv_path=buidlings_path))
+        if rooms_path is not None:
+            all_attributes.append(load_bdg_room_attr_from_csv(csv_path=rooms_path))
 
         logging.info("Add the attributes to the spaces...")
 
@@ -234,19 +245,26 @@ def load_custom_building(
         for city_object in cj_file.city_objects:
             if isinstance(city_object, CityJSONSpace):
                 for attributes in all_attributes:
-                    city_object.add_attributes(
-                        new_attributes=attributes.get(city_object.space_id, {})
-                    )
+                    if city_object.space_id not in attributes:
+                        continue
+                    attr = attributes[city_object.space_id]
+                    if isinstance(city_object, Building) and isinstance(attr, BdgAttr):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingRoom) and isinstance(
+                        attr, BdgRoomAttr
+                    ):
+                        city_object.apply_attr(attr, overwrite=True)
 
         logging.info("Load the units...")
 
         # Load the units
-        load_units_from_csv(
-            cj_file=cj_file,
-            csv_path=units_path,
-            code_column=units_code_column,
-            spaces_column=units_spaces_column,
-        )
+        if units_path is not None:
+            load_units_from_csv(
+                cj_file=cj_file,
+                csv_path=units_path,
+                # code_column=units_code_column,
+                # spaces_column=units_spaces_column,
+            )
 
         logging.info("Check the hierarchy...")
 

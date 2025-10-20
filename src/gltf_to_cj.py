@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 import numpy as np
 import trimesh
@@ -21,7 +21,21 @@ from cj_objects import (
     CityJSONSpace,
     CityJSONSpaceSubclass,
 )
-from csv_utils import csv_read_attributes
+from constants import (
+    ICON_POSITION_COLUMN,
+    ID_COLUMN,
+    UNIT_CODE_COLUMN,
+    UNIT_SPACES_COLUMN,
+)
+from csv_utils import (
+    BdgAttr,
+    BdgAttrReader,
+    BdgRoomAttr,
+    BdgRoomAttrReader,
+    BdgUnitAttr,
+    BdgUnitAttrReader,
+    csv_read_attributes,
+)
 from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
 
 
@@ -72,24 +86,21 @@ def _unit_code_to_parent(code: str) -> str:
         return code[:-2]
 
 
-def load_attributes_from_csv(
-    csv_path: Path, id_column: str
-) -> dict[str, dict[str, Any]]:
-    attributes_all, specific_values_all = csv_read_attributes(
-        csv_path=csv_path, specific_columns=(id_column,)
-    )
-    id_to_attributes: dict[str, dict[str, Any]] = {}
-    for i in range(len(attributes_all)):
-        _, id_value = specific_values_all[i][0]
-        id_to_attributes[id_value] = attributes_all[i]
-    return id_to_attributes
+def load_bdg_attr_from_csv(csv_path: Path) -> dict[str, BdgAttr]:
+    bdgs_attributes_all = BdgAttrReader(csv_path=csv_path)
+    return bdgs_attributes_all._id_to_attr
+
+
+def load_bdg_room_attr_from_csv(csv_path: Path) -> dict[str, BdgRoomAttr]:
+    bdg_rooms_attributes_all = BdgRoomAttrReader(csv_path=csv_path)
+    return bdg_rooms_attributes_all._id_to_attr
 
 
 def load_units_from_csv(
     cj_file: CityJSONFile,
     csv_path: Path,
-    code_column: str,
-    spaces_column: str,
+    # code_column: str,
+    # spaces_column: str,
 ) -> None:
     root_pos = cj_file.get_root_position()
     root = cj_file.city_objects[root_pos]
@@ -103,13 +114,18 @@ def load_units_from_csv(
 
     # Process the CSV file to find all the units
     unit_to_spaces: dict[str, list[str]] = {}
-    specific_columns = (code_column, spaces_column)
-    attributes_all, specific_values_all = csv_read_attributes(
-        csv_path=csv_path, specific_columns=specific_columns
-    )
-    for attributes, specific_values in zip(attributes_all, specific_values_all):
-        _, unit_code = specific_values[0]
-        _, unit_spaces = specific_values[1]
+    # specific_columns = (UNITS_CODE_COLUMN, UNITS_SPACES_COLUMN, ICON_POSITION_COLUMN)
+    # attributes_all, specific_values_all = csv_read_attributes(
+    #     csv_path=csv_path, specific_columns=specific_columns
+    # )
+    units_attributes_all = BdgUnitAttrReader(csv_path=csv_path)
+    units_attributes_iterator = units_attributes_all.iterator()
+    for object_id, units_attributes in units_attributes_iterator:
+        # _, unit_code = specific_values[0]
+        # _, unit_spaces = specific_values[1]
+        # _, icon_position = specific_values[2]
+
+        unit_code = units_attributes.unit_code
 
         current_units_same_code = len(all_units[unit_code])
         unit_id = BuildingUnit.unit_code_to_id(
@@ -119,13 +135,16 @@ def load_units_from_csv(
         unit = BuildingUnit(
             object_id=unit_id,
             unit_code=unit_code,
-            attributes=attributes,
+            attributes=units_attributes.attributes,
+            icon_position=units_attributes.icon_position,
         )
-        unit_to_spaces[unit.id] = unit_spaces
+        unit_to_spaces[unit.id] = units_attributes.unit_spaces
         all_units[unit_code].append(unit)
 
     # Add the missing hierarchy in the codes
-    main_container_id = BuildingUnitContainer.unit_code_to_id(code="", prefix=prefix)
+    main_container_id = BuildingUnitContainer.unit_code_to_id(
+        code=BuildingUnitContainer.main_parent, prefix=prefix
+    )
     all_unit_containers: dict[str, BuildingUnitContainer] = {
         BuildingUnitContainer.main_parent: BuildingUnitContainer(
             object_id=main_container_id, unit_code=""
