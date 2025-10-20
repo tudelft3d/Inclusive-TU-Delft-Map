@@ -6,9 +6,9 @@ from typing import Annotated, List, Mapping, Optional
 import typer
 
 from bag_to_cj import Bag2Cityjson
+from cj_attributes import BdgAttr, BdgRoomAttr
 from cj_objects import Building, BuildingRoom, CityJSONSpace
 from cj_to_gltf import Cityjson2Gltf
-from csv_utils import BdgAttr, BdgRoomAttr
 from gltf_to_cj import (
     full_building_from_gltf,
     load_bdg_attr_from_csv,

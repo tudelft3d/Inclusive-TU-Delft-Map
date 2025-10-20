@@ -1,4 +1,3 @@
-import csv
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -8,7 +7,8 @@ import trimesh
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from cj_geometry import IconPosition, MultiSurface
+from cj_attributes import BdgAttr, BdgAttrReader, BdgSubAttr, BdgSubAttrReader
+from cj_geometry import MultiSurface
 from cj_loader import CityjsonLoader, cj_object_to_mesh
 from cj_objects import (
     Building,
@@ -20,22 +20,6 @@ from cj_objects import (
     CityJSONObjectSubclass,
     CityJSONSpace,
     CityJSONSpaceSubclass,
-)
-from constants import (
-    BAG_COLUMN,
-    ICON_POSITION_COLUMN,
-    ID_COLUMN,
-    PARENT_ID_COLUMN,
-    SKIP_COLUMN,
-)
-from csv_utils import (
-    BdgAttr,
-    BdgAttrReader,
-    BdgSubAttr,
-    BdgSubAttrReader,
-    csv_format_type,
-    csv_get_row_value,
-    csv_read_attributes,
 )
 from geometry_utils import merge_trimeshes, orient_polygons_z_up
 

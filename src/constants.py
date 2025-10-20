@@ -1,7 +1,0 @@
-BAG_COLUMN = "3D BAG Buildings IDs [list,str]"
-ID_COLUMN = "Number [str]"
-SKIP_COLUMN = "Skip [bool]"
-PARENT_ID_COLUMN = "Parent Number [str]"
-ICON_POSITION_COLUMN = "Icon Position [list,float]"
-UNIT_CODE_COLUMN = "Type Code [str]"
-UNIT_SPACES_COLUMN = "Numbers [list,str]"

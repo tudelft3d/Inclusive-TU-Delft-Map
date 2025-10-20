@@ -1,12 +1,19 @@
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Iterator
 
 import numpy as np
 import trimesh
 from tqdm import tqdm
 
+from cj_attributes import (
+    BdgAttr,
+    BdgAttrReader,
+    BdgRoomAttr,
+    BdgRoomAttrReader,
+    BdgUnitAttr,
+    BdgUnitAttrReader,
+)
 from cj_geometry import Geometry, IconPosition, MultiSurface
 from cj_objects import (
     Building,
@@ -20,21 +27,6 @@ from cj_objects import (
     CityJSONObjectSubclass,
     CityJSONSpace,
     CityJSONSpaceSubclass,
-)
-from constants import (
-    ICON_POSITION_COLUMN,
-    ID_COLUMN,
-    UNIT_CODE_COLUMN,
-    UNIT_SPACES_COLUMN,
-)
-from csv_utils import (
-    BdgAttr,
-    BdgAttrReader,
-    BdgRoomAttr,
-    BdgRoomAttrReader,
-    BdgUnitAttr,
-    BdgUnitAttrReader,
-    csv_read_attributes,
 )
 from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
 
@@ -125,7 +117,7 @@ def load_units_from_csv(
         # _, unit_spaces = specific_values[1]
         # _, icon_position = specific_values[2]
 
-        unit_code = units_attributes.unit_code
+        unit_code = units_attributes.code
 
         current_units_same_code = len(all_units[unit_code])
         unit_id = BuildingUnit.unit_code_to_id(

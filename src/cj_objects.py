@@ -9,8 +9,7 @@ import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from cj_geometry import CityJSONGeometries, Geometry, IconPosition
-from csv_utils import (
+from cj_attributes import (
     Attr,
     BdgAttr,
     BdgPartAttr,
@@ -18,6 +17,7 @@ from csv_utils import (
     BdgStoreyAttr,
     BdgUnitAttr,
 )
+from cj_geometry import CityJSONGeometries, Geometry, IconPosition
 
 
 class CityJSONFile:

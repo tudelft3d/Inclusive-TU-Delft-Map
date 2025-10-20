@@ -190,3 +190,6 @@ class IconPosition:
 
         pos_array = icon_position_from_mesh(mesh=mesh, z_offset=z_offset)
         return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])
+
+    def to_list(self) -> list[float]:
+        return [self.x, self.y, self.z]
