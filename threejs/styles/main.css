@@ -15,6 +15,7 @@ body {
   flex: 1 1 auto;
   height: auto;
   z-index: 1;
+  background-color: #cae8ff;
 }
 
 canvas {

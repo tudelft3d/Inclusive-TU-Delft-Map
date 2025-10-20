@@ -1,8 +1,5 @@
 import { Map } from "./app";
-import { Searcher } from "./search";
-import { BuildingView } from "./buildingView"
 import { outline_code } from "./layers"
-import { initSearchBar } from "./searchBar"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -27,66 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Log initial status
     console.log('🗺️ TU Delft Map initialized!');
     console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
-    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
-
-    // map.loadGLTF('assets/campus/geom/model.glb');
-    // map.loadGLTF('assets/campus/geom/geometry.glb');
-    map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    // Make map globally accessible for debugging preloading
-    window.mapInstance = map;
-
-    // Add console utilities for monitoring preloading
-    window.checkPreloadingStatus = () => {
-        const stats = map.getTileCacheInfo();
-        console.log('=== Tile Cache & Preloading Status ===');
-        console.log(`Cache size: ${stats.size} tiles`);
-        console.log(`Memory estimate: ${stats.memoryEstimate}`);
-        console.log(`Is preloading: ${stats.isPreloading}`);
-        console.log(`Preloaded layers: ${stats.preloadedLayers.join(', ')}`);
-        console.log(`Available layers: ${stats.availableLayers.join(', ')}`);
-        return stats;
-    };
-
-    // Log initial status
-    console.log('🗺️ TU Delft Map initialized!');
-    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
-    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
-
-    window.mapInstance = map;
-
-    // Console helper to inspect tile cache / preloading status
-    window.checkPreloadingStatus = () => {
-        const stats = map.getTileCacheInfo ? map.getTileCacheInfo() : {};
-        console.log('=== Tile Cache & Preloading Status ===');
-        console.log(`Cache size: ${stats.size ?? 'n/a'} tiles`);
-        console.log(`Memory estimate: ${stats.memoryEstimate ?? 'n/a'}`);
-        console.log(`Is preloading: ${stats.isPreloading ?? 'n/a'}`);
-        console.log(`Preloaded layers: ${(stats.preloadedLayers || []).join(', ')}`);
-        console.log(`Available layers: ${(stats.availableLayers || []).join(', ')}`);
-        return stats;
-    };
-
-    console.log('🗺️ TU Delft Map initialized!');
-    console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
-    // Load assets
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
-
-    const searcher = new Searcher();
-
-    // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 250;
-
-    // The number of results that are returned for partials searches
-    const search_result_count = 5;
+    map.loadIcon();
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -97,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.setCompassElement(compassIcon);
 
         // Add controls change listener to update compass rotation
-        map.cameraManager.controls.addEventListener('change', () => {
+        map.cameraManager.addEventListenerControls('change', () => {
             map.cameraManager.updateCompassRotation();
         });
 
@@ -122,21 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2D/3D view toggle button
     const viewToggleBtn = document.getElementById('view-toggle-btn');
 
-    function getIsOrthographic() {
-        try {
-            if (!map.cameraManager) return false;
-            if (typeof map.cameraManager.isOrthographic === 'function') return map.cameraManager.isOrthographic();
-            if (map.cameraManager.camera) {
-                if ('isOrthographicCamera' in map.cameraManager.camera) return !!map.cameraManager.camera.isOrthographicCamera;
-                if ('isPerspectiveCamera' in map.cameraManager.camera) return !map.cameraManager.camera.isPerspectiveCamera;
-            }
-        } catch (e) { /* ignore */ }
-        return false;
-    }
-
     function updateViewToggleUI() {
         if (!viewToggleBtn) return;
-        const isOrtho = getIsOrthographic();
+        const isOrtho = map.cameraManager.usesOrthographicCamera();
         // when in 3D show "2D"
         const label = isOrtho ? '3D' : '2D';
         viewToggleBtn.textContent = label;
@@ -152,27 +81,18 @@ document.addEventListener('DOMContentLoaded', () => {
         viewToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            if (map && map.cameraManager && typeof map.cameraManager.toggleOrthographic === 'function') {
-                map.cameraManager.toggleOrthographic();
-            } else {
-                console.warn('toggleOrthographic not available on cameraManager');
-            }
+            map.cameraManager.toggleOrthographic();
             // update UI after camera change (with slight delay to allow for camera update)
             setTimeout(updateViewToggleUI, 80);
         });
 
         // keep UI in sync with external camera changes
-        if (map && map.cameraManager && map.cameraManager.controls && typeof map.cameraManager.controls.addEventListener === 'function') {
-            map.cameraManager.controls.addEventListener('change', updateViewToggleUI);
-        }
+        map.cameraManager.addEventListenerControls('change', updateViewToggleUI);
 
         const mq = window.matchMedia('(max-width:620px)');
         mq.addEventListener?.('change', updateViewToggleUI);
         window.addEventListener('resize', updateViewToggleUI);
     }
-
-    // Initialize search bar UI (handles intermediate results, mobile sheet, overlay)
-    initSearchBar({ map, searcher, search_delay, search_result_count });
 
     // Basemap dropdown wiring
     const basemapBtn = document.getElementById('basemap-btn');
@@ -211,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Layers dropdown wiring
-    const layersBtn = document.getElementById('layer-btn'); 
+    const layersBtn = document.getElementById('layer-btn');
     const layersDropdown = document.getElementById('layers-dropdown');
     if (layersBtn && layersDropdown) {
         layersBtn.addEventListener('click', (event) => {
@@ -228,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         layersDropdown.querySelectorAll('a').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                outline_code(item.dataset.code, map);
+                outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
                 layersDropdown.style.display = 'none';
             });
         });
@@ -283,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bvBtn = document.getElementById("bv-btn");
     if (bvBtn) {
         bvBtn.addEventListener("click", () => {
-            buildingView.initiate_buildingView();
+            map.buildingView.initiate_buildingView();
         });
     }
 
