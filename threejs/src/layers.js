@@ -2,6 +2,7 @@ import { Map } from "./app";
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import { estimateBytesUsed } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+<<<<<<< HEAD
 import Papa from 'papaparse';
 
 
@@ -70,6 +71,20 @@ export function load_codelist(path) {
 }
 
 export async function outline_code(code, map) {
+=======
+import { Scene } from "three";
+import { ObjectPicker } from "./objectPicker";
+import { OutlineManager } from "./outlines";
+
+/**
+ * 
+ * @param {string} code 
+ * @param {Scene} scene 
+ * @param {ObjectPicker} picker 
+ * @param {OutlineManager} outlineManager 
+ */
+export function outline_code(code, scene, picker, outlineManager) {
+>>>>>>> main
 
 	var object_attribute_list = [];
 
@@ -85,17 +100,17 @@ export async function outline_code(code, map) {
 		if (current_object.attributes["Usage Code"] == code) {
 			keys.push(current_object.attributes.key);
 			if (current_object.type == "Building") {
-				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_2'));
+				object_names.push(scene.getObjectByName(current_object.attributes.key + '-lod_2'));
 			}
 			else {
-				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_0'));
+				object_names.push(scene.getObjectByName(current_object.attributes.key + '-lod_0'));
 			}
 
 		}
 
 	});
 	console.log(object_names);
-	map.setOutline(keys, "lod_0", "single");
-	map.picker.highlight(object_names);
+	outlineManager.setOutline(keys, "lod_0", "single");
+	picker.pickMesh(object_names);
 
 }

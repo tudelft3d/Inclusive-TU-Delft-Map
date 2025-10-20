@@ -1,18 +1,17 @@
 // outlineManager.js
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { FXAAPass } from 'three/examples/jsm/postprocessing/FXAAPass.js';
-import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
+import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
+import { GammaCorrectionShader } from "three/examples/jsm/shaders/GammaCorrectionShader.js";
 
 export class OutlineManager {
-
     constructor(scene, iconsSceneManager, renderer) {
         this.scene = scene;
         this.iconsSceneManager = iconsSceneManager;
-        this.renderer = renderer
+        this.renderer = renderer;
         this.composers = [];
         this.cameras = [];
         this.outlinePasses = [];
@@ -21,11 +20,11 @@ export class OutlineManager {
             edgeStrength: 5,
             edgeGlow: 0.25,
             edgeThickness: 0.3,
-            visibleEdgeColor: '#ffffff',
-            hiddenEdgeColor: '#ffffff'
+            visibleEdgeColor: "#ffffff",
+            hiddenEdgeColor: "#ffffff",
         };
         this._resizeListener = () => this.onResize();
-        window.addEventListener('resize', this._resizeListener);
+        window.addEventListener("resize", this._resizeListener);
     }
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
@@ -43,8 +42,8 @@ export class OutlineManager {
             currentIndex = this.composers.length - 1;
         }
 
-        // Update the size of the icons
-        this.iconsSceneManager.beforeRender(cameraManager);
+        // // Update the size of the icons
+        // this.iconsSceneManager.beforeRender(cameraManager);
 
         var composer = this.composers[currentIndex];
         var outlinePass = this.outlinePasses[currentIndex];
@@ -74,13 +73,13 @@ export class OutlineManager {
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
-
         composer.addPass(outlinePass);
 
-        // Third pass for the icons
-        const iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
-        iconsRenderPass.clear = false; // To avoid replacing everything on the screen
-        composer.addPass(iconsRenderPass);
+        // // Third pass for the icons
+        // var iconsRenderPass = new RenderPass(this.iconsSceneManager.scene, cameraManager.camera);
+        // iconsRenderPass.clear = false; // To avoid replacing everything on the screen
+        // iconsRenderPass.clearDepth = true;
+        // composer.addPass(iconsRenderPass);
 
         // Fourth pass to make everything appear
         const gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
@@ -96,40 +95,50 @@ export class OutlineManager {
         this.outlinePasses.push(outlinePass);
         return composer;
     }
-    setStyle(code = 'default') {
-
+    setStyle(code = "default") {
         for (const composer of this.composers) {
             const outline = composer.passes[1];
-            if (code == 'default') {
+            if (code == "default") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#ffffff');
-                outline.hiddenEdgeColor.set('#ffffff');
-            };
-            if (code == 'single') {
+                outline.visibleEdgeColor.set("#ffffff");
+                outline.hiddenEdgeColor.set("#ffffff");
+            }
+            if (code == "single") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#d9ff00');
-                outline.hiddenEdgeColor.set('#d9ff00');
-            };
-            if (code == 'hover') {
+                outline.visibleEdgeColor.set("#d9ff00");
+                outline.hiddenEdgeColor.set("#d9ff00");
+            }
+            if (code == "hover") {
                 outline.edgeStrength = 5;
-                outline.edgeGlow = 0.25
+                outline.edgeGlow = 0.25;
                 outline.edgeThickness = 0.3;
-                outline.visibleEdgeColor.set('#0bff02');
-                outline.hiddenEdgeColor.set('#0bff02');
-            };
+                outline.visibleEdgeColor.set("#0bff02");
+                outline.hiddenEdgeColor.set("#0bff02");
+            }
         }
-    };
+    }
+
+    setOutline(objectList, lod = 'lod_2', style) {
+
+        const outlineObjects = [];
+        for (const obj of objectList) {
+            const target = this.scene.getObjectByName(`${obj}-${lod}`);
+            if (target) outlineObjects.push(target);
+        }
+
+        this.outlineObjects(outlineObjects, style);
+    }
+
 
     outlineObjects(objects, code = "default") {
         this.setStyle(code);
         // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
-
     }
 
     clearOutline() {
@@ -140,12 +149,14 @@ export class OutlineManager {
     onResize() {
         for (var i = 0; i < this.composers.length; i++) {
             this.composers[i].setSize(window.innerWidth, window.innerHeight);
-            this.outlinePasses[i].setSize(window.innerWidth, window.innerHeight);
+            this.outlinePasses[i].setSize(
+                window.innerWidth,
+                window.innerHeight
+            );
         }
     }
 
     dispose() {
-        window.removeEventListener('resize', this._resizeListener);
+        window.removeEventListener("resize", this._resizeListener);
     }
-
 }
