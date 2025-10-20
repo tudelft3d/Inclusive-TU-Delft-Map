@@ -15,6 +15,17 @@ SKIP_COLUMN = "Skip [bool]"
 PARENT_ID_COLUMN = "Parent Number [str]"
 CODE_COLUMN = "Type Code [str]"
 UNIT_SPACES_COLUMN = "Numbers [list,str]"
+ARGUMENT_TO_NAME = {
+    "object_id": "object_id",
+    "icon_position": "icon_position",
+    "bag_ids": "bag_ids",
+    "skip": "skip",
+    "parent_object_id": "parent_object_id",
+    "code": "code",
+    "unit_spaces": "unit_spaces",
+    "parent_units": "parent_units",
+    "space_id": "space_id",
+}
 COL_TO_NAME = {
     ID_COLUMN: "object_id",
     ICON_POSITION_COLUMN: "icon_position",
@@ -129,6 +140,25 @@ class BdgRoomAttr(Attr):
     specific_columns = (ID_COLUMN, ICON_POSITION_COLUMN, CODE_COLUMN)
     id_index = 0
     id_builder_index = None
+
+    def __init__(
+        self,
+        attributes: dict[str, Any],
+        object_id: str,
+        icon_position: IconPosition | list[float] | None,
+        code: str,
+    ) -> None:
+        super().__init__(
+            attributes=attributes, object_id=object_id, icon_position=icon_position
+        )
+        self.code = code
+
+
+class BdgUnitCtnrAttr(Attr):
+
+    specific_columns = (CODE_COLUMN, UNIT_SPACES_COLUMN, ICON_POSITION_COLUMN)
+    id_index = None
+    id_builder_index = 0
 
     def __init__(
         self,

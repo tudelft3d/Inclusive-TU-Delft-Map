@@ -10,6 +10,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from cj_attributes import (
+    ARGUMENT_TO_NAME,
     Attr,
     BdgAttr,
     BdgPartAttr,
@@ -224,9 +225,10 @@ class CityJSONObject(ABC):
             )
         self.icon_position = icon_position
         if self.icon_position is not None:
+            icon_position_name = ARGUMENT_TO_NAME["icon_position"]
             self.add_attributes(
                 {
-                    "icon_position": [
+                    icon_position_name: [
                         self.icon_position.x,
                         self.icon_position.y,
                         self.icon_position.z,
@@ -236,9 +238,10 @@ class CityJSONObject(ABC):
 
     def set_icon(self, icon_position: IconPosition, overwrite: bool = False) -> None:
         self.icon_position = icon_position
+        icon_position_name = ARGUMENT_TO_NAME["icon_position"]
         self.add_attributes(
             {
-                "icon_position": [
+                icon_position_name: [
                     self.icon_position.x,
                     self.icon_position.y,
                     self.icon_position.z,
@@ -326,6 +329,7 @@ class CityJSONSpace(CityJSONObject):
             icon_position=icon_position,
         )
         self.space_id = space_id
+        space_id_key = ARGUMENT_TO_NAME["space_id"]
         self.add_attributes({"space_id": space_id})
         self.parent_units: set[str] = set()
 
@@ -333,7 +337,7 @@ class CityJSONSpace(CityJSONObject):
         self.parent_units.add(new_unit_id)
 
     def get_cityobject(self) -> dict[str, Any]:
-        parent_units_key = "parent_units"
+        parent_units_key = ARGUMENT_TO_NAME["parent_units"]
         self.add_attributes({parent_units_key: list(self.parent_units)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
@@ -478,7 +482,8 @@ class BuildingUnitContainer(CityJSONObject):
             icon_position=icon_position,
         )
         self.unit_code = unit_code
-        self.add_attributes({"code": unit_code})
+        code_name = ARGUMENT_TO_NAME["code"]
+        self.add_attributes({code_name: unit_code})
 
     @classmethod
     def unit_code_to_id(cls, code: str, prefix: str) -> str:
@@ -514,7 +519,7 @@ class BuildingUnit(BuildingUnitContainer):
         self.unit_spaces.add(new_space_id)
 
     def get_cityobject(self) -> dict[str, Any]:
-        unit_spaces_key = "unit_spaces"
+        unit_spaces_key = ARGUMENT_TO_NAME["unit_spaces"]
         self.add_attributes({unit_spaces_key: list(self.unit_spaces)})
         content_dict = super().get_cityobject()
         # Remove it from the attributes to ensure the object is unchanged
