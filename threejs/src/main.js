@@ -1,14 +1,9 @@
 import { Map } from "./app";
-// import { Searcher } from "./search";
-import { BuildingView } from "./buildingView"
-import { outline_code, load_codelist, populate_layer_buttons } from "./layers"
-
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
 
     const map = new Map(container);
-    populate_layer_buttons('assets/threejs/buildings/thematic_codelist.csv');
 
     // Make map globally accessible for debugging preloading
     window.mapInstance = map;
@@ -31,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon();
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -135,8 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Layers dropdown wiring
-    const layersBtn = document.getElementById('layer-btn');
+    const layersBtn = document.getElementById('layers-btn');
     const layersDropdown = document.getElementById('layers-dropdown');
+
     if (layersBtn && layersDropdown) {
         layersBtn.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -149,13 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
             layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
         });
 
-        layersDropdown.querySelectorAll('a').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
-                layersDropdown.style.display = 'none';
-            });
-        });
+        // layersDropdown.querySelectorAll('a').forEach(item => {
+        //     item.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
+        //         layersDropdown.style.display = 'none';
+        //     });
+        // });
 
         document.addEventListener('click', () => {
             layersDropdown.style.display = 'none';

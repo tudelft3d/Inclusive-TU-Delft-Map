@@ -103,7 +103,11 @@ export class ObjectPicker {
      * @param {Mesh | null} mesh 
      */
     pickMesh(mesh) {
-        if (!mesh || !mesh.name) {
+
+        if (mesh === undefined) {
+            console.error(mesh, "mesh was undefined");
+        }
+        else if (!mesh || !mesh.name) {
             // Unhighlight
             this.unpick();
 

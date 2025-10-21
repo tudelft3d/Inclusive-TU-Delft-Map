@@ -269,7 +269,6 @@ export class CamerasControls {
     switchToOrthographic() {
         console.log("Switching to orthographic");
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
-            console.log(this.camera.quaternion);
             // Where we end up
             const newTarget = this.controls.target.clone();
             newTarget.y = 0;

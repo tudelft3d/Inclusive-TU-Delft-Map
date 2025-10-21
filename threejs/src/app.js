@@ -16,6 +16,7 @@ import {
 } from "./icons";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { initSearchBar } from "./searchBar";
+import { LayerManager } from "./layers";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
 import { Highlighter } from "./highlighter";
@@ -75,6 +76,7 @@ export class Map {
             false
         );
 
+        this._initLayerManager();
         this._initBuildingView();
         this._initPicker();
         this._initSearcher();
@@ -155,12 +157,21 @@ export class Map {
         this._resizeWindow();
     }
 
+    _initLayerManager() {
+        this.layerManager = new LayerManager(
+            this.scene,
+            this.iconsSceneManager,
+            this.svgLoader
+        );
+    }
+
     _initBuildingView() {
         this.buildingView = new BuildingView(
             this.cameraManager,
             this.scene,
             this.buildings,
             this.outlineManager,
+            this.layerManager
         );
     }
 
@@ -174,6 +185,7 @@ export class Map {
             this.buildingView
         );
         this.buildingView.picker = this.picker;
+        this.layerManager.picker = this.picker;
     }
 
     _initSearcher() {
