@@ -16,12 +16,11 @@ import {
 NOTES:
 
 TODO:
-	- finish building icons
-	- integrate the units
+	- refactor code to reduce duplication
+	- refactor code to make buildings and rooms loop in the same way
 	- somehow determine a color for each icon, maybe save in json file? integrate with colorblind mode?
  
 MENTION:
-	- units and rooms have different names for code. they are "code" and "Usage Code" respectively
 	- process from csv list to json needs to improve
 
 */
@@ -43,9 +42,13 @@ export class LayerManager {
 
 		}
 
+		// Maybe have these taken from codelist?
+		// Or otherwise pass as argument
+		this.active_layers = [];
+
 		this._populate_layer_buttons();
 
-		this.active_layers = [];
+		
 
 		this.campus_buildings_json = this._isolate_building_json();
 
@@ -55,7 +58,7 @@ export class LayerManager {
 
 		this.current_building_key;
 
-		this.current_storey_keys;
+		this.current_storey_room_keys;
 
 		this.building_view_active = false;
 
@@ -84,9 +87,18 @@ export class LayerManager {
 
 		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
 
-			let found_room_codes = this._recursive_room_code_searcher(building_key);
+			if (!building_json.children) {
 
-			campus_building_codes[building_key] = found_room_codes;
+				campus_building_codes[building_key] = new Set();
+
+				continue;
+			}
+
+			const building_units_key = building_json.children.find((key) => key.includes("Unit"));
+
+			let found_unit_codes = this._recursive_unit_code_searcher(building_units_key);
+
+			campus_building_codes[building_key] = found_unit_codes;
 
 		}
 
@@ -94,7 +106,7 @@ export class LayerManager {
 
 	}
 
-	_recursive_room_code_searcher(key) {
+	_recursive_unit_code_searcher(key) {
 
 		const current_json_object = cityjson.CityObjects[key];
 
@@ -104,17 +116,13 @@ export class LayerManager {
 
 			codes.add(current_json_object.attributes["code"]);
 
-		}else if (current_json_object.attributes["Usage Code"]){
-
-			codes.add(current_json_object.attributes["Usage Code"]);
-
 		}
 
 		if (current_json_object["children"]) {
 
 			current_json_object["children"].forEach((child_key) => {
 
-				codes = codes.union(this._recursive_room_code_searcher(child_key));
+				codes = codes.union(this._recursive_unit_code_searcher(child_key));
 
 			});
 
@@ -140,19 +148,21 @@ export class LayerManager {
 	// Called from the buildingView function whenever the storey is changed.
 	enable_storey_icons(storey_room_keys) {
 
-		if (this.current_storey_keys) {
+		if (this.current_storey_room_keys) {
 
 			this._remove_storey_icon_sets();
 
 		}
 
-		this.current_storey_keys = storey_room_keys;
+		this.current_storey_room_keys = storey_room_keys;
 
 		this._add_storey_icon_sets();
 
 	}
 
 	_create_initial_campus_icons() {
+
+		const active_layers_set = new Set(this.active_layers);
 
 		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
 
@@ -183,19 +193,26 @@ export class LayerManager {
 
 		const current_building_json = cityjson.CityObjects[this.current_building_key];
 
+		const active_layers_set = new Set(this.active_layers);
+
+		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
+
+		const paths = needed_layers.map((element) => {return this.layers_json[element]["path from assets"]});
+		const colors = Array(needed_layers.length).fill("#f7c286ff");
+
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
 
 		this._add_icon_set(
 			this.current_building_key,
-			current_building_json.attributes["space_id"],
-			[],
-			[],
-			[],
-			position);
+			"",
+			paths,
+			needed_layers,
+			colors,
+			position);	
 
 		this._remove_storey_icon_sets();
 
-		this.current_storey_keys = undefined;
+		this.current_storey_room_keys = undefined;
 
 	}
 
@@ -203,7 +220,7 @@ export class LayerManager {
 	// or when switching to campus view
 	_remove_storey_icon_sets() {
 
-		this.current_storey_keys.forEach((current_key) => {
+		this.current_storey_room_keys.forEach((current_key) => {
 
 			if (current_key in this.map.iconsSceneManager.iconSets) {
 
@@ -218,38 +235,74 @@ export class LayerManager {
 	// Used when changing from one storey to another
 	_add_storey_icon_sets() {
 
-		this.current_storey_keys.forEach((current_key) => {
+		this.current_storey_room_keys.forEach((current_key) => {
 
 			const current_room_json = cityjson.CityObjects[current_key];
 
-			const current_room_code = current_room_json.attributes["Usage Code"];
+			const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
 
-			if (this.active_layers.includes(current_room_code)) {
-
-				const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
-
-				this._add_icon_set(
-					current_key,
-					"",
-					[this.layers_json[current_room_code]["path from assets:"]],
-					[current_room_code],
-					["#f7c286ff"],
-					position);	
-
+			if (current_room_parent_unit_key_array.length == 0) {
+				return;
 			}
+
+			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
+
+				return cityjson.CityObjects[element].attributes.code;
+
+			});
+
+			const active_parent_unit_codes = parent_unit_codes.filter((element) => {
+
+				return this.active_layers.includes(element);
+
+			});
+
+			if (active_parent_unit_codes.length == 0) {
+				return;
+			}
+
+			const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+
+			let paths = [];
+			let keys = [];
+			let colors = [];
+
+			active_parent_unit_codes.forEach((code) => {
+
+				paths.push(unfiltered_layers_json[code]["path from assets"]);
+				keys.push(code);
+				colors.push("#f7c286ff");
+
+			})
+
+			this._add_icon_set(
+				current_key,
+				"",
+				paths,
+				keys,
+				colors,
+				position);
 
 		});
 		 
 	}
 
 	// Used when removing a thematic layer
-	_remove_icon(layer_code) {
+	_remove_icon(code) {
 
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.map.iconsSceneManager.iconSets)) {
 
-			if (layer_code in icon_set_object.svgIcons) {
+			if (code in icon_set_object.svgIcons) {
 
-	            this.map.iconsSceneManager.removeIconSet(icon_set_key)
+				if (Object.keys(icon_set_object.svgIcons).length > 1) {
+
+					icon_set_object.svgIcons.removeSvgIcon(code);
+
+				} else {
+
+					this.map.iconsSceneManager.removeIconSet(icon_set_key)
+
+				}
 
         	}
 
@@ -258,46 +311,95 @@ export class LayerManager {
 	}
 
 	// Used when adding a thematic layer
-	_add_icon(layer_code) {
+	_add_icon(code) {
 
-		this._add_icon_buildings();
+		this._add_icon_buildings(code);
 
 		if (this.building_view_active) {
 
-			this._add_icon_rooms(layer_code);
+			this._add_icon_rooms(code);
 
 		}
 
 	}
 
-	_add_icon_buildings(layer_code) {
+	_add_icon_buildings(code) {
 
+		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
 
+			if (this.building_view_active && building_key == this.current_building_key) {
+				continue;
+			}
+
+			if (this.campus_buildings_codes[building_key].has(code)) {
+
+				if (this.map.iconsSceneManager.iconSets[building_key]) {
+
+					const path = [this.layers_json[code]["path from assets"]];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(building_key, code, path, color);
+
+				} else {
+
+					const position = this._convert_cityjson_position(building_json.attributes.icon_position);
+
+					this._add_icon_set(
+						building_key,
+						"",
+						[this.layers_json[code]["path from assets"]],
+						[code],
+						["#f7c286ff"],
+						position);	
+
+				}
+
+			}
+
+		}
 
 	}
 
-	_add_icon_rooms(layer_code) {
+	_add_icon_rooms(code) {
 
-		this.current_storey_keys.forEach((current_key) => {
+		this.current_storey_room_keys.forEach((current_key) => {
 
 			const current_room_json = cityjson.CityObjects[current_key];
 
-			if (current_room_json.attributes["Usage Code"] == layer_code) {
+			const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
 
-				// if (current_key in this.map.iconsSceneManager.iconSets) {
-				// 	console.log(current_key, " already had an icon, somehow");
-				// 	continue;
-				// }
+			if (current_room_parent_unit_key_array.length == 0) {
+				return;
+			}
 
-				const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
 
-				this._add_icon_set(
-					current_key,
-					"",
-					[this.layers_json[layer_code]["path from assets:"]],
-					[layer_code],
-					["#f7c286ff"],
-					position);	
+				return cityjson.CityObjects[element].attributes.code;
+
+			});
+
+			if (parent_unit_codes.includes(code)) {
+
+				if (this.map.iconsSceneManager.iconSets[current_key]) {
+
+					const path = [this.layers_json[code]["path from assets"]];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(current_key, code, path, color);
+
+				} else {
+
+					const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+
+					this._add_icon_set(
+						current_key,
+						"",
+						[this.layers_json[code]["path from assets"]],
+						[code],
+						["#f7c286ff"],
+						position);	
+
+				}
 
 			}
 
@@ -305,23 +407,6 @@ export class LayerManager {
 
 	}
 
-	_update_active_layers(layer_code) {
-
-		const index = this.active_layers.indexOf(layer_code);
-
-		if (index == -1) {
-
-			this.active_layers.push(layer_code);
-
-			this._add_icon(layer_code);
-
-		} else {
-			this.active_layers.splice(index, 1);
-
-			this._remove_icon(layer_code);
-		}
-
-	}
 
 	_convert_cityjson_position(position_object) {
 
@@ -334,15 +419,19 @@ export class LayerManager {
 
 	}
 
-	// this class needs to track the global status of:
-	// 1. track building view versus 3d view - handle the visibility of indoor vs label icons 
-	// 		function to transition between both 
-	// 2. track status of each thematic layer
-	//		function to toggle visibility of each theme
-	// 3. incorporate the already existing functions below
-	//		load codelist
-	//		populate layer dropdown
+	async _add_icon_svg(icon_set_key, icon_key, icon_path, icon_color) {
 
+		const svg = await Promise.all(
+            icon_path.map((p) => this.map.svgLoader.getSvg(p))
+        );
+
+        console.log(svg[0]);
+
+        const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
+
+        this.map.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
+
+	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
 
@@ -366,6 +455,24 @@ export class LayerManager {
 
         this.map.iconsSceneManager.addIconSet(icon_set);
         
+	}
+
+	_update_active_layers(code) {
+
+		const index = this.active_layers.indexOf(code);
+
+		if (index == -1) {
+
+			this.active_layers.push(code);
+
+			this._add_icon(code);
+
+		} else {
+			this.active_layers.splice(index, 1);
+
+			this._remove_icon(code);
+		}
+
 	}
 
 	_populate_layer_buttons(path) {
