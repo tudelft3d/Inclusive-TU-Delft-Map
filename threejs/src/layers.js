@@ -1,4 +1,3 @@
-import { Map } from "./app";
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import unfiltered_layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
@@ -25,12 +24,13 @@ MENTION:
 
 */
 
-
 export class LayerManager {
 
-	constructor(map) {
+	constructor(scene, iconsSceneManager, svgLoader) {
 
-		this.map = map;
+		this.scene = scene;
+		this.iconsSceneManager = iconsSceneManager;
+		this.svgLoader = svgLoader;
 
 		this.layers_json = {};
 
@@ -46,15 +46,12 @@ export class LayerManager {
 		// Or otherwise pass as argument
 		this.active_layers = [];
 
-		this._populate_layer_buttons();
 
-		
+		this._populate_layer_buttons();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
 		this.campus_buildings_codes = this._isolate_building_room_codes();
-
-		console.log(this.campus_buildings_codes);
 
 		this.current_building_key;
 
@@ -138,7 +135,7 @@ export class LayerManager {
 
 		this.current_building_key = building_key;
 
-		this.map.iconsSceneManager.removeIconSet(building_key);
+		this.iconsSceneManager.removeIconSet(building_key);
 
 		this.enable_storey_icons(storey_room_keys);
 
@@ -202,9 +199,13 @@ export class LayerManager {
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
 
+		if (this.iconsSceneManager.iconSets[this.current_building_key]) {
+			this.iconsSceneManager.removeIconSet(this.current_building_key);
+		}
+
 		this._add_icon_set(
 			this.current_building_key,
-			"",
+			current_building_json.attributes["space_id"],
 			paths,
 			needed_layers,
 			colors,
@@ -222,9 +223,9 @@ export class LayerManager {
 
 		this.current_storey_room_keys.forEach((current_key) => {
 
-			if (current_key in this.map.iconsSceneManager.iconSets) {
+			if (current_key in this.iconsSceneManager.iconSets) {
 
-				this.map.iconsSceneManager.removeIconSet(current_key);
+				this.iconsSceneManager.removeIconSet(current_key);
 
 			}
 
@@ -290,7 +291,7 @@ export class LayerManager {
 	// Used when removing a thematic layer
 	_remove_icon(code) {
 
-		for (const [icon_set_key, icon_set_object] of Object.entries(this.map.iconsSceneManager.iconSets)) {
+		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
 
 			if (code in icon_set_object.svgIcons) {
 
@@ -300,7 +301,7 @@ export class LayerManager {
 
 				} else {
 
-					this.map.iconsSceneManager.removeIconSet(icon_set_key)
+					this.iconsSceneManager.removeIconSet(icon_set_key)
 
 				}
 
@@ -333,7 +334,7 @@ export class LayerManager {
 
 			if (this.campus_buildings_codes[building_key].has(code)) {
 
-				if (this.map.iconsSceneManager.iconSets[building_key]) {
+				if (this.iconsSceneManager.iconSets[building_key]) {
 
 					const path = [this.layers_json[code]["path from assets"]];
 					const color = ["#f7c286ff"];
@@ -380,7 +381,7 @@ export class LayerManager {
 
 			if (parent_unit_codes.includes(code)) {
 
-				if (this.map.iconsSceneManager.iconSets[current_key]) {
+				if (this.iconsSceneManager.iconSets[current_key]) {
 
 					const path = [this.layers_json[code]["path from assets"]];
 					const color = ["#f7c286ff"];
@@ -422,21 +423,49 @@ export class LayerManager {
 	async _add_icon_svg(icon_set_key, icon_key, icon_path, icon_color) {
 
 		const svg = await Promise.all(
-            icon_path.map((p) => this.map.svgLoader.getSvg(p))
+            icon_path.map((p) => this.svgLoader.getSvg(p))
         );
 
         console.log(svg[0]);
 
         const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
 
-        this.map.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
+        this.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
+
+	}
+
+	_generate_icon_onclick(object_key) {
+
+		const object_json = cityjson.CityObjects[object_key];
+
+		let object_threejs_name;
+
+		if (object_json.type == "Building") {
+
+			object_threejs_name = object_key + "-lod_2";
+
+		} else if (object_json.type == "BuildingRoom") {
+
+			object_threejs_name = object_key + "-lod_0";
+
+		} else {
+
+			console.error("UNRECOGNIZED OBJECT type:", object_key);
+
+		}
+
+		const onClick = (e) => {
+            this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+        };
+
+        return onClick;
 
 	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
 
 		const svgs = await Promise.all(
-            paths.map((p) => this.map.svgLoader.getSvg(p))
+            paths.map((p) => this.svgLoader.getSvg(p))
         );
 
         const icons = [];
@@ -451,9 +480,11 @@ export class LayerManager {
 
         const text_icon = new TextIcon(icon_set_text);
 
-        const icon_set = new IconSet(icon_set_key, icons, text_icon, position);
+        const onClick = this._generate_icon_onclick(icon_set_key);
 
-        this.map.iconsSceneManager.addIconSet(icon_set);
+        const icon_set = new IconSet(icon_set_key, icons, text_icon, position, onClick);
+
+        this.iconsSceneManager.addIconSet(icon_set);
         
 	}
 

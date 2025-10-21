@@ -1,0 +1,145 @@
+#basemap-btn,
+#layers-btn{
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #027dab;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+
+#top-right-sidebar-controls {
+  position: fixed;
+  top: calc(var(--height, 64px) + 14px);
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 30;
+}
+
+/* Keep the container positioning for each control so dropdowns can be absolute inside them */
+#basemap-container,
+#layers-container {
+  position: relative;
+  z-index: 31;
+}
+
+/* Drop-downs open to the left of the button and are vertically centered with the button */
+#basemap-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;               /* center vertically relative to the button */
+  right: 85%;            /* place left of the control */
+  transform: translateY(-20%);
+  margin-right: 12px;     /* gap between button and dropdown */
+  background: #f1f1f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  padding: 8px 0px;
+  border-radius: 5px;
+  min-width: 200px;
+  z-index: 999;
+  box-sizing: border-box;
+}
+
+#basemap-btn:hover,
+#layers-btn:hover {
+  background: #026e95;
+  transform: translateY(-1px);
+}
+
+#layers-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;               /* center vertically relative to the button */
+  right: 85%;            /* place left of the control */
+  transform: translateY(-19%);
+  margin-right: 12px;     /* gap between button and dropdown */
+  background: #f1f1f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  padding: 8px 0px;
+  border-radius: 5px;
+  min-width: 200px;
+  max-height: 300px;
+  z-index: 999;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Link styles inside the dropdowns */
+#basemap-dropdown a,
+#layers-dropdown a {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;   
+  text-decoration: none;
+  color: black;
+  border-radius: 2px;
+}
+
+#basemap-dropdown a:hover,
+#layers-dropdown a:hover {
+  background: #027eab0e;
+}
+
+/* Mobile adjustments for narrow screens */
+@media (max-width: 620px) {
+  /* smaller buttons */
+  #basemap-btn,
+  #layers-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  /* smaller icons inside buttons */
+  #layers-btn img,
+  #layers-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+  }
+
+  #basemap-btn img,
+  #basemap-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    object-fit: contain;
+  }
+
+
+  #top-right-sidebar-controls {
+    right: 10px;
+    top: calc(var(--height, 64px) + 10px);
+    gap: 6px;
+  }
+
+  #basemap-dropdown {
+    font-size: 14px;
+    min-width: 170px;
+    padding: 6px 0px;
+    top: 50%;
+    right: 100%;
+    transform: translateY(-10%);
+  }
+
+  #layers-dropdown {
+    font-size: 14px;
+    min-width: 170px;
+    padding: 6px 0px;
+    top: 50%;
+    right: 100%;
+    transform: translateY(-33%);
+  }
+}

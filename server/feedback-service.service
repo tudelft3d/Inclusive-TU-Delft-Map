@@ -1,0 +1,20 @@
+[Unit]
+Description=Feedback API (Node.js)
+After=network.target
+
+[Service]
+# Run as a non‑root user that owns the code
+User=abry
+Group=abry
+# Adjust these to match where you keep the code
+WorkingDirectory=/home/abry/Inclusive-TU-Delft-Map/threejs/backend
+Environment=NODE_ENV=production
+# If you want a custom port, add: Environment=PORT=3000
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+# Optional: limit resources
+# MemoryLimit=150M
+# CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
