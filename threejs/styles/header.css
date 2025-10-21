@@ -11,6 +11,7 @@
   --header-max-width: 1500px; 
   --gap: 18px;
   --height: 64px;
+  --edge-offset: 28px;
   --font-sans: 'Open Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
@@ -71,13 +72,28 @@ body.menu-open {
 
 /* Branding - logo */
 .brand {
+  position: absolute;
+  left: var(--edge-offset);
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 12px;
   text-decoration: none;
   color: inherit;
   flex: 0 0 auto;
-  transform: translateY(-10%);
+  transform-origin: center;
+}
+
+.header-actions {
+  position: absolute;
+  right: var(--edge-offset);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
 }
 
 .brand img {
@@ -90,9 +106,15 @@ body.menu-open {
 
 /* Main navigation */
 .main-nav {
-  flex: 1 1 auto;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   justify-content: center;
+  max-width: calc(100vw - (var(--edge-offset) * 2) - 40px);
+  width: auto;
+  box-sizing: border-box;
 }
 
 .main-nav ul {
@@ -181,6 +203,16 @@ body.menu-open {
 
 /* mobile / small-screen header & panel */
 @media (max-width:620px) {
+  .brand {
+  position: static;
+  transform: translateY(-10%); /* restore previous visual nudge if wanted */
+  }
+
+  .header-actions {
+    position: static;
+    transform: none;
+  }
+
   .header-inner {
     position: relative;
     padding: 8px 12px;
@@ -226,11 +258,11 @@ body.menu-open {
     position: fixed;
     top: var(--height);
     right: 0;
+    left: auto;                   
     height: calc(100vh - var(--height));
-    width: min(69%);
+    width: min(69vw, 100%);       
     max-width: 100%;
-    transform: translateX(100%);
-    /* hidden off-screen to the right */
+    transform: translateX(100vw);    
     transition: transform 280ms ease;
     padding: 3px 3px;
     background: var(--bg);
@@ -239,11 +271,10 @@ body.menu-open {
     z-index: 1250;
     overflow-y: auto;
     box-sizing: border-box;
-    
   }
 
   .main-nav.open {
-    transform: translateX(0);
+    transform: translateX(0);       
   }
 
   /* internal layout: vertical list, right-aligned */
