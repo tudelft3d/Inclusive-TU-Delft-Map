@@ -251,11 +251,12 @@ class Bag2Cityjson(CityjsonLoader):
 
             # Add the missing hierarchy in the codes
             main_container_id = BuildingUnitContainer.unit_code_to_id(
-                code=BuildingUnitContainer.main_parent, prefix=prefix
+                code=BuildingUnitContainer.main_parent_code, prefix=prefix
             )
             if main_container_id not in all_objects_cj:
                 main_container = BuildingUnitContainer(
-                    object_id=main_container_id, unit_code=""
+                    object_id=main_container_id,
+                    unit_code=BuildingUnitContainer.main_parent_code,
                 )
                 bdg_obj_id = Building.space_number_to_id(number=parent_space_id)
                 bdg_obj = all_objects_cj[bdg_obj_id]

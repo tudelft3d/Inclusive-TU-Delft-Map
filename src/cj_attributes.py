@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Generic, Type, TypeVar, cast
 
@@ -15,6 +16,8 @@ SKIP_COLUMN = "Skip [bool]"
 PARENT_ID_COLUMN = "Parent Number [str]"
 CODE_COLUMN = "Type Code [str]"
 UNIT_SPACES_COLUMN = "Numbers [list,str]"
+STOREY_LEVEL = "Level [float]"
+
 ARGUMENT_TO_NAME = {
     "object_id": "object_id",
     "icon_position": "icon_position",
@@ -34,6 +37,7 @@ COL_TO_NAME = {
     PARENT_ID_COLUMN: "parent_object_id",
     CODE_COLUMN: "code",
     UNIT_SPACES_COLUMN: "unit_spaces",
+    STOREY_LEVEL: "storey_level",
 }
 
 
@@ -103,7 +107,7 @@ class BdgSubAttr(Attr):
 
 class BdgPartAttr(Attr):
 
-    specific_columns = (ID_COLUMN, ICON_POSITION_COLUMN)
+    specific_columns = (ID_COLUMN,)
     id_index = 0
     id_builder_index = None
 
@@ -111,16 +115,13 @@ class BdgPartAttr(Attr):
         self,
         attributes: dict[str, Any],
         object_id: str,
-        icon_position: IconPosition | list[float] | None,
     ) -> None:
-        super().__init__(
-            attributes=attributes, object_id=object_id, icon_position=icon_position
-        )
+        super().__init__(attributes=attributes, object_id=object_id, icon_position=None)
 
 
 class BdgStoreyAttr(Attr):
 
-    specific_columns = (ID_COLUMN, ICON_POSITION_COLUMN)
+    specific_columns = (ID_COLUMN, STOREY_LEVEL)
     id_index = 0
     id_builder_index = None
 
@@ -128,11 +129,10 @@ class BdgStoreyAttr(Attr):
         self,
         attributes: dict[str, Any],
         object_id: str,
-        icon_position: IconPosition | list[float] | None,
+        storey_level: float,
     ) -> None:
-        super().__init__(
-            attributes=attributes, object_id=object_id, icon_position=icon_position
-        )
+        super().__init__(attributes=attributes, object_id=object_id, icon_position=None)
+        self.storey_level = storey_level
 
 
 class BdgRoomAttr(Attr):
@@ -255,6 +255,9 @@ class AttrReader(Generic[A], ABC):
         self._id_builder_counts[value] += 1
         return object_id
 
+    def get_id_to_attr(self):
+        return deepcopy(self._id_to_attr)
+
     def get_attributes_by_object_id(self, object_id: str):
         try:
             return self._id_to_attr[object_id]
@@ -284,9 +287,17 @@ class BdgSubAttrReader(AttrReader[BdgSubAttr]):
         super().__init__(csv_path)
 
 
-class BdgUnitAttrReader(AttrReader[BdgUnitAttr]):
+class BdgPartAttrReader(AttrReader[BdgPartAttr]):
 
-    attr_class = BdgUnitAttr
+    attr_class = BdgPartAttr
+
+    def __init__(self, csv_path: Path) -> None:
+        super().__init__(csv_path)
+
+
+class BdgStoreyAttrReader(AttrReader[BdgStoreyAttr]):
+
+    attr_class = BdgStoreyAttr
 
     def __init__(self, csv_path: Path) -> None:
         super().__init__(csv_path)
@@ -295,6 +306,14 @@ class BdgUnitAttrReader(AttrReader[BdgUnitAttr]):
 class BdgRoomAttrReader(AttrReader[BdgRoomAttr]):
 
     attr_class = BdgRoomAttr
+
+    def __init__(self, csv_path: Path) -> None:
+        super().__init__(csv_path)
+
+
+class BdgUnitAttrReader(AttrReader[BdgUnitAttr]):
+
+    attr_class = BdgUnitAttr
 
     def __init__(self, csv_path: Path) -> None:
         super().__init__(csv_path)

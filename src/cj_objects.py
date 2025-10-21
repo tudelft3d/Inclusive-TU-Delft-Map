@@ -466,7 +466,7 @@ class BuildingRoom(CityJSONSpace):
 class BuildingUnitContainer(CityJSONObject):
 
     type_name = "CityObjectGroup"
-    main_parent = "BuildingUnits"
+    main_parent_code = ""
 
     def __init__(
         self,
@@ -489,7 +489,7 @@ class BuildingUnitContainer(CityJSONObject):
     def unit_code_to_id(cls, code: str, prefix: str) -> str:
         code = code.replace(".", "_").replace("-", "_")
         prefix = prefix.replace("-", "_")
-        return f"{prefix}-{cls.type_name}-{code}"
+        return f"{prefix}-{cls.type_name}-BuildingUnits_{code}"
 
     def apply_attr(self, attr: BdgAttr, overwrite: bool) -> None:
         raise NotImplementedError()
@@ -536,7 +536,7 @@ class BuildingUnit(BuildingUnitContainer):
     def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
         code_instance = cls.unit_code_to_code_instance(code=code, number=number)
         prefix = prefix.replace("-", "_")
-        return f"{prefix}-{cls.type_name}-{code_instance}"
+        return f"{prefix}-{cls.type_name}-BuildingUnits_{code_instance}"
 
     def apply_attr(self, attr: BdgUnitAttr, overwrite: bool) -> None:
         self.add_attributes(new_attributes=attr.attributes)

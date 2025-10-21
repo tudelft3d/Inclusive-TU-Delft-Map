@@ -6,15 +6,25 @@ from typing import Annotated, List, Mapping, Optional
 import typer
 
 from bag_to_cj import Bag2Cityjson
-from cj_attributes import BdgAttr, BdgRoomAttr
-from cj_objects import Building, BuildingRoom, CityJSONSpace
-from cj_to_gltf import Cityjson2Gltf
-from gltf_to_cj import (
-    full_building_from_gltf,
-    load_bdg_attr_from_csv,
-    load_bdg_room_attr_from_csv,
-    load_units_from_csv,
+from cj_attributes import (
+    BdgAttr,
+    BdgAttrReader,
+    BdgPartAttr,
+    BdgPartAttrReader,
+    BdgRoomAttr,
+    BdgRoomAttrReader,
+    BdgStoreyAttr,
+    BdgStoreyAttrReader,
 )
+from cj_objects import (
+    Building,
+    BuildingPart,
+    BuildingRoom,
+    BuildingStorey,
+    CityJSONSpace,
+)
+from cj_to_gltf import Cityjson2Gltf
+from gltf_to_cj import full_building_from_gltf, load_units_from_csv
 
 app = typer.Typer()
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -155,33 +165,30 @@ def load_custom_building(
         ),
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
-    units_path: Annotated[
-        Optional[Path],
-        typer.Option(
-            "-u",
-            "--units",
-            help="Paths to building units in CSV format.",
-            exists=True,
-        ),
-    ],
-    # units_code_column: Annotated[
-    #     str,
-    #     typer.Option(
-    #         help="Column storing the code associated to each unit.",
-    #     ),
-    # ],
-    # units_spaces_column: Annotated[
-    #     str,
-    #     typer.Option(
-    #         help="Column storing the spaces associated to each unit.",
-    #     ),
-    # ],
     buidlings_path: Annotated[
         Optional[Path],
         typer.Option(
             "-b",
             "--buildings",
             help="Paths to buildings attributes in CSV format.",
+            exists=True,
+        ),
+    ],
+    parts_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-p",
+            "--parts",
+            help="Paths to parts attributes in CSV format.",
+            exists=True,
+        ),
+    ],
+    storeys_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-s",
+            "--storeys",
+            help="Paths to storeys attributes in CSV format.",
             exists=True,
         ),
     ],
@@ -194,14 +201,15 @@ def load_custom_building(
             exists=True,
         ),
     ],
-    # attributes_id_cols: Annotated[
-    #     List[str],
-    #     typer.Option(
-    #         "-c",
-    #         "--columns",
-    #         help="Column storing the identifier for each attribute path.",
-    #     ),
-    # ] = [],
+    units_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-u",
+            "--units",
+            help="Paths to building units in CSV format.",
+            exists=True,
+        ),
+    ],
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -233,11 +241,25 @@ def load_custom_building(
 
         logging.info("Load the CSV attributes...")
 
-        all_attributes: list[Mapping[str, BdgAttr | BdgRoomAttr]] = []
+        all_attributes: list[
+            Mapping[str, BdgAttr | BdgPartAttr | BdgStoreyAttr | BdgRoomAttr]
+        ] = []
         if buidlings_path is not None:
-            all_attributes.append(load_bdg_attr_from_csv(csv_path=buidlings_path))
+            all_attributes.append(
+                BdgAttrReader(csv_path=buidlings_path).get_id_to_attr()
+            )
+        if parts_path is not None:
+            all_attributes.append(
+                BdgPartAttrReader(csv_path=parts_path).get_id_to_attr()
+            )
+        if storeys_path is not None:
+            all_attributes.append(
+                BdgStoreyAttrReader(csv_path=storeys_path).get_id_to_attr()
+            )
         if rooms_path is not None:
-            all_attributes.append(load_bdg_room_attr_from_csv(csv_path=rooms_path))
+            all_attributes.append(
+                BdgRoomAttrReader(csv_path=rooms_path).get_id_to_attr()
+            )
 
         logging.info("Add the attributes to the spaces...")
 
@@ -249,6 +271,14 @@ def load_custom_building(
                         continue
                     attr = attributes[city_object.space_id]
                     if isinstance(city_object, Building) and isinstance(attr, BdgAttr):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingPart) and isinstance(
+                        attr, BdgPartAttr
+                    ):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingStorey) and isinstance(
+                        attr, BdgStoreyAttr
+                    ):
                         city_object.apply_attr(attr, overwrite=True)
                     if isinstance(city_object, BuildingRoom) and isinstance(
                         attr, BdgRoomAttr

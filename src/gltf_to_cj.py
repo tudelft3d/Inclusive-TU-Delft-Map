@@ -68,24 +68,16 @@ def _geom_and_name_from_scene_id(
 def _unit_code_to_parent(code: str) -> str:
     if len(code) == 0:
         raise ValueError(f"Code '{code}' is not a correct value.")
-    if code == BuildingUnitContainer.main_parent:
-        raise ValueError(f"BuildingUnitContainer.main_parent does not have a parent.")
+    if code == BuildingUnitContainer.main_parent_code:
+        raise ValueError(
+            f"BuildingUnitContainer.main_parent_code does not have a parent."
+        )
     elif len(code) == 1:
-        return BuildingUnitContainer.main_parent
+        return BuildingUnitContainer.main_parent_code
     elif len(code) == 2:
         return code[:-1]
     else:
         return code[:-2]
-
-
-def load_bdg_attr_from_csv(csv_path: Path) -> dict[str, BdgAttr]:
-    bdgs_attributes_all = BdgAttrReader(csv_path=csv_path)
-    return bdgs_attributes_all._id_to_attr
-
-
-def load_bdg_room_attr_from_csv(csv_path: Path) -> dict[str, BdgRoomAttr]:
-    bdg_rooms_attributes_all = BdgRoomAttrReader(csv_path=csv_path)
-    return bdg_rooms_attributes_all._id_to_attr
 
 
 def load_units_from_csv(
@@ -135,16 +127,17 @@ def load_units_from_csv(
 
     # Add the missing hierarchy in the codes
     main_container_id = BuildingUnitContainer.unit_code_to_id(
-        code=BuildingUnitContainer.main_parent, prefix=prefix
+        code=BuildingUnitContainer.main_parent_code, prefix=prefix
     )
     all_unit_containers: dict[str, BuildingUnitContainer] = {
-        BuildingUnitContainer.main_parent: BuildingUnitContainer(
-            object_id=main_container_id, unit_code=""
+        BuildingUnitContainer.main_parent_code: BuildingUnitContainer(
+            object_id=main_container_id,
+            unit_code=BuildingUnitContainer.main_parent_code,
         )
     }
     current_codes = list(all_units.keys())
     for code in current_codes:
-        while code != BuildingUnitContainer.main_parent:
+        while code != BuildingUnitContainer.main_parent_code:
             if not code in all_units.keys():
                 all_units[code] = []
             if not code in all_unit_containers.keys():
@@ -163,7 +156,7 @@ def load_units_from_csv(
 
     # Apply the parent-child relationships of unit containers
     for code, unit_container in all_unit_containers.items():
-        if code == BuildingUnitContainer.main_parent:
+        if code == BuildingUnitContainer.main_parent_code:
             CityJSONObject.add_parent_child(
                 parent=cj_file.city_objects[root_pos],
                 child=unit_container,
