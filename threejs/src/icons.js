@@ -18,7 +18,7 @@ export class IconSet {
     constructor(key, svgIcons, textIcon, worldPos, onClick) {
         this.key = key;
         this.basePos = worldPos;
-        this.onClick = onClick;
+        // this.onClick = onClick;
 
         this.svgIcons = {};
         svgIcons.map((svgIcon) => {
@@ -53,7 +53,6 @@ export class IconSet {
 
         this.wrapperObject = new CSS2DObject(this.wrapper);
         this.wrapper.addEventListener("click", (e) => {
-            console.log("HERE");
             onClick(e);
         });
     }

@@ -1,5 +1,4 @@
 import { Map } from "./app";
-import { outline_code } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon();
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -131,8 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Layers dropdown wiring
-    const layersBtn = document.getElementById('layer-btn');
+    const layersBtn = document.getElementById('layers-btn');
     const layersDropdown = document.getElementById('layers-dropdown');
+
     if (layersBtn && layersDropdown) {
         layersBtn.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -145,18 +144,19 @@ document.addEventListener('DOMContentLoaded', () => {
             layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
         });
 
-        layersDropdown.querySelectorAll('a').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
-                layersDropdown.style.display = 'none';
-            });
-        });
+        // layersDropdown.querySelectorAll('a').forEach(item => {
+        //     item.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
+        //         layersDropdown.style.display = 'none';
+        //     });
+        // });
 
         document.addEventListener('click', () => {
             layersDropdown.style.display = 'none';
         });
     }
+
 
     // Accessibility dropdown wiring
     // const accessibilityBtn = document.getElementById('accessibility-btn');

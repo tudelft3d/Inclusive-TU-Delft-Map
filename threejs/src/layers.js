@@ -1,45 +1,626 @@
-import { Map } from "./app";
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import { estimateBytesUsed } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { Scene } from "three";
-import { ObjectPicker } from "./objectPicker";
-import { OutlineManager } from "./outlines";
+import unfiltered_layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
+import Papa from 'papaparse';
 
-/**
- * 
- * @param {string} code 
- * @param {Scene} scene 
- * @param {ObjectPicker} picker 
- * @param {OutlineManager} outlineManager 
- */
-export function outline_code(code, scene, picker, outlineManager) {
+import {
+    IconSet,
+    IconsSceneManager,
+    TextIcon,
+    SvgIcon,
+    SvgLoader,
+} from "./icons";
 
-	var object_attribute_list = [];
+/*
+NOTES:
 
-	for (const [key, value] of Object.entries(cityjson["CityObjects"])) {
+TODO:
+	- refactor code to reduce duplication
+	- refactor code to make buildings and rooms loop in the same way
+	- somehow determine a color for each icon, maybe save in json file? integrate with colorblind mode?
+ 
+MENTION:
+	- process from csv list to json needs to improve
 
-		object_attribute_list.push(value);
-	}
+*/
 
-	let keys = [];
-	let object_names = [];
+export class LayerManager {
 
-	object_attribute_list.forEach((current_object) => {
-		if (current_object.attributes["Usage Code"] == code) {
-			keys.push(current_object.attributes.key);
-			if (current_object.type == "Building") {
-				object_names.push(scene.getObjectByName(current_object.attributes.key + '-lod_2'));
-			}
-			else {
-				object_names.push(scene.getObjectByName(current_object.attributes.key + '-lod_0'));
+	constructor(scene, iconsSceneManager, svgLoader) {
+
+		this.scene = scene;
+		this.iconsSceneManager = iconsSceneManager;
+		this.svgLoader = svgLoader;
+
+		this.layers_json = {};
+
+		for (const [key, value] of Object.entries(unfiltered_layers_json)) {
+
+			if (value["Include"] == "Y") {
+				this.layers_json[key] = value;
 			}
 
 		}
 
-	});
-	console.log(object_names);
-	outlineManager.setOutline(keys, "lod_0", "single");
-	picker.pickMesh(object_names);
+		// Maybe have these taken from codelist?
+		// Or otherwise pass as argument
+		this.active_layers = [];
+
+
+		this._populate_layer_buttons();
+
+		this.campus_buildings_json = this._isolate_building_json();
+
+		this.campus_buildings_codes = this._isolate_building_room_codes();
+
+		this.current_building_key;
+
+		this.current_storey_room_keys;
+
+		this.building_view_active = false;
+
+		this._create_initial_campus_icons();
+
+	}
+
+	_isolate_building_json() {
+
+		const campus_buildings_json = {};
+
+		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
+
+			if (building_json.type == "Building") {
+				campus_buildings_json[building_key] = building_json;
+			}
+
+		}
+
+		return campus_buildings_json;
+	}
+
+	_isolate_building_room_codes() {
+
+		const campus_building_codes = {};
+
+		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
+
+			if (!building_json.children) {
+
+				campus_building_codes[building_key] = new Set();
+
+				continue;
+			}
+
+			const building_units_key = building_json.children.find((key) => key.includes("Unit"));
+
+			let found_unit_codes = this._recursive_unit_code_searcher(building_units_key);
+
+			campus_building_codes[building_key] = found_unit_codes;
+
+		}
+
+		return campus_building_codes;
+
+	}
+
+	_recursive_unit_code_searcher(key) {
+
+		const current_json_object = cityjson.CityObjects[key];
+
+		let codes = new Set();
+
+		if (current_json_object.attributes["code"]) {
+
+			codes.add(current_json_object.attributes["code"]);
+
+		}
+
+		if (current_json_object["children"]) {
+
+			current_json_object["children"].forEach((child_key) => {
+
+				codes = codes.union(this._recursive_unit_code_searcher(child_key));
+
+			});
+
+		}
+
+		return codes;
+
+	}
+
+	switch_to_building_view(building_key, storey_room_keys) {
+
+		this.building_view_active = true;
+
+		this.current_building_key = building_key;
+
+		this.iconsSceneManager.removeIconSet(building_key);
+
+		this.enable_storey_icons(storey_room_keys);
+
+	}
+
+
+	// Called from the buildingView function whenever the storey is changed.
+	enable_storey_icons(storey_room_keys) {
+
+		if (this.current_storey_room_keys) {
+
+			this._remove_storey_icon_sets();
+
+		}
+
+		this.current_storey_room_keys = storey_room_keys;
+
+		this._add_storey_icon_sets();
+
+	}
+
+	_create_initial_campus_icons() {
+
+		const active_layers_set = new Set(this.active_layers);
+
+		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
+
+			if(!building_json.attributes.icon_position) {
+				continue;
+			}
+
+			if(building_json.attributes.space_id.includes("NL")) {
+				continue;
+			}
+
+			const position = this._convert_cityjson_position(building_json.attributes.icon_position);
+
+			this._add_icon_set(
+				building_key,
+				building_json.attributes["space_id"],
+				[],
+				[],
+				[],
+				position);	
+
+		}
+
+	}
+
+	// Called from buildingView whenever switching back to the campus view
+	switch_to_campus_view() {
+
+		const current_building_json = cityjson.CityObjects[this.current_building_key];
+
+		const active_layers_set = new Set(this.active_layers);
+
+		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
+
+		const paths = needed_layers.map((element) => {return this.layers_json[element]["path from assets"]});
+		const colors = Array(needed_layers.length).fill("#f7c286ff");
+
+		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
+
+		if (this.iconsSceneManager.iconSets[this.current_building_key]) {
+			this.iconsSceneManager.removeIconSet(this.current_building_key);
+		}
+
+		this._add_icon_set(
+			this.current_building_key,
+			current_building_json.attributes["space_id"],
+			paths,
+			needed_layers,
+			colors,
+			position);	
+
+		this._remove_storey_icon_sets();
+
+		this.current_storey_room_keys = undefined;
+
+	}
+
+	// Used when changing from one storey to another
+	// or when switching to campus view
+	_remove_storey_icon_sets() {
+
+		this.current_storey_room_keys.forEach((current_key) => {
+
+			if (current_key in this.iconsSceneManager.iconSets) {
+
+				this.iconsSceneManager.removeIconSet(current_key);
+
+			}
+
+		});
+
+	}
+
+	// Used when changing from one storey to another
+	_add_storey_icon_sets() {
+
+		this.current_storey_room_keys.forEach((current_key) => {
+
+			const current_room_json = cityjson.CityObjects[current_key];
+
+			const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
+
+			if (current_room_parent_unit_key_array.length == 0) {
+				return;
+			}
+
+			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
+
+				return cityjson.CityObjects[element].attributes.code;
+
+			});
+
+			const active_parent_unit_codes = parent_unit_codes.filter((element) => {
+
+				return this.active_layers.includes(element);
+
+			});
+
+			if (active_parent_unit_codes.length == 0) {
+				return;
+			}
+
+			const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+
+			let paths = [];
+			let keys = [];
+			let colors = [];
+
+			active_parent_unit_codes.forEach((code) => {
+
+				paths.push(unfiltered_layers_json[code]["path from assets"]);
+				keys.push(code);
+				colors.push("#f7c286ff");
+
+			})
+
+			this._add_icon_set(
+				current_key,
+				"",
+				paths,
+				keys,
+				colors,
+				position);
+
+		});
+		 
+	}
+
+	// Used when removing a thematic layer
+	_remove_icon(code) {
+
+		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
+
+			if (code in icon_set_object.svgIcons) {
+
+				if (Object.keys(icon_set_object.svgIcons).length > 1) {
+
+					icon_set_object.svgIcons.removeSvgIcon(code);
+
+				} else {
+
+					this.iconsSceneManager.removeIconSet(icon_set_key)
+
+				}
+
+        	}
+
+		}
+
+	}
+
+	// Used when adding a thematic layer
+	_add_icon(code) {
+
+		this._add_icon_buildings(code);
+
+		if (this.building_view_active) {
+
+			this._add_icon_rooms(code);
+
+		}
+
+	}
+
+	_add_icon_buildings(code) {
+
+		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
+
+			if (this.building_view_active && building_key == this.current_building_key) {
+				continue;
+			}
+
+			if (this.campus_buildings_codes[building_key].has(code)) {
+
+				if (this.iconsSceneManager.iconSets[building_key]) {
+
+					const path = [this.layers_json[code]["path from assets"]];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(building_key, code, path, color);
+
+				} else {
+
+					const position = this._convert_cityjson_position(building_json.attributes.icon_position);
+
+					this._add_icon_set(
+						building_key,
+						"",
+						[this.layers_json[code]["path from assets"]],
+						[code],
+						["#f7c286ff"],
+						position);	
+
+				}
+
+			}
+
+		}
+
+	}
+
+	_add_icon_rooms(code) {
+
+		this.current_storey_room_keys.forEach((current_key) => {
+
+			const current_room_json = cityjson.CityObjects[current_key];
+
+			const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
+
+			if (current_room_parent_unit_key_array.length == 0) {
+				return;
+			}
+
+			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
+
+				return cityjson.CityObjects[element].attributes.code;
+
+			});
+
+			if (parent_unit_codes.includes(code)) {
+
+				if (this.iconsSceneManager.iconSets[current_key]) {
+
+					const path = [this.layers_json[code]["path from assets"]];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(current_key, code, path, color);
+
+				} else {
+
+					const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+
+					this._add_icon_set(
+						current_key,
+						"",
+						[this.layers_json[code]["path from assets"]],
+						[code],
+						["#f7c286ff"],
+						position);	
+
+				}
+
+			}
+
+		});
+
+	}
+
+
+	_convert_cityjson_position(position_object) {
+
+		const position = new THREE.Vector3(
+			position_object[0],
+			position_object[2],
+			-position_object[1]);
+
+		return position;
+
+	}
+
+	async _add_icon_svg(icon_set_key, icon_key, icon_path, icon_color) {
+
+		const svg = await Promise.all(
+            icon_path.map((p) => this.svgLoader.getSvg(p))
+        );
+
+        console.log(svg[0]);
+
+        const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
+
+        this.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
+
+	}
+
+	_generate_icon_onclick(object_key) {
+
+		const object_json = cityjson.CityObjects[object_key];
+
+		let object_threejs_name;
+
+		if (object_json.type == "Building") {
+
+			object_threejs_name = object_key + "-lod_2";
+
+		} else if (object_json.type == "BuildingRoom") {
+
+			object_threejs_name = object_key + "-lod_0";
+
+		} else {
+
+			console.error("UNRECOGNIZED OBJECT type:", object_key);
+
+		}
+
+		const onClick = (e) => {
+            this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+        };
+
+        return onClick;
+
+	}
+
+	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
+
+		const svgs = await Promise.all(
+            paths.map((p) => this.svgLoader.getSvg(p))
+        );
+
+        const icons = [];
+
+        for (var i = 0; i < paths.length; i++) {
+            const svg = svgs[i];
+            const key = icon_keys[i];
+            const bgColor = bg_colors[i];
+            const icon = new SvgIcon(key, svg, { bgColor: bgColor });
+            icons.push(icon);
+        }
+
+        const text_icon = new TextIcon(icon_set_text);
+
+        const onClick = this._generate_icon_onclick(icon_set_key);
+
+        const icon_set = new IconSet(icon_set_key, icons, text_icon, position, onClick);
+
+        this.iconsSceneManager.addIconSet(icon_set);
+        
+	}
+
+	_update_active_layers(code) {
+
+		const index = this.active_layers.indexOf(code);
+
+		if (index == -1) {
+
+			this.active_layers.push(code);
+
+			this._add_icon(code);
+
+		} else {
+			this.active_layers.splice(index, 1);
+
+			this._remove_icon(code);
+		}
+
+	}
+
+	_populate_layer_buttons(path) {
+
+		var layers_dropdown = document.getElementById("layers-dropdown");
+		layers_dropdown.innerHTML = "";
+
+		for (const [layer_key, layer_attributes] of Object.entries(this.layers_json)) {
+
+			var a = document.createElement("a");
+
+			a.appendChild(document.createTextNode(layer_attributes["Name (EN) [str]"]));
+
+			a.addEventListener("click", (event) => {
+				
+				this._update_active_layers(layer_key);
+
+			});
+
+			a.href = "#";
+
+			layers_dropdown.appendChild(a);
+
+		}
+
+	}
+
+	_alter_thematic_codelist_json() {
+
+		let json_data = {};
+
+		this.layers_json.forEach((element) => {
+			json_data[element["Code [str]"]] = element;
+		})
+
+		console.log(JSON.stringify(json_data));
+	}
 
 }
+
+// export async function populate_layer_buttons(path) {
+
+
+// 	const all_layers_json = await load_codelist(path); // this needs to be the codelist file
+// 	const layers_json = all_layers_json.filter((element) => {
+// 		return element["Include"] == "Y";
+// 	});
+// 	var layers_dropdown = document.getElementById("layers-dropdown");
+// 	layers_dropdown.innerHTML = "";
+
+
+// 	for (let i = 0; i < layers_json.length; i++) {
+
+// 		var a = document.createElement("a");
+
+// 		a.appendChild(document.createTextNode(layers_json[i]["Name-EN"]));
+
+// 		a.addEventListener("click", (event) => {
+// 			// if building view: toggle icons of objects that are in the current floor
+// 			// remove 3d view icons for only the current building, and vice versa when leaving building view
+// 			// this is to keep the icons for other buildings there
+// 			// consider how to deal with external icons (above should solve it)
+// 			// if 3d view: toggle icons with the building ID labels, above the building
+
+
+// 			// hide or unhide layers (toggle function)
+// 			console.log(layers_json[i]);
+
+// 		});
+
+// 		a.href = "#";
+
+// 		layers_dropdown.appendChild(a);
+
+// 	}
+
+// }
+// export function load_codelist(path) {
+// 	return new Promise((resolve, reject) => {
+// 		Papa.parse(path, {
+// 			download: true,
+// 			header: true,
+// 			delimiter: ",",
+// 			skipEmptyLines: "greedy",
+// 			complete: (results) => resolve(results.data),
+// 			error: (err) => reject(err)
+// 		});
+// 	});
+// }
+
+// export async function outline_code(code, map) {
+
+// 	var object_attribute_list = [];
+
+// 	for (const [key, value] of Object.entries(cityjson["CityObjects"])) {
+
+// 		object_attribute_list.push(value);
+// 	}
+
+// 	let keys = [];
+// 	let object_names = [];
+
+// 	object_attribute_list.forEach((current_object) => {
+// 		if (current_object.attributes["Usage Code"] == code) {
+// 			keys.push(current_object.attributes.key);
+// 			if (current_object.type == "Building") {
+// 				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_2'));
+// 			}
+// 			else {
+// 				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_0'));
+// 			}
+
+// 		}
+
+// 	});
+// 	console.log(object_names);
+// 	map.setOutline(keys, "lod_0", "single");
+// 	map.picker.highlight(object_names);
+
+// }
