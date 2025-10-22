@@ -1,18 +1,30 @@
 import logging
 import subprocess
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Mapping, Optional
 
 import typer
 
 from bag_to_cj import Bag2Cityjson
-from cj_objects import CityJSONObject, CityJSONSpace
-from cj_to_gltf import Cityjson2Gltf
-from gltf_to_cj import (
-    full_building_from_gltf,
-    load_attributes_from_csv,
-    load_units_from_csv,
+from cj_attributes import (
+    BdgAttr,
+    BdgAttrReader,
+    BdgPartAttr,
+    BdgPartAttrReader,
+    BdgRoomAttr,
+    BdgRoomAttrReader,
+    BdgStoreyAttr,
+    BdgStoreyAttrReader,
 )
+from cj_objects import (
+    Building,
+    BuildingPart,
+    BuildingRoom,
+    BuildingStorey,
+    CityJSONSpace,
+)
+from cj_to_gltf import Cityjson2Gltf
+from gltf_to_cj import full_building_from_gltf, load_units_from_csv
 
 app = typer.Typer()
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -80,34 +92,34 @@ def load_bag(
             exists=True,
         ),
     ] = None,
-    bag_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--bag",
-            help="The CSV column that specifies which 3DBAG entities are part of the building/building subdivision.",
-        ),
-    ] = None,
-    id_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--id",
-            help="The CSV column that specifies the id to use for the exported building/building subdivision.",
-        ),
-    ] = None,
-    skip_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--skip",
-            help="The CSV column that specifies whether to skip this building/building subdivision. Useful for objects with custom geometry to avoid duplicates.",
-        ),
-    ] = None,
-    parent_column: Annotated[
-        Optional[str],
-        typer.Option(
-            "--parent",
-            help="The CSV column that specifies the parent of this building subdivision, referring to the id_column of the buildings attributes.",
-        ),
-    ] = None,
+    # bag_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--bag",
+    #         help="The CSV column that specifies which 3DBAG entities are part of the building/building subdivision.",
+    #     ),
+    # ] = None,
+    # id_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--id",
+    #         help="The CSV column that specifies the id to use for the exported building/building subdivision.",
+    #     ),
+    # ] = None,
+    # skip_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--skip",
+    #         help="The CSV column that specifies whether to skip this building/building subdivision. Useful for objects with custom geometry to avoid duplicates.",
+    #     ),
+    # ] = None,
+    # parent_column: Annotated[
+    #     Optional[str],
+    #     typer.Option(
+    #         "--parent",
+    #         help="The CSV column that specifies the parent of this building subdivision, referring to the id_column of the buildings attributes.",
+    #     ),
+    # ] = None,
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -132,10 +144,10 @@ def load_bag(
             cj_path=input_cj_path,
             bdgs_attr_path=bdgs_attr_path,
             bdgs_sub_attr_path=bdgs_sub_attr_path,
-            bag_column=bag_column,
-            id_column=id_column,
-            skip_column=skip_column,
-            parent_column=parent_column,
+            # bag_column=bag_column,
+            # id_column=id_column,
+            # skip_column=skip_column,
+            # parent_column=parent_column,
         )
         cj_bag_data.export(output_cj_path)
 
@@ -153,8 +165,44 @@ def load_custom_building(
         ),
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
+    buidlings_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-b",
+            "--buildings",
+            help="Paths to buildings attributes in CSV format.",
+            exists=True,
+        ),
+    ],
+    parts_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-p",
+            "--parts",
+            help="Paths to parts attributes in CSV format.",
+            exists=True,
+        ),
+    ],
+    storeys_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-s",
+            "--storeys",
+            help="Paths to storeys attributes in CSV format.",
+            exists=True,
+        ),
+    ],
+    rooms_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-r",
+            "--rooms",
+            help="Paths to rooms attributes in CSV format.",
+            exists=True,
+        ),
+    ],
     units_path: Annotated[
-        Path,
+        Optional[Path],
         typer.Option(
             "-u",
             "--units",
@@ -162,35 +210,6 @@ def load_custom_building(
             exists=True,
         ),
     ],
-    units_code_column: Annotated[
-        str,
-        typer.Option(
-            help="Column storing the code associated to each unit.",
-        ),
-    ],
-    units_spaces_column: Annotated[
-        str,
-        typer.Option(
-            help="Column storing the spaces associated to each unit.",
-        ),
-    ],
-    attributes_paths: Annotated[
-        List[Path],
-        typer.Option(
-            "-a",
-            "--attributes",
-            help="Paths to attributes in CSV format.",
-            exists=True,
-        ),
-    ] = [],
-    attributes_id_cols: Annotated[
-        List[str],
-        typer.Option(
-            "-c",
-            "--columns",
-            help="Column storing the identifier for each attribute path.",
-        ),
-    ] = [],
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -205,10 +224,10 @@ def load_custom_building(
         raise ValueError("The input path should end with '.glb' or '.gltf'.")
     if not output_cj_path.suffix == ".json":
         raise ValueError("The output path should end with '.json'.")
-    if len(attributes_paths) != len(attributes_id_cols):
-        raise ValueError(
-            "The arguments `attributes_paths` and `attributes_id_cols` should have the same number of elements."
-        )
+    # if len(attributes_paths) != len(attributes_id_cols):
+    #     raise ValueError(
+    #         "The arguments `attributes_paths` and `attributes_id_cols` should have the same number of elements."
+    #     )
 
     if output_cj_path.exists() and not overwrite:
         raise ValueError(
@@ -220,30 +239,69 @@ def load_custom_building(
         # Load the geometry from glTF
         cj_file = full_building_from_gltf(gltf_path=input_gltf_path)
 
-        all_attributes = []
-        for path, id_col in zip(attributes_paths, attributes_id_cols):
+        logging.info("Load the CSV attributes...")
+
+        all_attributes: list[
+            Mapping[str, BdgAttr | BdgPartAttr | BdgStoreyAttr | BdgRoomAttr]
+        ] = []
+        if buidlings_path is not None:
             all_attributes.append(
-                load_attributes_from_csv(csv_path=path, id_column=id_col)
+                BdgAttrReader(csv_path=buidlings_path).get_id_to_attr()
             )
+        if parts_path is not None:
+            all_attributes.append(
+                BdgPartAttrReader(csv_path=parts_path).get_id_to_attr()
+            )
+        if storeys_path is not None:
+            all_attributes.append(
+                BdgStoreyAttrReader(csv_path=storeys_path).get_id_to_attr()
+            )
+        if rooms_path is not None:
+            all_attributes.append(
+                BdgRoomAttrReader(csv_path=rooms_path).get_id_to_attr()
+            )
+
+        logging.info("Add the attributes to the spaces...")
 
         # Add the attributes to the CityJSON spaces
         for city_object in cj_file.city_objects:
             if isinstance(city_object, CityJSONSpace):
                 for attributes in all_attributes:
-                    city_object.add_attributes(
-                        new_attributes=attributes.get(city_object.space_id, {})
-                    )
+                    if city_object.space_id not in attributes:
+                        continue
+                    attr = attributes[city_object.space_id]
+                    if isinstance(city_object, Building) and isinstance(attr, BdgAttr):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingPart) and isinstance(
+                        attr, BdgPartAttr
+                    ):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingStorey) and isinstance(
+                        attr, BdgStoreyAttr
+                    ):
+                        city_object.apply_attr(attr, overwrite=True)
+                    if isinstance(city_object, BuildingRoom) and isinstance(
+                        attr, BdgRoomAttr
+                    ):
+                        city_object.apply_attr(attr, overwrite=True)
+
+        logging.info("Load the units...")
 
         # Load the units
-        load_units_from_csv(
-            cj_file=cj_file,
-            csv_path=units_path,
-            code_column=units_code_column,
-            spaces_column=units_spaces_column,
-        )
+        if units_path is not None:
+            load_units_from_csv(
+                cj_file=cj_file,
+                csv_path=units_path,
+                # code_column=units_code_column,
+                # spaces_column=units_spaces_column,
+            )
+
+        logging.info("Check the hierarchy...")
 
         # Check the correctness of the hierarchy
         cj_file.check_objects_hierarchy(n_components=2)
+
+        logging.info("Write the file...")
 
         # Write to CityJSON
         file_json = cj_file.to_json()

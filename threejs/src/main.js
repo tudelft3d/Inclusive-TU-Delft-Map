@@ -191,11 +191,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Location button
     const locationBtn = document.getElementById('location-btn');
+    var movedSinceLastBtnPush = true;
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
+            console.log("Pressed button")
+            console.log(movedSinceLastBtnPush);
             event.stopPropagation();
-            map.getUserLocationAndZoom();
+            if (!map.locationManager.initialised) {
+                map.locationManager.inititialise(true, () => {
+                    movedSinceLastBtnPush = false;
+                });
+            } else if (movedSinceLastBtnPush || map.locationManager.hidden) {
+                map.locationManager.unhide();
+                map.locationManager.moveToLocation(false, () => {
+                    movedSinceLastBtnPush = false;
+                });
+            } else {
+                map.locationManager.hide();
+            }
+            movedSinceLastBtnPush = false;
+            console.log(movedSinceLastBtnPush);
         });
+        map.cameraManager.addEventListenerControls("change", (e) => {
+            movedSinceLastBtnPush = true;
+        })
     }
 
     // BV (streetview) button

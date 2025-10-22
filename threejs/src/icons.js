@@ -145,7 +145,7 @@ export class IconsSceneManager {
      *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
-     * @param {HTMLElement} mainContainer
+     * @param {HTMLElement} iconContainer
      * @param {HTMLElement} mainContainer
      */
     constructor(scene, renderer, iconContainer, mainContainer) {
@@ -212,15 +212,15 @@ export class IconsSceneManager {
         delete this.iconSets[key];
     }
 
-    /**
-     * Remove all IconSets from the scene.
-     *
-     */
-    removeAllIconSets() {
-        for (const [key, icon] of Object.entries(this.iconSets)) {
-            this.removeIconSet(key);
-        }
-    }
+    // /**
+    //  * Remove all IconSets from the scene.
+    //  *
+    //  */
+    // removeAllIconSets() {
+    //     for (const [key, icon] of Object.entries(this.iconSets)) {
+    //         this.removeIconSet(key);
+    //     }
+    // }
 
     /**
      * Resize the icons based on the camera position.
@@ -278,6 +278,11 @@ export class TextIcon {
 
         // Assemble the hierarchy
         this.container.appendChild(this.content);
+
+    }
+
+    is_populated() {
+        return !(this.content["innerText"] == "");
     }
 }
 

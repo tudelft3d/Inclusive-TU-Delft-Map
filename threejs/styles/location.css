@@ -1,0 +1,38 @@
+.location-position-container,
+.location-position-centered-box,
+.location-position-disc,
+.location-accuracy-container,
+.location-accuracy-centered-box,
+.location-accuracy-circle {
+    pointer-events: none;
+}
+
+.location-position-centered-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.location-position-disc {
+    border-radius: 50%;
+    background-color: #4285f4;
+    border: 2px solid #ffffff;
+}
+
+.location-accuracy-centered-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.location-accuracy-circle {
+    border-radius: 50%;
+    background-color: #4286f44f;
+    border: 2px solid #4285f4;
+}

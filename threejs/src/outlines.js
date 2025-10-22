@@ -6,11 +6,11 @@ import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
 import { GammaCorrectionShader } from "three/examples/jsm/shaders/GammaCorrectionShader.js";
+import { LocationSceneManager } from "./location";
 
 export class OutlineManager {
-    constructor(scene, iconsSceneManager, renderer) {
+    constructor(scene, renderer) {
         this.scene = scene;
-        this.iconsSceneManager = iconsSceneManager;
         this.renderer = renderer;
         this.composers = [];
         this.cameras = [];
