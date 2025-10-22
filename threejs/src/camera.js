@@ -62,6 +62,11 @@ export class CamerasControls {
         this.mapControls.update();
 
         this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
+        this.orbitControls.mouseButtons = {
+            LEFT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE
+        }
         this.orbitControls.target.copy(target);
         this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
         this.orbitControls.enablePan = false;
