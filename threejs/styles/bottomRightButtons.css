@@ -131,8 +131,28 @@
 #zoom-btn svg {
   width: 23px;
   height: 23px;
-  display: block;
+  display: block;            
+  max-width: 100%;
   object-fit: contain;
+  line-height: 0;
+}
+
+/* Also ensure other control imgs behave the same */
+#reset-btn img,
+#reset-btn svg,
+#compass-btn img,
+#compass-btn svg,
+#location-btn img,
+#location-btn svg,
+#view-toggle-btn img,
+#view-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+  line-height: 0;
+  vertical-align: middle;
 }
 
 #view-toggle-btn {
