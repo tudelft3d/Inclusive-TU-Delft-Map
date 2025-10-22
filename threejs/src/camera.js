@@ -381,21 +381,37 @@ export class CamerasControls {
         this.controls.update();
     }
 
-    /* Zoom to a specific coordinate */
-    zoomToLocation(x, z, height = 200) {
-        console.log(`Zooming to location: ${x}, ${z}`);
+    // /* Zoom to a specific coordinate */
+    // zoomToLocation(x, z, height = 200) {
+    //     console.log(`Zooming to location: ${x}, ${z}`);
 
-        // Set the target to the location
-        this.controls.target.set(x, 0, z);
+    //     // Set the target to the location
+    //     this.controls.target.set(x, 0, z);
 
-        // Position camera above and slightly back from the target
-        this.camera.position.set(x, height, z + 100);
+    //     // Position camera above and slightly back from the target
+    //     this.camera.position.set(x, height, z + 100);
 
-        this.camera.lookAt(this.controls.target);
-        this.controls.update();
+    //     this.camera.lookAt(this.controls.target);
+    //     this.controls.update();
+    // }
+
+    _zoomPerspective(newTarget, distance, onComplete = () => { }) {
+        // Set camera position & orientation
+        const initTarget = this.controls.target.clone();
+        const initPosition = this.camera.position.clone();
+        const initDirection = initPosition.clone().sub(initTarget).normalize();
+        const finalTarget = newTarget;
+
+        if (!distance) {
+            distance = initPosition.distanceTo(initTarget);
+        }
+
+        const finalPosition = finalTarget.clone().addScaledVector(initDirection, distance);
+
+        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
     }
 
-    _zoomPerspective(object) {
+    _zoomToObjectPerspective(object, onComplete = () => { }) {
         if (!object) {
             this.switchToMap();
             return;
@@ -403,25 +419,29 @@ export class CamerasControls {
 
         this.switchToOrbit();
 
-        // Compute final distance to the building with its bounding sphere
+        // Compute final target and distance to the building with its bounding sphere
         const sphere = new THREE.Sphere();
         new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
         const margin = 1.2;
         const fov = this.camera.fov * (Math.PI / 180);
         const distance = sphere.radius / Math.tan(fov / 2) * margin;
 
+        // Zoom to the position
+        return this._zoomPerspective(sphere.center, distance, onComplete);
+    }
+
+    _zoomOrthographic(newTarget, distance, onComplete = () => { }) {
         // Set camera position & orientation
         const initTarget = this.controls.target.clone();
         const initPosition = this.camera.position.clone();
-        const initDirection = initPosition.clone().sub(initTarget).normalize();
-        const finalTarget = sphere.center;
-        const finalPosition = finalTarget.clone().addScaledVector(initDirection, distance);
+        const initTargetToPosition = initPosition.clone().sub(initTarget);
+        const finalTarget = newTarget;
+        const finalPosition = finalTarget.clone().add(initTargetToPosition);
 
-        this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000);
-
+        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 500, onComplete);
     }
 
-    _zoomOrthographic(object) {
+    _zoomToObjectOrthographic(object, onComplete = () => { }) {
         if (!object) {
             return;
         }
@@ -430,21 +450,23 @@ export class CamerasControls {
         const sphere = new THREE.Sphere();
         new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
 
-        // Set camera position & orientation
-        const initTarget = this.controls.target.clone();
-        const initPosition = this.camera.position.clone();
-        const initTargetToPosition = initPosition.clone().sub(initTarget);
-        const finalTarget = sphere.center;
-        const finalPosition = finalTarget.clone().add(initTargetToPosition);
-
-        this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 500);
+        // Zoom to the position
+        return this._zoomOrthographic(sphere.center, null, onComplete);
     }
 
-    zoomToObject(object) {
+    zoomToObject(object, onComplete = () => { }) {
         if (this.usesOrthographicCamera()) {
-            this._zoomOrthographic(object);
+            return this._zoomToObjectOrthographic(object, onComplete);
         } else {
-            this._zoomPerspective(object);
+            return this._zoomToObjectPerspective(object, onComplete);
+        }
+    }
+
+    zoomToCoordinates(newTarget, distance, onComplete = () => { }) {
+        if (this.usesOrthographicCamera()) {
+            return this._zoomOrthographic(newTarget, distance, onComplete);
+        } else {
+            return this._zoomPerspective(newTarget, distance, onComplete);
         }
     }
 
@@ -453,7 +475,8 @@ export class CamerasControls {
         initTarget,
         finalPosition,
         finalTarget,
-        duration = 1000
+        duration = 1000,
+        onComplete = () => { }
     ) {
         const current_values = {
             position: initPosition,
@@ -477,10 +500,14 @@ export class CamerasControls {
                 // Remove from the list of tween when completed
                 const idx = this.tweens.indexOf(tweenCamera);
                 if (idx !== -1) this.tweens.splice(idx, 1);
+                onComplete();
             })
             .start()
 
+
         this.tweens.push(tweenCamera);
+
+        return tweenCamera;
     }
 
 }
