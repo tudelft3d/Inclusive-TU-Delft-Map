@@ -11,7 +11,7 @@ export class IconSet {
      *
      * @param {string} key
      * @param {SvgIcon[]} svgIcons
-     * @param {TextIcon} textIcon
+     * @param {TextIcon | null} textIcon
      * @param {THREE.Vector3} worldPos
      * @param {*} onClick
      */
@@ -37,20 +37,35 @@ export class IconSet {
         this.wrapper = document.createElement("div");
         this.wrapper.className = "icons-container";
 
-        // Inside wrapper to move the position anchor
-        this.wrapperInner = document.createElement("div");
-        this.wrapperInner.className = "icons-centered-box";
-        this.wrapper.appendChild(this.wrapperInner);
+        // Subwrapper
+        this.subWrapper = document.createElement("div");
+        this.subWrapper.className = "icons-subcontainer";
+        this.wrapper.appendChild(this.subWrapper);
+
+        // Subsubwrapper to move the position anchor
+        this.subSubWrapper = document.createElement("div");
+        this.subSubWrapper.className = "icons-subsubcontainer";
+        this.subWrapper.appendChild(this.subSubWrapper);
 
         // Add the text
-        if (!(this.textIcon.container instanceof HTMLElement)) {
-            throw new Error("text must be a string or HTMLElement");
+        if (this.textIcon) {
+            if (!(this.textIcon.container instanceof HTMLElement)) {
+                throw new Error("text must be a string or HTMLElement");
+            }
+            this.subSubWrapper.appendChild(this.textIcon.container);
         }
-        this.wrapperInner.appendChild(this.textIcon.container);
 
         // Build the row of icons
         this._makeIconsRow();
 
+        // Pointing arrow
+        this.iconsArrow = document.createElement("img");
+        this.iconsArrow.src = '/assets/threejs/graphics/icons/thematic-layers/triangle.svg';
+        this.iconsArrow.className = "icons-arrow";
+        this.iconsArrow.style.setProperty('--triangle-fill', "white");
+        this.subWrapper.appendChild(this.iconsArrow);
+
+        // Make the actual three.js object
         this.wrapperObject = new CSS2DObject(this.wrapper);
         this.wrapper.addEventListener("click", (e) => {
             onClick(e);
@@ -79,9 +94,10 @@ export class IconSet {
     }
 
     _makeIconsRow() {
+        if (Object.keys(this.svgIcons).length === 0) { return };
         // Remove the previous row
         if (this.svgIconsRow) {
-            this.wrapperInner.removeChild(this.svgIconsRow);
+            this.subSubWrapper.removeChild(this.svgIconsRow);
         }
 
         // Build the row of icons
@@ -93,7 +109,7 @@ export class IconSet {
             }
             this.svgIconsRow.appendChild(svgIcon.container);
         }
-        this.wrapperInner.appendChild(this.svgIconsRow);
+        this.subSubWrapper.appendChild(this.svgIconsRow);
     }
 
     /**
@@ -103,7 +119,7 @@ export class IconSet {
      */
     _setScale(scale) {
         const baseOffset = new Vector3(0, (50 * (1 - scale)) / 2, 0);
-        this.wrapperInner.style.transform = `scale(${scale}) translate(0, -50%)`;
+        this.subWrapper.style.transform = `scale(${scale}) translate(0, -50%)`;
         this.wrapperObject.position.copy(this.basePos.clone().add(baseOffset));
     }
 

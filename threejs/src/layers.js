@@ -482,6 +482,14 @@ export class LayerManager {
             icons.push(icon);
         }
 
+		var text_icon;
+		console.log(icon_set_text);
+		if (!icon_set_text || icon_set_text == "") {
+			text_icon = null;
+		} else {
+			text_icon = new TextIcon(icon_set_text);
+		}
+
         const text_icon = new TextIcon(icon_set_text);
 
         const onClick = this._generate_icon_onclick(icon_set_key);
