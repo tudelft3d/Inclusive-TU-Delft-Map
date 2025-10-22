@@ -4,11 +4,11 @@ import layers_json from "../assets/threejs/buildings/thematic_codelist.json" ass
 import Papa from 'papaparse';
 
 import {
-    IconSet,
-    IconsSceneManager,
-    TextIcon,
-    SvgIcon,
-    SvgLoader,
+	IconSet,
+	IconsSceneManager,
+	TextIcon,
+	SvgIcon,
+	SvgLoader,
 } from "./icons";
 
 /*
@@ -167,11 +167,11 @@ export class LayerManager {
 
 		for (const [building_key, building_json] of Object.entries(this.campus_buildings_json)) {
 
-			if(!building_json.attributes.icon_position) {
+			if (!building_json.attributes.icon_position) {
 				continue;
 			}
 
-			if(building_json.attributes.space_id.includes("NL")) {
+			if (building_json.attributes.space_id.includes("NL")) {
 				continue;
 			}
 
@@ -183,7 +183,7 @@ export class LayerManager {
 				[],
 				[],
 				[],
-				position);	
+				position);
 
 		}
 
@@ -198,7 +198,7 @@ export class LayerManager {
 
 		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
 
-		const paths = needed_layers.map((element) => {return this.layer_definition[element]["path from assets"]});
+		const paths = needed_layers.map((element) => { return this.layer_definition[element]["path from assets"] });
 		const colors = Array(needed_layers.length).fill("#f7c286ff");
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
@@ -213,7 +213,7 @@ export class LayerManager {
 			paths,
 			needed_layers,
 			colors,
-			position);	
+			position);
 
 		this._remove_storey_icon_sets();
 
@@ -291,7 +291,7 @@ export class LayerManager {
 				position);
 
 		});
-		 
+
 	}
 
 	// Used when removing a thematic layer
@@ -311,7 +311,7 @@ export class LayerManager {
 
 				}
 
-        	}
+			}
 
 		}
 
@@ -357,7 +357,7 @@ export class LayerManager {
 						[this.layer_definition[code]["path from assets"]],
 						[code],
 						["#f7c286ff"],
-						position);	
+						position);
 
 				}
 
@@ -404,7 +404,7 @@ export class LayerManager {
 						[this.layer_definition[code]["path from assets"]],
 						[code],
 						["#f7c286ff"],
-						position);	
+						position);
 
 				}
 
@@ -429,12 +429,12 @@ export class LayerManager {
 	async _add_icon_svg(icon_set_key, icon_key, icon_path, icon_color) {
 
 		const svg = await Promise.all(
-            icon_path.map((p) => this.svgLoader.getSvg(p))
-        );
+			icon_path.map((p) => this.svgLoader.getSvg(p))
+		);
 
-        const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
+		const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
 
-        this.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
+		this.iconsSceneManager.iconSets[icon_set_key].addSvgIcon(icon);
 
 	}
 
@@ -459,28 +459,28 @@ export class LayerManager {
 		}
 
 		const onClick = (e) => {
-            this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
-        };
+			this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+		};
 
-        return onClick;
+		return onClick;
 
 	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
 
 		const svgs = await Promise.all(
-            paths.map((p) => this.svgLoader.getSvg(p))
-        );
+			paths.map((p) => this.svgLoader.getSvg(p))
+		);
 
-        const icons = [];
+		const icons = [];
 
-        for (var i = 0; i < paths.length; i++) {
-            const svg = svgs[i];
-            const key = icon_keys[i];
-            const bgColor = bg_colors[i];
-            const icon = new SvgIcon(key, svg, { bgColor: bgColor });
-            icons.push(icon);
-        }
+		for (var i = 0; i < paths.length; i++) {
+			const svg = svgs[i];
+			const key = icon_keys[i];
+			const bgColor = bg_colors[i];
+			const icon = new SvgIcon(key, svg, { bgColor: bgColor });
+			icons.push(icon);
+		}
 
 		var text_icon;
 		console.log(icon_set_text);
@@ -490,14 +490,12 @@ export class LayerManager {
 			text_icon = new TextIcon(icon_set_text);
 		}
 
-        const text_icon = new TextIcon(icon_set_text);
+		const onClick = this._generate_icon_onclick(icon_set_key);
 
-        const onClick = this._generate_icon_onclick(icon_set_key);
+		const icon_set = new IconSet(icon_set_key, icons, text_icon, position, onClick);
 
-        const icon_set = new IconSet(icon_set_key, icons, text_icon, position, onClick);
+		this.iconsSceneManager.addIconSet(icon_set);
 
-        this.iconsSceneManager.addIconSet(icon_set);
-        
 	}
 
 	_update_active_layers(code) {
@@ -518,7 +516,7 @@ export class LayerManager {
 
 	}
 
-	_populate_layer_buttons_alt(){
+	_populate_layer_buttons_alt() {
 
 		var layers_dropdown = document.getElementById("layers-dropdown");
 		// layers_dropdown.innerHTML = "";
@@ -561,18 +559,18 @@ export class LayerManager {
 			}
 
 			a.addEventListener('click', () => {
-            	list_elements.forEach((element) => {
+				list_elements.forEach((element) => {
 
-            		console.log(element);
+					console.log(element);
 
-            		element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
+					element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
 
-            		// for (const child of element.children) {
+					// for (const child of element.children) {
 					// 	child.style.display = (child.style.display === 'block') ? 'none' : 'block';
 					// }
-            		
-            	})
-        	});
+
+				})
+			});
 
 			layers_dropdown.appendChild(ul);
 
@@ -595,17 +593,17 @@ export class LayerManager {
 
 			let text = document.createTextNode(layer_attributes["Name (EN) [str]"]);
 
-    		let img = document.createElement("img");
-    		img.setAttribute('width', '20');
-    		img.setAttribute('height', '20');
-    		img.setAttribute('align', 'top');
-    		img.src = layer_attributes["path from assets"];
+			let img = document.createElement("img");
+			img.setAttribute('width', '20');
+			img.setAttribute('height', '20');
+			img.setAttribute('align', 'top');
+			img.src = layer_attributes["path from assets"];
 
 			a.appendChild(img);
 			a.appendChild(text);
 
 			a.addEventListener("click", (event) => {
-				
+
 				this._update_active_layers(layer_key);
 
 				if (event.srcElement.style.backgroundColor == "green") {
