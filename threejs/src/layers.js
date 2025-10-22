@@ -51,7 +51,7 @@ export class LayerManager {
 
 		this._populate_layer_buttons();
 
-		this._populate_layer_buttons_alt();
+		// this._populate_layer_buttons_alt();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
@@ -284,7 +284,7 @@ export class LayerManager {
 
 			this._add_icon_set(
 				current_key,
-				"",
+				null,
 				paths,
 				keys,
 				colors,
@@ -301,7 +301,7 @@ export class LayerManager {
 
 			if (code in icon_set_object.svgIcons) {
 
-				if (Object.keys(icon_set_object.svgIcons).length > 1) {
+				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.textIcon.is_populated()) {
 
 					icon_set_object.removeSvgIcon(code);
 
@@ -353,7 +353,7 @@ export class LayerManager {
 
 					this._add_icon_set(
 						building_key,
-						"",
+						null,
 						[this.layer_definition[code]["path from assets"]],
 						[code],
 						["#f7c286ff"],
@@ -400,7 +400,7 @@ export class LayerManager {
 
 					this._add_icon_set(
 						current_key,
-						"",
+						null,
 						[this.layer_definition[code]["path from assets"]],
 						[code],
 						["#f7c286ff"],
@@ -431,8 +431,6 @@ export class LayerManager {
 		const svg = await Promise.all(
             icon_path.map((p) => this.svgLoader.getSvg(p))
         );
-
-        console.log(svg[0]);
 
         const icon = new SvgIcon(icon_key, svg[0], { bgColor: icon_color });
 
@@ -515,9 +513,62 @@ export class LayerManager {
 	_populate_layer_buttons_alt(){
 
 		var layers_dropdown = document.getElementById("layers-dropdown");
-		layers_dropdown.innerHTML = "";
+		// layers_dropdown.innerHTML = "";
 
-		console.log(this.layer_hierarchy);
+		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
+
+			console.log(group_name);
+			console.log(group_layers);
+
+			var ul = document.createElement("ul");
+
+			var a = document.createElement("a");
+
+			let header_text = document.createTextNode(group_name);
+
+			a.appendChild(header_text);
+
+			ul.appendChild(a);
+
+			let list_elements = [];
+
+			for (const [layer_name, layer_code] of Object.entries(group_layers)) {
+
+				var li = document.createElement("li");
+
+				var a_li = document.createElement("a");
+
+				let button_text = document.createTextNode(layer_name);
+
+				a_li.appendChild(button_text);
+
+				li.appendChild(a_li);
+
+				list_elements.push(li);
+				// list_elements.push(a_li);
+				// list_elements.push(button_text);
+
+				ul.appendChild(li);
+
+			}
+
+			a.addEventListener('click', () => {
+            	list_elements.forEach((element) => {
+
+            		console.log(element);
+
+            		element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
+
+            		// for (const child of element.children) {
+					// 	child.style.display = (child.style.display === 'block') ? 'none' : 'block';
+					// }
+            		
+            	})
+        	});
+
+			layers_dropdown.appendChild(ul);
+
+		}
 
 	}
 
@@ -546,8 +597,6 @@ export class LayerManager {
 			a.appendChild(text);
 
 			a.addEventListener("click", (event) => {
-
-				console.log(event);
 				
 				this._update_active_layers(layer_key);
 

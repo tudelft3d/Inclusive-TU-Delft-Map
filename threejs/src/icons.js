@@ -278,6 +278,11 @@ export class TextIcon {
 
         // Assemble the hierarchy
         this.container.appendChild(this.content);
+
+    }
+
+    is_populated() {
+        return !(this.content["innerText"] == "");
     }
 }
 
