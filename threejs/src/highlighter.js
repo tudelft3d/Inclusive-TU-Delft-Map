@@ -14,7 +14,6 @@ export class Highlighter {
      */
     highlight(meshes) {
         if (!Array.isArray(meshes)) meshes = [meshes];
-
         this.unhighlight();
 
         for (const mesh of meshes) {

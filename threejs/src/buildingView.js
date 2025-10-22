@@ -15,14 +15,15 @@ export class BuildingView {
      * @param {[]} buildings 
      * @param {OutlineManager} outlineManager
      */
-    constructor(cameraManager, scene, buildings, outlineManager, layer_manager) {
+    constructor(cameraManager, scene, buildings, outlineManager, layer_manager, picker) {
         this.active = false;
 
         this.cameraManager = cameraManager;
         this.scene = scene;
         this.buildings = buildings;
         this.outlineManager = outlineManager;
-        this.layer_manager = layer_manager
+        this.layer_manager = layer_manager;
+        this.picker = picker;
 
         this.selectedKey;
         this.building_key;
@@ -46,7 +47,7 @@ export class BuildingView {
 
     }
 
-    initiate_buildingView() {
+    initiate_buildingView(floor = "00") {
 
         if (!this.building_key) {
             console.log("no building selected");
@@ -77,13 +78,15 @@ export class BuildingView {
         this.building_threejs = this.scene.getObjectByName(this.building_key);
 
         // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
+        // this should fix it?
+        this.picker.unpick();
 
         this._unhide_objects_recursive(this.building_threejs);
 
         this._hide_mesh_children(this.building_threejs);
 
 
-        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects("00");
+        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects(floor);
         this._unhide_objects(storey_00_room_threejs);
 
 

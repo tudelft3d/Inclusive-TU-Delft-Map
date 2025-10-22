@@ -74,7 +74,7 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
         intermediateResults.innerHTML = '';
         if (!search_results || search_results.length === 0) {
             intermediateResults.classList.add('open');
-            intermediateResults.innerHTML = '<div class="empty">No results</div>';
+            intermediateResults.innerHTML = '<div class="empty"> No matches found :( </div>';
             return;
         }
 
@@ -82,7 +82,8 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
         const keys = search_results.map(el => el.item && el.item.attributes && el.item.attributes.key ? el.item.attributes.key : String(el));
         for (let i = 0; i < keys.length; i++) {
             const li = document.createElement('li');
-            li.textContent = keys[i];
+            const displayName = search_results[i].item.attributes.display_name || keys[i];
+            li.textContent = displayName;
             li.tabIndex = 0;
             li.addEventListener('click', () => {
                 searcher.search_and_zoom(keys[i]);
