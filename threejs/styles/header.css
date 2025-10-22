@@ -74,7 +74,7 @@ body.menu-open {
 .brand {
   position: absolute;
   left: var(--edge-offset);
-  top: 50%;
+  top: 43%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
@@ -88,7 +88,7 @@ body.menu-open {
 .header-actions {
   position: absolute;
   right: var(--edge-offset);
-  top: 50%;
+  top: 45%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
@@ -96,14 +96,35 @@ body.menu-open {
   flex: 0 0 auto;
 }
 
+.brand2 {
+  position: absolute;
+  right: var(--edge-offset);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  flex: 0 0 auto;
+  transform-origin: center;
+}
+
 .brand img {
   /* logo scaled to header height */
-  height: calc(var(--height) * 0.55);
+  height: calc(var(--height) * 0.50);
   width: auto;
   display: block;
   object-fit: contain;
 }
 
+.brand2 img {
+  /* logo scaled to header height */
+  height: calc(var(--height) * 0.50);
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
 /* Main navigation */
 .main-nav {
   position: absolute;
@@ -147,7 +168,7 @@ body.menu-open {
   position: relative;
 }
 
-/* Right-side header actions (language switch) */
+/* Right-side header actions */
 .header-actions {
   display: flex;
   align-items: center;
@@ -155,64 +176,38 @@ body.menu-open {
   flex: 0 0 auto;
 }
 
-/* Language switcher layout */
-.lang-switch {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
-
-/* Language button styling */
-.lang-btn {
-  width: 32px;
-  height: 30px;
-  background: var(--lang-inactive);
-  border: 1px solid var(--lang-active);
-  padding: 2px 2px 2px 2px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #000000;
-  cursor: pointer;
-  min-width: 30px;
-  text-align: center;
-}
-
-.lang-btn:hover {
-  filter: brightness(0.98);
-  background-color: #ffc2bd7b;
-}
-
-/* Active language appearance */
-.lang-btn.active {
-  background: var(--lang-active);
-  color: #000000;
-  border-color: transparent;
-
-}
-
 /* hide hamburger by default (desktop) and hide nav mobile-lang on desktop */
 .menu-toggle {
   display: none;
 }
 
-.nav-lang {
+/* .nav-lang {
   display: none;
   margin-top: 12px;
+} */
+
+
+.lang-switch,
+.nav-lang {
+  display: none !important;
 }
 
 /* mobile / small-screen header & panel */
 @media (max-width:620px) {
   .brand {
   position: static;
-  transform: translateY(-10%); /* restore previous visual nudge if wanted */
+  transform: translateY(-10%); 
+  }
+
+  .brand2{
+    display: none;
   }
 
   .header-actions {
     position: static;
     transform: none;
   }
-
+  
   .header-inner {
     position: relative;
     padding: 8px 12px;
@@ -222,7 +217,7 @@ body.menu-open {
   .menu-toggle {
     display: inline-flex;
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 55%;
     transform: translateY(-50%);
     align-items: center;
@@ -241,20 +236,11 @@ body.menu-open {
 
   }
 
-  /* Hide desktop inline language controls, show mobile nav-language */
-  .lang-switch {
-    display: none;
-  }
-
-  .nav-lang {
-    display: block;
-  }
-
   /* Right-side slide-out panel anchored below header via --height */
   .main-nav {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: start;
     position: fixed;
     top: var(--height);
     right: 0;
@@ -280,12 +266,12 @@ body.menu-open {
   /* internal layout: vertical list, right-aligned */
   .main-nav ul {
     display: flex;
+    justify-content: start;
     flex-direction: column;
     gap: 6px;
     margin: 0;
-    padding: 8px 8px 6px 8px;
+    padding: 8px 2px 6px 0px;
     align-items: flex-end;
-    /* right align items */
     box-sizing: border-box;
   }
 
@@ -295,31 +281,27 @@ body.menu-open {
 
   .main-nav ul li a {
     display: block;
+    justify-content: start;
     width: 100%;
-    padding: 8px 10px;
+    padding: 8px 0px 8px 0px;
     text-align: right;
     box-sizing: border-box;
   }
 
-  /* language buttons */
-  .main-nav .nav-lang {
+  .main-nav {
     display: flex;
     width: 100%;
-    justify-content: flex-end;
+    justify-content: start;
     gap: 6px;
     padding: 8px 12px 0px 12px;
     box-sizing: border-box;
     margin-top: 6px;
   }
 
-  .main-nav .nav-lang{
+  .main-nav {
     padding: 6px 18px;
     min-width: auto;
     margin: 0;
   }
-
-  .lang-btn {
-    padding: 6px 6px;
-    min-width: auto;
-  }
 }
+
