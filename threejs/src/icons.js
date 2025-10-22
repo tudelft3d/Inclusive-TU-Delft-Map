@@ -18,7 +18,7 @@ export class IconSet {
     constructor(key, svgIcons, textIcon, worldPos, onClick) {
         this.key = key;
         this.basePos = worldPos;
-        this.onClick = onClick;
+        // this.onClick = onClick;
 
         this.svgIcons = {};
         svgIcons.map((svgIcon) => {
@@ -53,7 +53,6 @@ export class IconSet {
 
         this.wrapperObject = new CSS2DObject(this.wrapper);
         this.wrapper.addEventListener("click", (e) => {
-            console.log("HERE");
             onClick(e);
         });
     }
@@ -146,7 +145,7 @@ export class IconsSceneManager {
      *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
-     * @param {HTMLElement} mainContainer
+     * @param {HTMLElement} iconContainer
      * @param {HTMLElement} mainContainer
      */
     constructor(scene, renderer, iconContainer, mainContainer) {
@@ -213,15 +212,15 @@ export class IconsSceneManager {
         delete this.iconSets[key];
     }
 
-    /**
-     * Remove all IconSets from the scene.
-     *
-     */
-    removeAllIconSets() {
-        for (const [key, icon] of Object.entries(this.iconSets)) {
-            this.removeIconSet(key);
-        }
-    }
+    // /**
+    //  * Remove all IconSets from the scene.
+    //  *
+    //  */
+    // removeAllIconSets() {
+    //     for (const [key, icon] of Object.entries(this.iconSets)) {
+    //         this.removeIconSet(key);
+    //     }
+    // }
 
     /**
      * Resize the icons based on the camera position.
@@ -279,6 +278,11 @@ export class TextIcon {
 
         // Assemble the hierarchy
         this.container.appendChild(this.content);
+
+    }
+
+    is_populated() {
+        return !(this.content["innerText"] == "");
     }
 }
 

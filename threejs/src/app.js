@@ -4,7 +4,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ObjectPicker } from "./objectPicker";
 import { getCanvasRelativePosition, cj2gltf } from "./utils";
 import { addBasemap, preloadAllLayers, getTileCacheStats } from "./basemap";
-import proj4 from "https://cdn.jsdelivr.net/npm/proj4@2.9.0/+esm";
 import { OutlineManager } from "./outlines";
 import { BUILDINGS_COLOR } from "./constants";
 import {
@@ -15,12 +14,16 @@ import {
     SvgLoader,
 } from "./icons";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
+import { LayerManager } from "./layers";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
 import { Highlighter } from "./highlighter";
 import { PICKED_COLOR } from "./constants";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
+import { LocationManager, LocationSceneManager } from "./location";
+import { BASEMAP_BOUNDARIES } from "./basemap";
 
 export class Map {
     /**
@@ -33,7 +36,6 @@ export class Map {
         this.userLocationMarker = null;
         this.buildings = [];
         this.cityjson = cityjson;
-        this.locationWatchId = null; // For tracking real-time location updates
         this.preloadingStarted = false; // Flag to ensure preloading starts only once
 
         // Cameras and controls
@@ -59,11 +61,17 @@ export class Map {
             this.css2dContainer,
             this.mainContainer
         );
-        this.outlineManager = new OutlineManager(
-            this.scene,
-            this.iconsSceneManager,
-            this.glRenderer
+        this.locationSceneManager = new LocationSceneManager(
+            this.locationScene,
+            this.css3dRenderer,
+            this.css3dContainer,
+            this.mainContainer
         );
+        this.locationManager = new LocationManager(
+            this.locationSceneManager,
+            this.cameraManager
+        );
+        this.outlineManager = new OutlineManager(this.scene, this.glRenderer);
         this.svgLoader = new SvgLoader();
         this._attachEvents();
 
@@ -75,6 +83,7 @@ export class Map {
             false
         );
 
+        this._initLayerManager();
         this._initBuildingView();
         this._initPicker();
         this._initSearcher();
@@ -97,6 +106,7 @@ export class Map {
         ]);
         this.scene.background = skyboxTexture;
 
+        this.locationScene = new THREE.Scene();
         this.iconsScene = new THREE.Scene();
     }
 
@@ -126,7 +136,7 @@ export class Map {
             setTimeout(() => {
                 preloadAllLayers({
                     zoom: 12,
-                    bbox: [84000, 443500, 87500, 448000], // Same bbox as main map
+                    bbox: BASEMAP_BOUNDARIES, // Same bbox as main map
                 });
             }, 3000); // 3 second delay
         }
@@ -139,10 +149,21 @@ export class Map {
 
     _initRenderers() {
         // WebGL renderer for 3D objects
-        this.glRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.glRenderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+        });
         this.glRenderer.setPixelRatio(window.devicePixelRatio);
         this.glContainer = this.glRenderer.domElement;
         this.mainContainer.appendChild(this.glContainer);
+
+        // CSS3D renderer for location
+        this.css3dRenderer = new CSS3DRenderer();
+        this.css3dContainer = this.css3dRenderer.domElement;
+        this.css3dContainer.style.position = "absolute";
+        this.css3dContainer.style.top = "0";
+        this.css3dContainer.style.pointerEvents = "none";
+        this.mainContainer.appendChild(this.css3dContainer);
 
         // CSS2D renderer for icons and text
         this.css2dRenderer = new CSS2DRenderer();
@@ -155,12 +176,21 @@ export class Map {
         this._resizeWindow();
     }
 
+    _initLayerManager() {
+        this.layerManager = new LayerManager(
+            this.scene,
+            this.iconsSceneManager,
+            this.svgLoader
+        );
+    }
+
     _initBuildingView() {
         this.buildingView = new BuildingView(
             this.cameraManager,
             this.scene,
             this.buildings,
             this.outlineManager,
+            this.layerManager
         );
     }
 
@@ -174,6 +204,7 @@ export class Map {
             this.buildingView
         );
         this.buildingView.picker = this.picker;
+        this.layerManager.picker = this.picker;
     }
 
     _initSearcher() {
@@ -186,167 +217,6 @@ export class Map {
         const search_delay = 250;
         const search_result_count = 5;
         initSearchBar(this.searcher, search_delay, search_result_count);
-    }
-
-    /* Convert GPS coordinates (lat/lon) to map's local coordinates, using proj4 */
-    latLonToLocal(lat, lon) {
-        // WGS84 (GPS coordinates) & RD New (Rijksdriehoek)
-        const wgs84 = "EPSG:4326";
-        const rdNew =
-            "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.417,50.3319,465.552,-0.398957,0.343988,-1.8774,4.0725 +units=m +no_defs";
-
-        // Convert GPS to RD coordinates using proj4
-        const [rdX, rdY] = proj4(wgs84, rdNew, [lon, lat]);
-        console.log(`GPS (${lat}, ${lon}) -> RD (${rdX}, ${rdY})`);
-
-        const x = rdX;
-        const z = -rdY; // Negative Z because of coordinate system orientation
-
-        console.log(`RD (${rdX}, ${rdY}) -> Local (${x}, ${z})`);
-
-        return { x, z };
-    }
-
-    /* Get user location and zoom to it with continuous tracking */
-    getUserLocationAndZoom() {
-        if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser");
-            return;
-        }
-
-        console.log("Starting location tracking...");
-
-        // Stop any existing tracking
-        if (this.locationWatchId !== null) {
-            navigator.geolocation.clearWatch(this.locationWatchId);
-        }
-
-        let firstUpdate = true;
-
-        // Use watchPosition for continuous updates
-        this.locationWatchId = navigator.geolocation.watchPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                const accuracy = position.coords.accuracy; // in meters
-
-                console.log(
-                    `Location update: ${lat}, ${lon} (accuracy: ${accuracy}m)`
-                );
-
-                // Convert GPS to local coordinates
-                const local = this.latLonToLocal(lat, lon);
-
-                // Update or create marker at the user's location
-                this.updateUserLocationMarker(local.x, local.z, accuracy);
-
-                // Only zoom on first update (aka button click)
-                if (firstUpdate) {
-                    this.cameraManager.zoomToLocation(local.x, local.z);
-                    firstUpdate = false;
-                }
-            },
-            (error) => {
-                let message = "Unable to retrieve your location";
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        message =
-                            "Location permission denied. Please enable location access in your browser settings.";
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        message = "Location information unavailable.";
-                        break;
-                    case error.TIMEOUT:
-                        message = "Location request timed out.";
-                        break;
-                }
-                console.error("Geolocation error:", error);
-                alert(message);
-
-                // Stop tracking on error
-                if (this.locationWatchId !== null) {
-                    navigator.geolocation.clearWatch(this.locationWatchId);
-                    this.locationWatchId = null;
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 3000, // every 3 seconds
-                maximumAge: 0,
-            }
-        );
-    }
-
-    /* Stop tracking user location */
-    stopLocationTracking() {
-        if (this.locationWatchId !== null) {
-            navigator.geolocation.clearWatch(this.locationWatchId);
-            this.locationWatchId = null;
-            console.log("Location tracking stopped");
-        }
-
-        // Remove the marker
-        if (this.userLocationMarker) {
-            this.scene.remove(this.userLocationMarker);
-            this.userLocationMarker = null;
-        }
-    }
-
-    /* Update or create user location marker with accuracy circle */
-    updateUserLocationMarker(x, z, accuracy) {
-        // Remove previous marker if it exists
-        if (this.userLocationMarker) {
-            this.scene.remove(this.userLocationMarker);
-        }
-
-        const markerGroup = new THREE.Group();
-
-        // Accuracy circle (transparent, sized to accuracy)
-        const circleGeometry = new THREE.CircleGeometry(accuracy, 64);
-        const circleMaterial = new THREE.MeshBasicMaterial({
-            color: 0x4285f4,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.2,
-        });
-        const circle = new THREE.Mesh(circleGeometry, circleMaterial);
-        circle.rotation.x = -Math.PI / 2; // Lay flat
-        markerGroup.add(circle);
-
-        // Accuracy ring border
-        const ringGeometry = new THREE.RingGeometry(
-            accuracy - 1,
-            accuracy + 1,
-            64
-        );
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            color: 0x4285f4,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.5,
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = -Math.PI / 2;
-        markerGroup.add(ring);
-
-        // Center dot (actual position)
-        const dotGeometry = new THREE.SphereGeometry(3, 16, 16);
-        const dotMaterial = new THREE.MeshBasicMaterial({
-            color: 0x4285f4,
-        });
-        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-        //dot.position.y = 1; // Slightly above the circle
-        markerGroup.add(dot);
-
-        markerGroup.position.set(x, 1, z); // Position just above ground
-        markerGroup.name = "user-location-marker"; // Name the user location marker
-
-        this.userLocationMarker = markerGroup;
-        this.scene.add(this.userLocationMarker);
-
-        console.log(
-            `Location marker updated at (${x}, ${z}) with accuracy ${accuracy}m`
-        );
     }
 
     _attachEvents() {
@@ -421,6 +291,7 @@ export class Map {
         this.cameraManager.resizeCameras(width, height);
         this.glRenderer.setSize(width, height);
         this.css2dRenderer.setSize(width, height);
+        this.css3dRenderer.setSize(width, height);
     }
 
     loadGLTF(path) {
@@ -535,6 +406,7 @@ export class Map {
         this.cameraManager.tweens.forEach((tween) => tween.update(time));
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
+        this.locationSceneManager.render(time, this.cameraManager);
         this.light.position.copy(this.cameraManager.camera.position);
         this.light.target.position.copy(this.cameraManager.controls.target);
     }
