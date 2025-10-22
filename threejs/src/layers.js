@@ -51,6 +51,8 @@ export class LayerManager {
 
 		this._populate_layer_buttons();
 
+		this._populate_layer_buttons_alt();
+
 		this.campus_buildings_json = this._isolate_building_json();
 
 		this.campus_buildings_codes = this._isolate_building_room_codes();
@@ -507,6 +509,15 @@ export class LayerManager {
 
 			this._remove_icon(code);
 		}
+
+	}
+
+	_populate_layer_buttons_alt(){
+
+		var layers_dropdown = document.getElementById("layers-dropdown");
+		layers_dropdown.innerHTML = "";
+
+		console.log(this.layer_hierarchy);
 
 	}
 
