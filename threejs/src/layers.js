@@ -217,6 +217,8 @@ export class LayerManager {
 
 		this.current_storey_room_keys = undefined;
 
+		this.building_view_active = false;
+
 	}
 
 	// Used when changing from one storey to another
@@ -299,7 +301,7 @@ export class LayerManager {
 
 				if (Object.keys(icon_set_object.svgIcons).length > 1) {
 
-					icon_set_object.svgIcons.removeSvgIcon(code);
+					icon_set_object.removeSvgIcon(code);
 
 				} else {
 
@@ -508,7 +510,7 @@ export class LayerManager {
 
 	}
 
-	_populate_layer_buttons(path) {
+	_populate_layer_buttons() {
 
 		var layers_dropdown = document.getElementById("layers-dropdown");
 		layers_dropdown.innerHTML = "";
