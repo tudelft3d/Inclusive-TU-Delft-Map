@@ -90,16 +90,22 @@ export class IconSet {
         }
 
         delete this.svgIcons[key];
+
         this._makeIconsRow();
     }
 
     _makeIconsRow() {
-        if (Object.keys(this.svgIcons).length === 0) { return };
+
         // Remove the previous row
         if (this.svgIconsRow) {
             this.subSubWrapper.removeChild(this.svgIconsRow);
         }
 
+        if (Object.keys(this.svgIcons).length === 0) {
+
+            return;
+        };
+        
         // Build the row of icons
         this.svgIconsRow = document.createElement("div");
         this.svgIconsRow.className = "icons-svg-row";

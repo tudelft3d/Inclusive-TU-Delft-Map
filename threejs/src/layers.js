@@ -49,9 +49,9 @@ export class LayerManager {
 		this.active_layers = [];
 
 
-		// this._populate_layer_buttons();
+		this._populate_layer_buttons();
 
-		this._populate_layer_buttons_alt();
+		// this._populate_layer_buttons_alt();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
@@ -483,7 +483,7 @@ export class LayerManager {
 		}
 
 		var text_icon;
-		console.log(icon_set_text);
+
 		if (!icon_set_text || icon_set_text == "") {
 			text_icon = null;
 		} else {
