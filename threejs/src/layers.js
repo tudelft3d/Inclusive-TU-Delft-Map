@@ -49,9 +49,9 @@ export class LayerManager {
 		this.active_layers = [];
 
 
-		this._populate_layer_buttons();
+		// this._populate_layer_buttons();
 
-		// this._populate_layer_buttons_alt();
+		this._populate_layer_buttons_alt();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
@@ -526,6 +526,8 @@ export class LayerManager {
 			console.log(group_name);
 			console.log(group_layers);
 
+			var div = document.createElement("div");
+
 			var ul = document.createElement("ul");
 
 			var a = document.createElement("a");
@@ -534,7 +536,9 @@ export class LayerManager {
 
 			a.appendChild(header_text);
 
-			ul.appendChild(a);
+			div.appendChild(a);
+
+			div.appendChild(ul);
 
 			let list_elements = [];
 
@@ -556,23 +560,23 @@ export class LayerManager {
 
 				ul.appendChild(li);
 
+				a_li.addEventListener('click', (event) => {
+
+					console.log(layer_name);
+
+				});
+
 			}
 
-			a.addEventListener('click', () => {
-				list_elements.forEach((element) => {
+			a.addEventListener('click', (event) => {
 
-					console.log(element);
+				let current_ul = event.srcElement.nextElementSibling;
 
-					element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
+				current_ul.style.display = (current_ul.style.display === '') ? 'none' : '';
 
-					// for (const child of element.children) {
-					// 	child.style.display = (child.style.display === 'block') ? 'none' : 'block';
-					// }
-
-				})
 			});
 
-			layers_dropdown.appendChild(ul);
+			layers_dropdown.appendChild(div);
 
 		}
 
