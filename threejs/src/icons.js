@@ -99,13 +99,13 @@ export class IconSet {
         // Remove the previous row
         if (this.svgIconsRow) {
             this.subSubWrapper.removeChild(this.svgIconsRow);
+            this.svgIconsRow = null;
         }
 
         if (Object.keys(this.svgIcons).length === 0) {
-
             return;
         };
-        
+
         // Build the row of icons
         this.svgIconsRow = document.createElement("div");
         this.svgIconsRow.className = "icons-svg-row";
