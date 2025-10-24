@@ -189,7 +189,8 @@ export class Map {
             this.scene,
             this.buildings,
             this.outlineManager,
-            this.layerManager
+            this.layerManager,
+            this.picker
         );
     }
 

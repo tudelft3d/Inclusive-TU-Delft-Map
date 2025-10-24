@@ -6,6 +6,7 @@ import { CamerasControls } from "./camera";
 import { HOVERED_COLOR } from "./constants";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
+
 export class ObjectPicker {
     /**
      *
@@ -123,22 +124,97 @@ export class ObjectPicker {
      * @param {Mesh | null} mesh 
      */
     pickMesh(mesh) {
-        if (!mesh) {
-            console.error(mesh, "Mesh is not correct");
+        if (!Array.isArray(mesh)) mesh = [mesh];
+        if (mesh.length == 0) {
+            console.error(mesh, "No mesh was sent into pickMesh");
+            return;
         }
-        // Highlight the mesh
-        this.pickHighlighter.highlight([mesh]);
+        if (mesh.length == 1) {
+            mesh = mesh[0];
+            if (!mesh || !mesh.name) {
+                // Unhighlight
+                this.unpick();
 
-        // Set the building view
-        if (this.buildingView) {
-            this.buildingView.set_target(mesh.name);
+                // Reset the building view
+                if (this.buildingView) {
+                    this.buildingView.set_target(null);
+                }
+
+                // Reset the camera
+                this.cameraManager.zoomToObject(null);
+            }
+            else {
+                // Highlight the mesh
+                this.pickHighlighter.highlight([mesh]);
+                const json = cityjson["CityObjects"][mesh.name.slice(0, -6)];
+
+                // Set the building view
+                if (this.buildingView && json.type === "Building") {
+                    this.buildingView.set_target(mesh.name);
+                }
+                else if (this.buildingView && json.type === "BuildingRoom") {
+                    const parentBuilding = this.findParentBuilding(json);
+                    this.buildingView.initiate_buildingView(mesh.name.slice(-12, -10), false);
+
+
+                }
+                this.cameraManager.zoomToObject(mesh);
+                console.log('zooming to: ', mesh);
+                // Show info pane with object name - InfoPane handles everything else
+                this.infoPane.show(mesh.name);
+            }
         }
+        // case of multiple building units - set building view to parent building
+        else {
+            // Highlight the meshes
+            // console.log(mesh);
+            this.pickHighlighter.highlight(mesh);
 
-        // Zoom to the mesh
-        this.cameraManager.zoomToObject(mesh);
+            const first_mesh = mesh[0];
+            const first_json = cityjson["CityObjects"][first_mesh.name.slice(0, -6)];
+            parentMesh = this.findParentBuilding(first_json);
 
-        // Show info pane with object name - InfoPane handles everything else
-        this.infoPane.show(mesh.name);
+            // Set the building view
+            if (this.buildingView) { // is this needed? @Alex
+
+                if (first_json.type == "BuildingRoom") {
+                    let allFloors = {};
+                    mesh.forEach(room => {
+                        const floor = room.name.slice(-12, -10);
+                        allFloors[floor] = (allFloors[floor] || 0) + 1;
+                    });
+
+                    let mostCommonFloor = null;
+                    let maxCount = 0;
+                    for (const [floor, count] of Object.entries(allFloors)) {
+                        if (count > maxCount) {
+                            mostCommonFloor = floor;
+                            maxCount = count;
+                        }
+                    }
+                    this.buildingView.initiate_buildingView(mostCommonFloor, false);
+                }
+                this.cameraManager.zoomToObject(parentMesh);
+
+
+                // Show info pane with object name - InfoPane handles everything else
+                // This needs to be outside of this function, and called when the input is known to be Building/Unit/Room. pickMesh does not know the context.
+                this.infoPane.show(parentKey);
+            }
+        }
+    }
+
+    findParentBuilding(json) {
+        let parentKey = json.parents[0];
+        let parent = cityjson["CityObjects"][parentKey];
+        while (parent.type != "Building") {
+            parentKey = parent.parents[0];
+            parent = cityjson["CityObjects"][parentKey];
+        }
+        let meshKey = parentKey + '-lod_2';
+        this.buildingView.set_target(meshKey);
+        var parentMesh = this.scene.getObjectByName(meshKey);
+        return parentMesh;
     }
 
     unpick() {

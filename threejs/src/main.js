@@ -184,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // });
     }
 
-
     // Accessibility dropdown wiring
     // const accessibilityBtn = document.getElementById('accessibility-btn');
     // const accessibilityDropdown = document.getElementById('accessibility-dropdown');
