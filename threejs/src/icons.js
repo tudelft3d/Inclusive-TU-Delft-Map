@@ -1,181 +1,387 @@
-import * as THREE from 'three';
-import { CamerasControls } from './camera';
+import { CamerasControls } from "./camera";
+import {
+    CSS2DObject,
+    CSS2DRenderer,
+} from "three/addons/renderers/CSS2DRenderer.js";
+import { Scene, Vector3 } from "three";
 
-export function svgToCanvasTexture(svgUrl, size = 256) {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-
-    // Load the SVG image
-    const img = new Image();
-    img.crossOrigin = 'anonymous'; // Needed for remote SVGs
-    img.src = svgUrl;
-
-    // Return a promise that resolves once the image is ready
-    return new Promise((resolve) => {
-        img.onload = () => {
-            // Clear background (optional – keep transparent)
-            ctx.clearRect(0, 0, size, size);
-            // Draw the SVG centered on the canvas
-            ctx.drawImage(img, 0, 0, size, size);
-
-            // Build a Three.js texture from the canvas
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.needsUpdate = true;
-            resolve(tex);
-        };
-    });
-}
-
-export function svgToDiscTexture(svgUrl, size = 256, bgColor = '#ffffff', lineWidth = 10, lineColor = '#000000') {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous'; // Needed for remote SVGs
-        img.onload = () => {
-            // Create the canvas
-            const canvas = document.createElement('canvas');
-            canvas.width = canvas.height = size + lineWidth;
-            const ctx = canvas.getContext('2d');
-
-            // Draw the disc
-            const radius = size / 2;
-            const position = radius + lineWidth / 2
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(position, position, radius, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.fillStyle = bgColor;
-            ctx.fill();
-
-            // Draw the outline
-            ctx.lineWidth = lineWidth; // Adjust thickness as needed
-            ctx.strokeStyle = lineColor;
-            ctx.stroke();
-            ctx.restore();
-
-            // Draw the SVG centred on the disc
-            const paddingFactor = 0.8; // Scale for the SVG to fit in the disc
-            const drawSize = size * paddingFactor;
-            const offset = (size - drawSize) / 2 + lineWidth / 2;
-
-            ctx.drawImage(img, offset, offset, drawSize, drawSize);
-
-            // Turn the canvas into a three.js texture
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.needsUpdate = true;
-            tex.minFilter = THREE.LinearFilter;
-            resolve(tex);
-        };
-        img.onerror = reject;
-        img.src = svgUrl;
-    });
-}
-
-export class Icon {
-
+export class IconSet {
     /**
-     * 
-     * @param {THREE.CanvasTexture} svgTexture 
-     * @param {THREE.Vector3} worldPos 
+     * Create a set of icons at the same position.
+     *
+     * @param {string} key
+     * @param {SvgIcon[]} svgIcons
+     * @param {TextIcon | null} textIcon
+     * @param {THREE.Vector3} worldPos
+     * @param {*} onClick
      */
-    constructor(svgTexture, worldPos) {
-        const material = new THREE.SpriteMaterial({
-            map: svgTexture,
-            // alphaTest: 0.5,
-            // blending: THREE.NoBlending,
-            transparent: true,
-            depthTest: false,
-            depthWrite: true,
-            sizeAttenuation: true,
+    constructor(key, svgIcons, textIcon, worldPos, onClick) {
+        this.key = key;
+        this.basePos = worldPos;
+        // this.onClick = onClick;
+
+        this.svgIcons = {};
+        svgIcons.map((svgIcon) => {
+            const key = svgIcon.key;
+            if (key in this.svgIcons) {
+                console.error(
+                    `There is already a SvgIcon with this key ('${key}')`
+                );
+            }
+            this.svgIcons[key] = svgIcon;
         });
 
-        this.sprite = new THREE.Sprite(material);
-        this.basePos = worldPos;
+        this.textIcon = textIcon;
+
+        // Main wrapper that gets moved by three.js
+        this.wrapper = document.createElement("div");
+        this.wrapper.className = "icons-container";
+
+        // Subwrapper
+        this.subWrapper = document.createElement("div");
+        this.subWrapper.className = "icons-subcontainer";
+        this.wrapper.appendChild(this.subWrapper);
+
+        // Subsubwrapper to move the position anchor
+        this.subSubWrapper = document.createElement("div");
+        this.subSubWrapper.className = "icons-subsubcontainer";
+        this.subWrapper.appendChild(this.subSubWrapper);
+
+        // Add the text
+        if (this.textIcon) {
+            if (!(this.textIcon.container instanceof HTMLElement)) {
+                throw new Error("text must be a string or HTMLElement");
+            }
+            this.subSubWrapper.appendChild(this.textIcon.container);
+        }
+
+        // Build the row of icons
+        this._makeIconsRow();
+
+        // Pointing arrow
+        this.iconsArrow = document.createElement("img");
+        this.iconsArrow.src = '/assets/threejs/graphics/icons/thematic-layers/triangle.svg';
+        this.iconsArrow.className = "icons-arrow";
+        this.iconsArrow.style.setProperty('--triangle-fill', "white");
+        this.subWrapper.appendChild(this.iconsArrow);
+
+        // Make the actual three.js object
+        this.wrapperObject = new CSS2DObject(this.wrapper);
+        this.wrapper.addEventListener("click", (e) => {
+            onClick(e);
+        });
     }
 
-    /** Set the size in world units.
-     * 
-     * @param {number} size 
+    addSvgIcon(svgIcon) {
+        const key = svgIcon.key;
+        if (key in this.svgIcons) {
+            console.error(
+                `There is already a SvgIcon with this key ('${key}')`
+            );
+        }
+        this.svgIcons[key] = svgIcon;
+        this._makeIconsRow();
+    }
+
+    removeSvgIcon(key) {
+        if (!(key in this.svgIcons)) {
+            console.error(`There is no SvgIcon with this key ('${key}')`);
+            return;
+        }
+
+        delete this.svgIcons[key];
+
+        this._makeIconsRow();
+    }
+
+    _makeIconsRow() {
+
+        // Remove the previous row
+        if (this.svgIconsRow) {
+            this.subSubWrapper.removeChild(this.svgIconsRow);
+        }
+
+        if (Object.keys(this.svgIcons).length === 0) {
+
+            return;
+        };
+        
+        // Build the row of icons
+        this.svgIconsRow = document.createElement("div");
+        this.svgIconsRow.className = "icons-svg-row";
+        for (const [key, svgIcon] of Object.entries(this.svgIcons)) {
+            if (!(svgIcon.container instanceof HTMLElement)) {
+                throw new Error("Each icon must be an HTMLElement");
+            }
+            this.svgIconsRow.appendChild(svgIcon.container);
+        }
+        this.subSubWrapper.appendChild(this.svgIconsRow);
+    }
+
+    /**
+     * Set the scale in screen units.
+     *
+     * @param {number} scale
      */
-    _setSize(size) {
-        this.sprite.scale.set(size, size, 1);
-        this.sprite.position.copy(this.basePos.clone().add(new THREE.Vector3(0, size / 2, 0)));
+    _setScale(scale) {
+        const baseOffset = new Vector3(0, (50 * (1 - scale)) / 2, 0);
+        this.subWrapper.style.transform = `scale(${scale}) translate(0, -50%)`;
+        this.wrapperObject.position.copy(this.basePos.clone().add(baseOffset));
     }
 
-    /** Set the size of the sprite based on the camera position.
-     * 
-     * @param {CamerasControls} cameraManager 
+    /**
+     * Set the size of the sprite based on the camera position.
+     *
+     * @param {CamerasControls} cameraManager
      */
     setSizeFromCameraManager(cameraManager) {
-        const camToIcon = this.sprite.position.clone().sub(cameraManager.camera.position);
-        const camDirection = new THREE.Vector3();
-        cameraManager.camera.getWorldDirection(camDirection);
+        const thresholdDistance = 1000;
+
+        // Compute the distance from the camera to the object position
         var distance;
         if (cameraManager.usesMapCamera() || cameraManager.usesOrbitCamera()) {
+            const camToIcon = this.basePos
+                .clone()
+                .sub(cameraManager.camera.position);
+            const camDirection = new Vector3();
+            cameraManager.camera.getWorldDirection(camDirection);
             distance = camToIcon.dot(camDirection);
         } else if (cameraManager.usesOrthographicCamera()) {
             distance = cameraManager.orthographicDistance();
-
-            // distance = camToIcon.dot(camDirection) / cameraManager.camera.zoom;
         }
-        distance = Math.min(distance, 1000);
-        this._setSize(0.07 * distance);
+
+        // Compute the scale based on the distance
+        var scale;
+        if (distance < thresholdDistance) {
+            scale = 1;
+        } else {
+            scale = (1 * thresholdDistance) / distance;
+        }
+        this._setScale(scale);
     }
 }
 
-
 export class IconsSceneManager {
-
-    /** A class to manage a scene of icons and its specificities.
-     * 
-     * @param {THREE.Scene} scene 
+    /**
+     * A class to manage a scene of icons and its specificities.
+     *
+     * @param {Scene} scene
+     * @param {CSS2DRenderer} renderer
+     * @param {HTMLElement} iconContainer
+     * @param {HTMLElement} mainContainer
      */
-    constructor(scene) {
+    constructor(scene, renderer, iconContainer, mainContainer) {
         this.scene = scene;
-        this.icons = [];
+        this.renderer = renderer;
+        this.iconContainer = iconContainer;
+        this.mainContainer = mainContainer;
+        this.iconSets = {};
+        console.log(this.iconContainer);
+        this._setUpEventListeners();
     }
 
-    /** Add an icon to the scene.
-     * 
-     * @param {Icon} icon 
+    _setUpEventListeners() {
+        this.movedDuringPointer = false;
+        this.mainContainer.addEventListener("pointerdown", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            this.movedDuringPointer = false;
+            e.target.setPointerCapture(e.pointerId);
+        });
+        this.mainContainer.addEventListener("pointermove", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            this.movedDuringPointer = true;
+        });
+        this.mainContainer.addEventListener("pointerup", (e) => {
+            if (!this.iconContainer.contains(e.target)) return;
+            if (this.movedDuringPointer) return;
+
+            // var el = e.target;
+            // while (el.parentElement != this.iconContainer) {
+            //     el = el.parentElement;
+            // }
+            // el.dispatchEvent(new Event("click"));
+        });
+    }
+
+    /**
+     * Add an icon to the scene with an identifier.
+     *
+     * @param {IconSet} icon
      */
-    addIcon(icon) {
-        this.scene.add(icon.sprite);
-        this.icons.push(icon);
+    addIconSet(iconSet) {
+        const key = iconSet.key;
+        if (key in this.iconSets) {
+            console.error(
+                `There is already an IconSet with this key ('${key}')`
+            );
+        }
+        this.iconSets[key] = iconSet;
+        this.scene.add(iconSet.wrapperObject);
     }
 
-    /** Resize the icons based on the camera position.
+    /**
+     * Remove an IconSet from the scene based on its identifier.
+     *
+     * @param {string} key
+     */
+    removeIconSet(key) {
+        if (!(key in this.iconSets)) {
+            console.error(`There is no IconSet with this key ('${key}')`);
+            return;
+        }
+        const iconSet = this.iconSets[key];
+        this.scene.remove(iconSet.wrapperObject);
+        delete this.iconSets[key];
+    }
+
+    // /**
+    //  * Remove all IconSets from the scene.
+    //  *
+    //  */
+    // removeAllIconSets() {
+    //     for (const [key, icon] of Object.entries(this.iconSets)) {
+    //         this.removeIconSet(key);
+    //     }
+    // }
+
+    /**
+     * Resize the icons based on the camera position.
      * To call before rendering.
-     * 
-     * @param {CamerasControls} cameraManager 
+     *
+     * @param {CamerasControls} cameraManager
      */
     beforeRender(cameraManager) {
-        for (const icon of this.icons) {
+        for (const [key, icon] of Object.entries(this.iconSets)) {
             icon.setSizeFromCameraManager(cameraManager);
         }
     }
 
+    /**
+     *
+     * @param {number} time
+     * @param {CamerasControls} cameraManager
+     */
+    render(time, cameraManager) {
+        this.beforeRender(cameraManager);
+        this.renderer.render(this.scene, cameraManager.camera);
+    }
 }
 
+export class TextIcon {
+    /**
+     * A wrapper for text to put in an icon.
+     *
+     * @param {string} text The text that will be shown inside the icon.
+     * @param {Object} [options] Optional configuration.
+     * @param {string|null} [options.color=null] Text colour (CSS value). `null` means “inherit”.
+     * @param {string|null} [options.bgColor=null] Background colour (CSS value). `null` means “transparent”.
+     * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
+     */
+    constructor(
+        text,
+        { color = undefined, bgColor = undefined, cssClass = "" } = {}
+    ) {
+        // Main container that is moved by three.js
+        this.container = document.createElement("div");
+        this.container.className = "icon-text-container";
 
-export async function addPointerSprite(scene, svgTexture, worldPos, size, constantSize = false) {
-    const material = new THREE.SpriteMaterial({
-        map: svgTexture,
-        // alphaTest: 0.5,
-        // blending: THREE.NoBlending,
-        transparent: true,
-        depthTest: false,
-        depthWrite: true,
-        sizeAttenuation: !constantSize,
-    });
+        // Text content
+        this.content = document.createElement("div");
+        this.content.className = "icon-text-content";
+        this.content.textContent = text;
 
-    const sprite = new THREE.Sprite(material);
-    sprite.position.copy(worldPos);
+        // Optional colors
+        if (color) {
+            this.content.style.color = color;
+        }
+        if (bgColor) {
+            this.content.style.background = bgColor;
+        }
 
-    // Optional: scale the sprite in world units (not pixels)
-    sprite.scale.set(size, size, 1);
+        // Assemble the hierarchy
+        this.container.appendChild(this.content);
 
-    scene.add(sprite);
-    return sprite;
+    }
+
+    is_populated() {
+        return !(this.content["innerText"] == "");
+    }
+}
+
+export class SvgIcon {
+    /**
+     * A wrapper for a SVG element to put in an icon.
+     *
+     * @param {string} key The unique identifier of this SvgIcon.
+     * @param {SVGElement} svgElement The SVG element that will be shown inside the icon.
+     * @param {Object} [options] Optional configuration.
+     * @param {string|null} [options.size=null] Icon size (CSS value). `null` means default.
+     * @param {string|null} [options.bgColor=null] Background colour (CSS value). `null` means “transparent”.
+     * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
+     */
+    constructor(
+        key,
+        svgElement,
+        { size = null, bgColor = null, cssClass = "" } = {}
+    ) {
+        this.key = key;
+
+        // Main container that is placed by three.js
+        this.container = document.createElement("div");
+        this.container.className = "icon-svg-container";
+        if (size) {
+            this.container.style.width = size;
+            this.container.style.height = size;
+        }
+
+        // Background circle with a color
+        this.bgCircle = document.createElement("div");
+        this.bgCircle.className = "icon-svg-bg";
+        if (bgColor) {
+            this.bgCircle.style.background = bgColor;
+        }
+
+        // Icon content
+        // Clone so we don't move the original node out of its source location
+        this.content = svgElement.cloneNode(true);
+        this.content.setAttribute("class", "icon-svg-content");
+
+        // Assemble the hierarchy
+        this.bgCircle.appendChild(this.content);
+        this.container.appendChild(this.bgCircle);
+    }
+}
+
+export class SvgLoader {
+    constructor() {
+        this.urlToSvg = {};
+        this.parser = new DOMParser();
+    }
+
+    /**
+     * Fetch an SVG file and turn it into an SVGElement.
+     * Returns a Promise that resolves to the element.
+     *
+     * @param {string} url The URL (local or on the web) of the SVG file.
+     * @returns {SVGElement} The SVG element.
+     */
+    async getSvg(url) {
+        if (!(url in this.urlToSvg)) {
+            // Send the request
+            const resp = await fetch(url);
+            if (!resp.ok)
+                throw new Error(`Failed to fetch ${url}: ${resp.status}`);
+            const text = await resp.text();
+
+            // Parse the SVG
+            const doc = this.parser.parseFromString(text, "image/svg+xml");
+            const svg = doc.documentElement;
+            if (!(svg instanceof SVGElement)) {
+                throw new Error("Fetched file is not a valid SVG");
+            }
+            this.urlToSvg[url] = svg;
+        }
+
+        return this.urlToSvg[url];
+    }
 }

@@ -1,86 +1,46 @@
-import * as THREE from 'three';
-import { hoveredColor, pickedColor } from "./constants";
 import { InfoPane } from "./infoPane";
+import { Highlighter } from "./highlighter";
+import { BuildingView } from "./buildingView";
+import { Vector2, Scene, Camera, Raycaster, Mesh } from "three";
+import { CamerasControls } from "./camera";
+import { HOVERED_COLOR } from "./constants";
 
 export class ObjectPicker {
+    /**
+     *
+     * @param {HTMLElement} infoPaneElement
+     * @param {Highlighter} pickHighlighter
+     * @param {Scene} scene
+     * @param {CamerasControls} cameraManager
+     * @param {BuildingView} buildingView
+     */
+    constructor(
+        infoPaneElement,
+        pickHighlighter,
+        scene,
+        cameraManager,
+        buildingView
+    ) {
+        this.pickHighlighter = pickHighlighter;
+        this.hoverHightlighter = new Highlighter(HOVERED_COLOR);
+        this.scene = scene;
+        this.cameraManager = cameraManager;
+        this.buildingView = buildingView;
 
-    constructor(infoPaneElement, buildingView = null) {
-        this.raycaster = new THREE.Raycaster();
-        this.picked = null;
-        this.pickedColor = null;
+        this.raycaster = new Raycaster();
 
         // Create InfoPane instance from the DOM element
-        this.infoPane = new InfoPane(infoPaneElement, buildingView);
+        this.infoPane = new InfoPane(infoPaneElement, this.buildingView);
     }
 
-    // hover(normalizedPosition, scene, camera) {
-    //     // Restore the color if there is a hovered object
-    //     if (this.hovered) {
-    //         this.hovered.material.emissive.setHex(this.hoveredColor);
-    //         this.hoveredColor = null;
-    //         this.hovered = null;
-    //     }
-
-    //     // Cast a ray through the frustum
-    //     this.raycaster.setFromCamera(normalizedPosition, camera);
-    //     // Get the list of objects the ray intersected
-    //     const intersected = this.raycaster.intersectObjects(scene.children);
-    //     if (intersected.length) {
-    //         // pick the first object. It's the closest one
-    //         const mesh = intersected[0].object;
-    //         if (mesh == this.picked) {
-    //             return;
-    //         }
-
-    //         // To skip the background
-    //         if (!mesh.name) { return }
-
-    //         // To prevent the modification from applyting to all objects
-    //         if (!mesh.userData.hasOwnProperty('materialCloned')) {
-    //             // Clone the material and mark the mesh so we don’t clone again later
-    //             mesh.material = mesh.material.clone();
-    //             mesh.userData.materialCloned = true;
-    //         }
-
-    //         // Save its color
-    //         if (this.hovered == mesh && this.hovered == this.picked) {
-    //             this.hovered.material.emissive.setHex(pickedColor)
-    //         } else {
-    //             this.hoveredColor = mesh.material.emissive.getHex();
-    //         }
-
-    //         // Set its emissive color to red
-    //         mesh.material.emissive.setHex(hoveredColor);
-
-    //         this.hovered = mesh;
-    //     }
-    // }
-
-    /**
-     * Picks the closest object at the given position.
-     * Returns a boolean stating if an object was found.
-     * @param {THREE.Vector2} normalizedPosition
-     * @param {THREE.Scene} scene
-     * @param {THREE.Camera} camera
-     * @returns true if an object was found, else false.
-     */
-    pick(normalizedPosition, scene, camera) {
-        // Restore the color if there was a picked object
-        if (this.picked && this.picked.material && this.picked.material.emissive) {
-            this.picked.material.emissive.setHex(this.pickedColor);
-            this.infoPane.hide(); // Clean separation - InfoPane handles hiding
-        }
-        this.picked = null;
-        this.pickedColor = null;
-
-
+    _raycastPosition(normalizedPosition) {
         // Cast a ray through the frustum
-        this.raycaster.setFromCamera(normalizedPosition, camera);
+        this.raycaster.setFromCamera(
+            normalizedPosition,
+            this.cameraManager.camera
+        );
         // Get the list of objects the ray intersected
-        const hits = this.raycaster.intersectObjects(scene.children);
-
-        // No hit
-        if (!hits.length) { return false; }
+        const hits = this.raycaster.intersectObjects(this.scene.children);
 
         // Pick the first visible object
         let mesh = null;
@@ -91,36 +51,92 @@ export class ObjectPicker {
             }
         }
 
-        // No visible object found
-        if (!mesh) { return false; }
-
-        if (!mesh.name) { return false; }
-        this.highlight(mesh);
-
-        return true;
+        return mesh;
     }
 
-    highlight(mesh) {
-        // To skip the background
+    // hoverPosition(normalizedPosition) {
+    //     const mesh = this._raycastPosition(normalizedPosition);
+    //     this.hoverMesh(mesh);
+    // }
+
+    // /**
+    //  * Hover the given mesh, or resets if the mesh is null.
+    //  * 
+    //  * @param {Mesh | null} mesh 
+    //  */
+    // hoverMesh(mesh) {
+    //     // Skip if the mesh is picked
+    //     for (const pickedMesh in this.pickHighlighter.highlighted) {
+    //         if (pickedMesh.name == mesh.name) return;
+    //     }
+    //     if (mesh.name in this.pickHighlighter.highlighted) return;
+    //     console.log(mesh);
+    //     console.log(this.pickHighlighter.highlighted);
+
+    //     if (!mesh || !mesh.name) {
+    //         // Unhover
+    //         this._unhover();
+    //     } else {
+    //         // Hover the mesh
+    //         this.hoverHightlighter.highlight([mesh]);
+    //     }
+    // }
+
+    // _unhover() {
+    //     this.hoverHightlighter.unhighlight();
+    // }
 
 
-        // To prevent the modification from applying to all objects
-        if (!mesh.userData.hasOwnProperty('materialCloned')) {
-            // Clone the material and mark the mesh so we don't clone again later
-            mesh.material = mesh.material.clone();
-            mesh.userData.materialCloned = true;
+    /**
+     * Picks the closest object at the given position.
+     *
+     * @param {Vector2} normalizedPosition
+     */
+    pickPosition(normalizedPosition) {
+        const mesh = this._raycastPosition(normalizedPosition);
+        this.pickMesh(mesh);
+    }
+
+    /**
+     * Pick the given mesh, or resets if the mesh is null.
+     * 
+     * @param {Mesh | null} mesh 
+     */
+    pickMesh(mesh) {
+
+        if (mesh === undefined) {
+            console.error(mesh, "mesh was undefined");
         }
+        else if (!mesh || !mesh.name) {
+            // Unhighlight
+            this.unpick();
 
-        // Save its color
+            // Reset the building view
+            if (this.buildingView) {
+                this.buildingView.set_target(null);
+            }
 
-        this.pickedColor = mesh.material.emissive.getHex();
+            // Reset the camera
+            this.cameraManager.zoomToObject(null);
+        } else {
+            // Highlight the mesh
+            this.pickHighlighter.highlight([mesh]);
 
-        // Set its emissive color to picked color
-        mesh.material.emissive.setHex(pickedColor);
+            // Set the building view
+            if (this.buildingView) {
+                this.buildingView.set_target(mesh.name);
+            }
 
-        // Show info pane with object name - InfoPane handles everything else
-        this.infoPane.show(mesh.name);
+            // Zoom to the mesh
+            this.cameraManager.zoomToObject(mesh);
 
-        this.picked = mesh;
+            // Show info pane with object name - InfoPane handles everything else
+            this.infoPane.show(mesh.name);
+        }
+    }
+
+    unpick() {
+        this.pickHighlighter.unhighlight();
+        this.infoPane.hide();
     }
 }

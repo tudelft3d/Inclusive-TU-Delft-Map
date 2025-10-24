@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+export const BASEMAP_MIN_X = 84000;
+export const BASEMAP_MAX_X = 87500;
+export const BASEMAP_MIN_Y = 443500;
+export const BASEMAP_MAX_Y = 448000;
+export const BASEMAP_BOUNDARIES = [BASEMAP_MIN_X, BASEMAP_MIN_Y, BASEMAP_MAX_X, BASEMAP_MAX_Y];
+
 // Function to calculate viewport center in map coordinates
 function getViewportCenter(bbox) {
   const [minX, minY, maxX, maxY] = bbox;
@@ -43,7 +49,7 @@ function createPrioritizedQueue(minRow, maxRow, minCol, maxCol, wmtsBaseURL, lay
   // Sort by distance - closest tiles first
   tiles.sort((a, b) => a.distance - b.distance);
 
-  console.log(`🎯 Prioritized ${tiles.length} tiles - center-out loading strategy`);
+  // console.log(`🎯 Prioritized ${tiles.length} tiles - center-out loading strategy`);
   return tiles;
 }
 
@@ -68,11 +74,11 @@ const AVAILABLE_LAYERS = [
 // Function to preload all layers in the background
 export function preloadAllLayers(options = {}) {
   if (preloadingState.isPreloading) {
-    console.log('Preloading already in progress...');
+    // console.log('Preloading already in progress...');
     return;
   }
 
-  console.log('Starting background preloading of all map layers...');
+  // console.log('Starting background preloading of all map layers...');
   preloadingState.isPreloading = true;
 
   const preloadOptions = {
@@ -93,7 +99,7 @@ export function preloadAllLayers(options = {}) {
 
 // Function to preload a specific layer
 function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
-  console.log(`Preloading ${layerName} (${layer})...`);
+  // console.log(`Preloading ${layerName} (${layer})...`);
 
   const {
     matrixSet = "EPSG:28992",
@@ -104,7 +110,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
       107.52, 53.76, 26.88, 13.44, 6.72,
       3.36, 1.68, 0.84, 0.42, 0.21
     ],
-    bbox = [84000, 443500, 87500, 448000], // better option: to change query bbox to camera view
+    bbox = BASEMAP_BOUNDARIES, // better option: to change query bbox to camera view
     originX = -285401.92,
     originY = 903401.92,
     maxConcurrentLoads = 6
@@ -139,12 +145,12 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
       if (activePreloads === 0 && preloadQueue.length === 0) {
         // Preloading complete for this layer
         preloadingState.preloadedLayers.add(layer);
-        console.log(`✓ Preloading complete for ${layerName}: ${preloadedTiles}/${totalTiles} tiles cached`);
+        // console.log(`✓ Preloading complete for ${layerName}: ${preloadedTiles}/${totalTiles} tiles cached`);
 
         // Check if all layers are preloaded
         if (preloadingState.preloadedLayers.size === AVAILABLE_LAYERS.length) {
           preloadingState.isPreloading = false;
-          console.log('🎉 All layers preloaded successfully!');
+          // console.log('🎉 All layers preloaded successfully!');
         }
       }
       return;
@@ -172,14 +178,14 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
 
         // Log progress every 10 tiles
         if (preloadedTiles % 10 === 0) {
-          console.log(`${layerName}: ${preloadedTiles}/${totalTiles} tiles preloaded`);
+          // console.log(`${layerName}: ${preloadedTiles}/${totalTiles} tiles preloaded`);
         }
 
         preloadNextTile();
       },
       undefined,
       (error) => {
-        console.warn(`Failed to preload tile for ${layerName}: ${url}`, error);
+        // console.warn(`Failed to preload tile for ${layerName}: ${url}`, error);
         activePreloads--;
         preloadNextTile();
       }
@@ -253,7 +259,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
     }
   }
 
-  console.log(`Loading ${totalTiles} tiles for ${layer}...`);
+  // console.log(`Loading ${totalTiles} tiles for ${layer}...`);
 
   // Function to load next tile from queue
   function loadNextTile() {
@@ -290,14 +296,14 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
 
         if (loadedTiles % 5 === 0 || progressPercent <= 20) {
           // Show more frequent updates for the first 20% (viewport tiles)
-          console.log(`🗺️ ${layer}: ${loadedTiles}/${totalTiles} tiles (${progressPercent}%) - viewport-first loading`);
+          // console.log(`🗺️ ${layer}: ${loadedTiles}/${totalTiles} tiles (${progressPercent}%) - viewport-first loading`);
         }
 
         loadNextTile(); // Load next tile
       },
       undefined,
       (error) => {
-        console.warn(`Failed to load tile: ${url}`, error);
+        // console.warn(`Failed to load tile: ${url}`, error);
         activeLoads--;
         loadNextTile(); // Continue with next tile even if one fails
       }
@@ -330,7 +336,7 @@ export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luc
   }
 
   // Create prioritized loading queue - center-out strategy
-  console.log(`🎯 Creating viewport-first loading strategy for ${layer}...`);
+  // console.log(`🎯 Creating viewport-first loading strategy for ${layer}...`);
   const prioritizedTiles = createPrioritizedQueue(
     minRow, maxRow, minCol, maxCol,
     wmtsBaseURL, layer, matrixSet, zoom
@@ -362,7 +368,7 @@ export function clearTileCache() {
     texture.dispose();
   });
   tileCache.clear();
-  console.log('Tile cache cleared');
+  // console.log('Tile cache cleared');
 }
 
 // Function to get cache statistics

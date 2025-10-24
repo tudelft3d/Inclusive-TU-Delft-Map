@@ -1,7 +1,4 @@
 import { Map } from "./app";
-import { Searcher } from "./search";
-import { BuildingView } from "./buildingView"
-import { outline_code } from "./layers"
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#scene-container');
@@ -26,24 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Log initial status
     console.log('🗺️ TU Delft Map initialized!');
     console.log('💡 Use checkPreloadingStatus() in console to monitor tile preloading');
-    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info');
+    console.log('💡 Use mapInstance.getTileCacheInfo() for detailed cache info (if available)');
 
-    // map.loadGLTF('assets/campus/geom/model.glb');
-    // map.loadGLTF('assets/campus/geom/geometry.glb');
     map.loadGLTF('assets/threejs/buildings/geometry.glb');
-    map.loadIcon('assets/threejs/graphics/icons/home.svg');
-
-    const buildingView = new BuildingView(map);
-
-    map.buildingView = buildingView;
-
-    const searcher = new Searcher();
-
-    // The amount of time the searchbar will wait before searcing in miliseconds
-    const search_delay = 250;
-
-    // The number of results that are returned for partials searches
-    const search_result_count = 5;
 
     // Set up compass element and rotation updates
     const compassIcon = document.querySelector('#compass-btn svg') ||
@@ -54,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.setCompassElement(compassIcon);
 
         // Add controls change listener to update compass rotation
-        map.cameraManager.controls.addEventListener('change', () => {
+        map.cameraManager.addEventListenerControls('change', () => {
             map.cameraManager.updateCompassRotation();
         });
 
@@ -62,186 +44,135 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.updateCompassRotation();
     }
 
-    document.getElementById('zoom-in-btn').addEventListener('click', (event) => {
+    // Zoom buttons
+    const zi = document.getElementById('zoom-in-btn');
+    const zo = document.getElementById('zoom-out-btn');
+    if (zi) zi.addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
         map.cameraManager.zoomIn();
     });
-
-    document.getElementById('zoom-out-btn').addEventListener('click', (event) => {
+    if (zo) zo.addEventListener('click', (event) => {
         event.stopPropagation();
         event.preventDefault();
         map.cameraManager.zoomOut();
     });
 
-    document.getElementById('view-toggle-btn').addEventListener('click', () => {
-        console.log("Clicked the button")
-        map.cameraManager.toggleOrthographic();
-    });
+    // 2D/3D view toggle button
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
 
-    const searchBar = document.getElementById('search');
-    const intermediateResults = document.getElementById("intermediate_results");
-
-    // general idea of "debouncing" from: https://dev.to/rowsanali/how-to-implement-a-search-functionality-using-javascript-1n1b
-
-    let timeout;
-
-    function debounce(func, wait) {
-
-        return function (...args) {
-
-            window.clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
+    function updateViewToggleUI() {
+        if (!viewToggleBtn) return;
+        const isOrtho = map.cameraManager.usesOrthographicCamera();
+        // when in 3D show "2D"
+        const label = isOrtho ? '3D' : '2D';
+        viewToggleBtn.textContent = label;
+        viewToggleBtn.setAttribute('aria-pressed', (!isOrtho).toString());
+        viewToggleBtn.title = `${label} view`;
+        // change appearance when the button shows "2D"
+        viewToggleBtn.classList.toggle('shows-2d', label === '2D');
     }
 
+    if (viewToggleBtn) {
+        updateViewToggleUI();
 
-    // Since we are adding html elements, we could in theory add entire subviews to the
-    // intermediate results, like a little picture of the result or other data.
-    function show_intermediate_results(search_results) {
+        viewToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            map.cameraManager.toggleOrthographic();
+            // update UI after camera change (with slight delay to allow for camera update)
+            setTimeout(updateViewToggleUI, 80);
+        });
 
-        var ul = document.createElement("ul");
+        // keep UI in sync with external camera changes
+        map.cameraManager.addEventListenerControls('change', updateViewToggleUI);
 
-        intermediateResults.innerHTML = '';
-
-        search_results = search_results.map((element) => { return element.item.attributes["key"] });
-
-        for (let i = 0; i < search_results.length; i++) {
-
-            var li = document.createElement("li");
-            li.appendChild(document.createTextNode(search_results[i]));
-
-            li.addEventListener("click", (event) => {
-
-                searcher.search_and_zoom(search_results[i], map);
-
-            });
-
-            //Example of how to engage with the intermediate result:
-            // li.addEventListener("mouseover", (event) => {
-            //     console.log("yeah that works");
-            // });
-
-            ul.appendChild(li);
-
-        }
-
-        intermediateResults.appendChild(ul);
+        const mq = window.matchMedia('(max-width:620px)');
+        mq.addEventListener?.('change', updateViewToggleUI);
+        window.addEventListener('resize', updateViewToggleUI);
     }
 
-
-
-    searchBar.addEventListener('keyup', (event) => {
-
-        let value = event.target.value;
-
-        if (!value || value.trim().length <= 0) {
-            return;
-        }
-
-        // If the key being released is enter, the user wants to search
-        // If the key being released is not enter, we show intermediate results
-        if (event.key === "Enter") {
-
-            searcher.search_and_zoom(value, map);
-
-        } else {
-
-            const debouncedSearch = debounce(() => {
-                const results = searcher.search_n_best_matches(value, search_result_count);
-                show_intermediate_results(results);
-            }, search_delay);
-
-            debouncedSearch();
-
-        }
-
-    });
-
-    // These two make sure the suggestions are hidden,
-    // but they also cause the suggestions to disappear before they can be clicked
-    searchBar.addEventListener("focusout", (event) => {
-
-        setTimeout(() => {
-            intermediateResults.style.visibility = 'hidden';
-        }, 100);
-
-        //intermediateResults.style.visibility = 'hidden';
-    });
-
-    searchBar.addEventListener("focusin", (event) => {
-        intermediateResults.style.visibility = 'visible';
-    });
-
+    // Basemap dropdown wiring
     const basemapBtn = document.getElementById('basemap-btn');
     const basemapDropdown = document.getElementById('basemap-dropdown');
+    if (basemapBtn && basemapDropdown) {
+        basemapBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // ensure other top-right dropdowns are closed
+            const other = document.getElementById('layers-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== basemapDropdown) other.style.display = 'none';
+            if (accessibility && accessibility !== basemapDropdown) accessibility.style.display = 'none';
 
-    basemapBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (basemapDropdown.style.display === 'none' || basemapDropdown.style.display === '') {
-            basemapDropdown.style.display = 'block';
-        } else {
-            basemapDropdown.style.display = 'none';
-        }
-    });
+            basemapDropdown.style.display = (basemapDropdown.style.display === 'block') ? 'none' : 'block';
+        });
 
-    document.addEventListener('click', () => {
-        basemapDropdown.style.display = 'none';
-    });
-
-    basemapDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const url = item.dataset.url;
-            const layer = item.dataset.layer;
-            map.setBasemap(url, layer);
+        document.addEventListener('click', () => {
             basemapDropdown.style.display = 'none';
         });
-    });
 
+        basemapDropdown.querySelectorAll('a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = item.dataset.url;
+                const layer = item.dataset.layer;
+                if (typeof map.setBasemap === 'function') {
+                    map.setBasemap(url, layer);
+                } else if (typeof map.setBaseMap === 'function') {
+                    map.setBaseMap(url, layer);
+                } else {
+                    console.warn('No basemap setter on map', url, layer);
+                }
+                basemapDropdown.style.display = 'none';
+            });
+        });
+    }
+
+    // Layers dropdown wiring
     const layersBtn = document.getElementById('layers-btn');
     const layersDropdown = document.getElementById('layers-dropdown');
 
-    layersBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (layersDropdown.style.display === 'none' || layersDropdown.style.display === '') {
-            layersDropdown.style.display = 'block';
-        } else {
-            layersDropdown.style.display = 'none';
-        }
-    });
+    if (layersBtn && layersDropdown) {
+        layersBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // close other top-right dropdowns before toggling this one
+            const other = document.getElementById('basemap-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== layersDropdown) other.style.display = 'none';
+            if (accessibility && accessibility !== layersDropdown) accessibility.style.display = 'none';
 
-    layersDropdown.querySelectorAll('a').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
+            layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
+        });
 
-            outline_code(item.dataset.code, map);
+        // layersDropdown.querySelectorAll('a').forEach(item => {
+        //     item.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
+        //         layersDropdown.style.display = 'none';
+        //     });
+        // });
 
+        document.addEventListener('click', () => {
             layersDropdown.style.display = 'none';
         });
-    });
+    }
 
-    document.addEventListener('click', () => {
-        layersDropdown.style.display = 'none';
-    });
 
-    const accessibilityBtn = document.getElementById('accessibility-btn');
-    const accessibilityDropdown = document.getElementById('accessibility-dropdown');
+    // Accessibility dropdown wiring
+    // const accessibilityBtn = document.getElementById('accessibility-btn');
+    // const accessibilityDropdown = document.getElementById('accessibility-dropdown');
+    // if (accessibilityBtn && accessibilityDropdown) {
+    //     accessibilityBtn.addEventListener('click', (event) => {
+    //         event.stopImmediatePropagation();
+    //         accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
+    //     });
 
-    accessibilityBtn.addEventListener('click', (event) => {
-        event.stopImmediatePropagation();
-        if (accessibilityDropdown.style.display === 'none' || accessibilityDropdown.style.display === '') {
-            accessibilityDropdown.style.display = 'block';
-        } else {
-            accessibilityDropdown.style.display = 'none';
-        }
-    });
+    //     document.addEventListener('click', () => {
+    //         accessibilityDropdown.style.display = 'none';
+    //     });
+    // }
 
-    document.addEventListener('click', () => {
-        accessibilityDropdown.style.display = 'none';
-    });
-
-    // RESET VIEW BUTTON
+    // Reset view button
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', (event) => {
@@ -250,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // COMPASS BUTTON
+    // Compass button
     const compassBtn = document.getElementById('compass-btn');
     if (compassBtn) {
         compassBtn.addEventListener('click', (event) => {
@@ -259,71 +190,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LOCATION BUTTON
+    // Location button
     const locationBtn = document.getElementById('location-btn');
+    var movedSinceLastBtnPush = true;
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
+            console.log("Pressed button")
+            console.log(movedSinceLastBtnPush);
             event.stopPropagation();
-            map.getUserLocationAndZoom();
+            if (!map.locationManager.initialised) {
+                map.locationManager.inititialise(true, () => {
+                    movedSinceLastBtnPush = false;
+                });
+            } else if (movedSinceLastBtnPush || map.locationManager.hidden) {
+                map.locationManager.unhide();
+                map.locationManager.moveToLocation(false, () => {
+                    movedSinceLastBtnPush = false;
+                });
+            } else {
+                map.locationManager.hide();
+            }
+            movedSinceLastBtnPush = false;
+            console.log(movedSinceLastBtnPush);
+        });
+        map.cameraManager.addEventListenerControls("change", (e) => {
+            movedSinceLastBtnPush = true;
+        })
+    }
+
+    // BV (streetview) button
+    const bvBtn = document.getElementById("bv-btn");
+    if (bvBtn) {
+        bvBtn.addEventListener("click", () => {
+            map.buildingView.initiate_buildingView();
         });
     }
 
-    const bvBtn = document.getElementById("bv-btn");
-    bvBtn.addEventListener("click", (event) => {
-
-        buildingView.initiate_buildingView();
-
-    });
-
-
+    // BV storey dropdown
     const bvDropdown_button = document.getElementById("bv-storey-btn");
     const bvDropdown_dropdown = document.getElementById("bv-dropdown");
+    if (bvDropdown_button && bvDropdown_dropdown) {
+        bvDropdown_button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            bvDropdown_dropdown.style.display = (bvDropdown_dropdown.style.display === 'block') ? 'none' : 'block';
+        });
+    }
 
-    bvDropdown_button.addEventListener("click", (event) => {
-
-        event.stopPropagation();
-        if (bvDropdown_dropdown.style.display === 'none' || bvDropdown_dropdown.style.display === '') {
-            bvDropdown_dropdown.style.display = 'block';
-        } else {
-            bvDropdown_dropdown.style.display = 'none';
-        }
-
-    });
-
-    // LOD DROPDOWN - Commented out
+    // LOD dropdown (kept commented for future use)
     /*
     const lodBtn = document.getElementById('lod-btn');
     const lodDropdown = document.getElementById('lod-dropdown');
-
     if (lodBtn && lodDropdown) {
-        lodBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            if (lodDropdown.style.display === 'none' || lodDropdown.style.display === '') {
-                lodDropdown.style.display = 'block';
-            } else {
-                lodDropdown.style.display = 'none';
-            }
-        });
-
-
-        document.addEventListener('click', () => {
-            lodDropdown.style.display = 'none';
-
-            if (lod === 'lod_0') {
-                console.log('lod0');
-                map.setOutline('BuildingRoom','lod_0');
-            }
-        });
-
-        lodDropdown.querySelectorAll('a').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const lod = item.dataset.lod;
-                map.lodVis(lod);
-                lodDropdown.style.display = 'none';
-            });
-        });
+        // ...existing LOD wiring...
     }
     */
 
+    // Reveal search bar after wiring all handlers to prevent initial flash
+    // window.addEventListener('load', () => {
+    //     const searchBar = document.getElementById('search-bar');
+    //     if (searchBar) searchBar.style.visibility = 'visible';
+    // });
 });

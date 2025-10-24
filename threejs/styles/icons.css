@@ -1,0 +1,75 @@
+/* Styling for the icons of the map*/
+
+.icons-arrow {
+    width: 20px;
+}
+
+.icons-subcontainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    max-width: 100%;
+    margin: 0;
+    pointer-events: none;
+}
+
+.icons-subsubcontainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    margin: 0 auto;
+    pointer-events: none;
+}
+
+.icon-text-content {
+    position: relative;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font: 16px sans-serif;
+    font-weight: 600;
+    padding: 3px 3px 1px 3px;
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 5px;
+}
+
+.icon-text-container {
+    pointer-events: auto;
+}
+
+.icons-svg-row {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+    gap: 2px;
+    justify-content: center;
+}
+
+.icon-svg-container {
+    display: flex;
+    align-items: center;
+    width: 26px;
+    height: 26px;
+    justify-content: center;
+    border: 2px solid #000000;
+    border-radius: 20%;
+    pointer-events: auto;
+}
+
+.icon-svg-bg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20%;
+}
+
+.icon-svg-content {
+    width: 80%;
+    height: 80%;
+    display: block;
+}

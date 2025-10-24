@@ -26,8 +26,8 @@ function initHeaderToggle() {
   toggle.dataset.bound = '1';
 
 
-  // // attempt to init on DOMContentLoaded if header HTML is embedded server-side
-  // document.addEventListener('DOMContentLoaded', () => initHeaderToggle());
+  // attempt to init on DOMContentLoaded if header HTML is embedded server-side
+  document.addEventListener('DOMContentLoaded', () => initHeaderToggle());
 
   // delegated anchor handling: close menu and allow/force navigation
   nav.addEventListener('click', (e) => {
@@ -36,19 +36,13 @@ function initHeaderToggle() {
     const href = a.getAttribute('href');
     // Close the menu immediately
     close();
-    // If a normal HTML page link and something else may block navigation, ensure navigation:
-    if (href && !href.startsWith('#') && !a.hasAttribute('target')) {
-      setTimeout(() => { window.location.href = href; }, 100);
-    }
   });
 
-
-  // tighten document click: only close when clicking outside nav/toggle/backdrop
+  // tighten document click: only close when clicking outside nav/toggle
   document.addEventListener('click', (e) => {
     if (nav.contains(e.target) || toggle.contains(e.target)) return;
     close();
   });
-
   toggle.dataset.bound = '1';
 
 

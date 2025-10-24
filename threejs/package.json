@@ -2,13 +2,15 @@
   "name": "inclusive-campus-map",
   "version": "0.1.0",
   "dependencies": {
-    "fuse.js": "^7.1.0",
-    "ol": "^10.6.1",
     "express": "^5.1.0",
+    "fuse.js": "^7.1.0",
     "joi": "^18.0.1",
+    "ol": "^10.6.1",
+    "papaparse": "^5.5.3",
     "pm2": "^6.0.13",
     "proj4": "^2.19.10",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

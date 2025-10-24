@@ -1,35 +1,48 @@
 import { Map } from "./app";
 import { ObjectPicker } from "./objectPicker"
 import * as THREE from 'three';
+import { CamerasControls } from "./camera";
+import { Scene } from "three";
+import { OutlineManager } from "./outlines";
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-
 export class BuildingView {
 
-    constructor(map) {
-
+    /**
+     * 
+     * @param {CamerasControls} cameraManager 
+     * @param {Scene} scene 
+     * @param {[]} buildings 
+     * @param {OutlineManager} outlineManager
+     */
+    constructor(cameraManager, scene, buildings, outlineManager, layer_manager) {
         this.active = false;
 
-        this.map = map;
+        this.cameraManager = cameraManager;
+        this.scene = scene;
+        this.buildings = buildings;
+        this.outlineManager = outlineManager;
+        this.layer_manager = layer_manager
 
+        this.selectedKey;
         this.building_key;
-
         this.building_json;
-
         this.building_threejs;
-
         this.storeys_json;
-
         this.current_storey;
-
     }
 
     set_target(key) {
 
+        if (this.active || !key) {
+            return;
+        }
+
+        this.selectedKey = key;
         this.building_key = key.split("-").slice(0, 3).join("-");
 
         // Alternatively
-        // this.building_key = this.map.scene.getObjectByName(key).parent.name;
+        // this.building_key = this.scene.getObjectByName(key).parent.name;
 
     }
 
@@ -52,22 +65,30 @@ export class BuildingView {
         this.active = true;
 
 
-        this.map.cameraManager.switchToOrthographic();
+        this.cameraManager.switchToOrthographic();
 
+        // Hide all other buildings except the current one
+        this._hideOtherBuildings();
 
         this.building_json = cityjson.CityObjects[this.building_key];
 
         this.storeys_json = this._isolate_storey_json();
 
-        this.building_threejs = this.map.scene.getObjectByName(this.building_key);
+        this.building_threejs = this.scene.getObjectByName(this.building_key);
+
+        // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
 
         this._unhide_objects_recursive(this.building_threejs);
 
         this._hide_mesh_children(this.building_threejs);
 
 
-        const storey_00_room_threejs = this._retrieve_room_threejs_objects("00");
+        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects("00");
         this._unhide_objects(storey_00_room_threejs);
+
+
+        this.layer_manager.switch_to_building_view(this.building_key, storey_00_room_keys);
+
 
         this._apply_outlines(storey_00_room_threejs, "lod_0", "default");
 
@@ -77,19 +98,34 @@ export class BuildingView {
 
     leave_buildingView() {
 
+        if (!this.active) {
+            return;
+        }
+
         this._hide_mesh_children(this.building_threejs);
 
-        this._unhide_objects([this.map.scene.getObjectByName(this.building_key.concat("-lod_2"))]);
+        const selectedBuilding = this.scene.getObjectByName(this.selectedKey);
+        this._unhide_objects([selectedBuilding]);
 
-        this.map.setOutline(this.map.buildings);
+        this.outlineManager.setOutline(this.buildings);
 
-        this.building_key = undefined;
+        // Show all other buildings again
+        this._showOtherBuildings();
+
+        // I disabled this because I expect when I exit orthographic view, 
+        // the building remains selected (target)
+        // this.building_key = undefined; 
 
         this.active = false;
+
+        this.cameraManager.switchToOrbit();
+        this.picker.pickMesh(selectedBuilding);
 
         var storey_dropdown = document.getElementById("bv-dropdown");
 
         storey_dropdown.innerHTML = "";
+
+        this.layer_manager.switch_to_campus_view();
 
     }
 
@@ -101,7 +137,7 @@ export class BuildingView {
             keys.push(current_object.name.split("-").slice(0, 3).join("-"));
         });
 
-        this.map.setOutline(keys, lod, style);
+        this.outlineManager.setOutline(keys, lod, style);
 
     }
 
@@ -109,11 +145,13 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        const new_storey_threejs = this._retrieve_room_threejs_objects(storey_code);
+        const [new_storey_keys, new_storey_threejs] = this._retrieve_room_keys_and_room_threejs_objects(storey_code);
 
         this._unhide_objects(new_storey_threejs);
 
         this._apply_outlines(new_storey_threejs, "lod_0", "default");
+
+        this.layer_manager.enable_storey_icons(new_storey_keys);
 
     }
 
@@ -151,7 +189,7 @@ export class BuildingView {
 
     }
 
-    _retrieve_room_threejs_objects(storey_code) {
+    _retrieve_room_keys_and_room_threejs_objects(storey_code) {
 
         if (!(storey_code in this.storeys_json)) {
             console.log("Invalid storey code, returning empty array");
@@ -172,15 +210,25 @@ export class BuildingView {
 
         building_room_keys.forEach((room_key) => {
 
-            // const space_id = cityjson.CityObjects[room_key]["attributes"]["space_id"];
-
             const threejs_object_name = room_key.concat("-lod_0");
 
-            room_threejs_objects.push(this.map.scene.getObjectByName(threejs_object_name));
+            const roomObject = this.scene.getObjectByName(threejs_object_name);
+
+            if (roomObject) {
+
+                // if the Z value of the layer (picked from the lowest point of the room) is negative
+                if (roomObject.geometry.boundingBox.min.z < 0) {
+                    // set the position to the absolute value
+                    roomObject.position.z = Math.abs(roomObject.geometry.boundingBox.min.z);
+                }
+
+            }
+
+            room_threejs_objects.push(roomObject);
 
         });
 
-        return room_threejs_objects;
+        return [building_room_keys, room_threejs_objects];
 
     }
 
@@ -265,6 +313,12 @@ export class BuildingView {
 
                 this._switch_to_storey(storey_codes[i]);
 
+                // Close the dropdown after selecting a storey
+                const bvDropdown = document.getElementById("bv-dropdown");
+                if (bvDropdown) {
+                    bvDropdown.style.display = 'none';
+                }
+
             });
 
             a.href = "#";
@@ -273,6 +327,53 @@ export class BuildingView {
 
         }
 
+    }
+
+    _hideOtherBuildings() {
+        // Find the world group that contains all buildings
+        const worldGroup = this.scene.getObjectByName('world');
+
+        if (!worldGroup) {
+            console.log('World group not found');
+            return;
+        }
+
+        console.log(`Found world group with ${worldGroup.children.length} buildings`);
+
+        // Check each building in the world group
+        worldGroup.children.forEach((building, index) => {
+
+            // Hide all buildings except the current one
+            if (building.name !== this.building_key) {
+                building.visible = false;
+                //console.log(`Hidden: ${building.name}`);
+            } else {
+                building.visible = true;
+                // console.log(`Keeping visible: ${building.name}`);
+            }
+        });
+
+        console.log(`✅ Hidden all buildings except: ${this.building_key}`);
+    }
+
+    _showOtherBuildings() {
+        // Find the world group that contains all buildings
+        const worldGroup = this.scene.getObjectByName('world');
+
+        if (!worldGroup) {
+            console.log('World group not found');
+            return;
+        }
+
+        console.log(`Showing all ${worldGroup.children.length} buildings`);
+
+        // Make all buildings visible again
+        worldGroup.children.forEach((building) => {
+            building.visible = true;
+            // console.log(`Shown: ${building.name}`);
+        });
+
+        console.log(`All buildings are now visible`);
     }
 
 }
