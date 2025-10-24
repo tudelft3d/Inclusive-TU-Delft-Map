@@ -179,9 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
         //     });
         // });
 
-        document.addEventListener('click', () => {
-            layersDropdown.style.display = 'none';
-        });
+        // document.addEventListener('click', () => {
+        //     layersDropdown.style.display = 'none';
+        // });
     }
 
 

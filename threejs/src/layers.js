@@ -50,9 +50,9 @@ export class LayerManager {
 		this.active_layers = [];
 
 
-		this._populate_layer_buttons();
+		// this._populate_layer_buttons();
 
-		// this._populate_layer_buttons_alt();
+		this._populate_layer_buttons_alt();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
@@ -599,56 +599,129 @@ export class LayerManager {
 
 		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
 
-			console.log(group_name);
-			console.log(group_layers);
+			let group_div = document.createElement("div");
+			layers_dropdown.appendChild(group_div);
 
-			var ul = document.createElement("ul");
+			let group_span_div = document.createElement("div");
+			group_span_div.className = "layer-button-row";
+			group_div.appendChild(group_span_div);
 
-			var a = document.createElement("a");
 
-			let header_text = document.createTextNode(group_name);
+			let open_span = document.createElement("span");
+			let activate_span = document.createElement("span");
 
-			a.appendChild(header_text);
+			group_span_div.appendChild(open_span);
+			group_span_div.appendChild(activate_span);
 
-			ul.appendChild(a);
 
-			let list_elements = [];
+			let open_button = document.createElement("button");
+			open_button.append(document.createTextNode("+"));
+			open_button.className = "layer-button";
+
+			
+
+			open_span.appendChild(open_button);
+
+
+			let activate_button = document.createElement("button");
+			activate_button.append(document.createTextNode(group_name));
+			activate_button.className = "layer-button";
+
+			activate_span.appendChild(activate_button);
+
+
+			let layer_div = document.createElement("div");
+			layer_div.className = "layer-button-background";
+			layer_div.id = group_name + "_div_id"
+
+			group_div.appendChild(layer_div);
 
 			for (const [layer_name, layer_code] of Object.entries(group_layers)) {
 
-				var li = document.createElement("li");
+				let current_layer_button = document.createElement("button");
+				current_layer_button.append(document.createTextNode(layer_name));
+				current_layer_button.className = "layer-button";
 
-				var a_li = document.createElement("a");
+				current_layer_button.addEventListener('click', () => {
+					console.log(layer_code);
+					this._update_active_layers(layer_code);
+		        });
 
-				let button_text = document.createTextNode(layer_name);
-
-				a_li.appendChild(button_text);
-
-				li.appendChild(a_li);
-
-				list_elements.push(li);
-				// list_elements.push(a_li);
-				// list_elements.push(button_text);
-
-				ul.appendChild(li);
+		        layer_div.appendChild(current_layer_button);
 
 			}
 
-			a.addEventListener('click', () => {
-				list_elements.forEach((element) => {
+			open_button.addEventListener('click', (event) => {
 
-					console.log(element);
+				let current_group_div = document.getElementById(group_name + "_div_id");
 
-					element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
+				current_group_div.style.display = (current_group_div.style.display === '') ? 'none' : '';
+		    });
 
-					// for (const child of element.children) {
-					// 	child.style.display = (child.style.display === 'block') ? 'none' : 'block';
-					// }
+		    activate_button.addEventListener('click', (event) => {
+		    	console.log("Activate:", group_name, layers);
+		    });
 
-				})
-			});
 
-			layers_dropdown.appendChild(ul);
+
+			// let text_span = document.createElement("span");
+			// let icon_span = document.createElement("span");
+
+			// var ul = document.createElement("ul");
+			// ul.className = "layer-button-background";
+
+			// let header_text = document.createTextNode(group_name);
+			// text_span.appendChild(header_text);
+
+			// let img = document.createElement("img");
+			// img.setAttribute('width', '20');
+			// img.setAttribute('height', '20');
+			// img.setAttribute('align', 'top');
+
+			// img.src = "../assets/threejs/graphics/icons/ui-buttons/plus_white.svg";
+			// img.setAttribute('fill', 'black');
+
+			// icon_span.appendChild(img);
+
+			// div.appendChild(icon_span);
+			// div.appendChild(text_span);
+			// div.appendChild(ul);
+
+			// for (const [layer_name, layer_code] of Object.entries(group_layers)) {
+
+			// 	var li = document.createElement("li");
+
+			// 	var a_li = document.createElement("a");
+
+			// 	let button_text = document.createTextNode(layer_name);
+
+			// 	a_li.appendChild(button_text);
+
+			// 	li.appendChild(a_li);
+
+			// 	ul.appendChild(li);
+
+			// 	a_li.addEventListener('click', (event) => {
+
+			// 		console.log(layer_name);
+
+			// 	});
+
+			// }
+
+			// text_span.addEventListener('click', (event) => {
+
+			// 	// console.log(event.srcElement.parentNode.children);
+
+			// 	let current_ul = event.srcElement.parentNode.getElementsByTagName("ul")[0];
+
+			// 	// let current_ul = event.srcElement.nextElementSibling;
+
+			// 	current_ul.style.display = (current_ul.style.display === '') ? 'none' : '';
+
+			// });
+
+			// layers_dropdown.appendChild(div);
 
 		}
 
