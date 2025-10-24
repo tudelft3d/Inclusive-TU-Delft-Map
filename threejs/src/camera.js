@@ -63,7 +63,7 @@ export class CamerasControls {
 
         this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
         this.orbitControls.mouseButtons = {
-            LEFT: THREE.MOUSE.PAN,
+            LEFT: THREE.MOUSE.ROTATE,
             MIDDLE: THREE.MOUSE.DOLLY,
             RIGHT: THREE.MOUSE.ROTATE
         }
