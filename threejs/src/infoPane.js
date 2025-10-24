@@ -38,10 +38,31 @@ export class InfoPane {
         return null;
     }
 
+    _getBuildingDataFromName_alt(objectName) {
+        if (!objectName) return null;
+
+        // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
+        const cleanName = objectName.replace(/-lod_\d+$/, '');
+
+        // Look up in CityJSON
+        const cityObjects = cityjson.CityObjects;
+
+        if (cityObjects && cityObjects[cleanName]) {
+            const buildingData = cityObjects[cleanName];
+
+            return buildingData;
+        }
+
+        return null;
+    }
+
     /**
      * Show info for a picked object
      */
     show(data) {
+
+        const raw_data = data;
+
         // Store original name if it's a string
         const originalName = typeof data === 'string' ? data : null;
 
@@ -152,7 +173,225 @@ export class InfoPane {
         this.pane.style.display = 'block'; // Keep it always visible, even with no info
 
         this._attachEventListeners();
+
+        this.show_alt(raw_data);
     }
+
+    show_alt(object_threejs_name) {
+
+        // TODO add checks for missing data
+
+        this.pane.innerHTML = "";
+
+        const object_json = this._getBuildingDataFromName_alt(object_threejs_name);
+
+        this._add_infoPane_title(object_json);
+
+        const wanted_attributes = [
+            "Address",
+            "Phone number",
+            "Email"
+        ];
+
+        wanted_attributes.forEach((attribute_name) => {
+
+            this._add_infoPane_object(object_json, attribute_name);
+
+        });
+
+        const open_hours_attributes = [
+            "Opening hours (Monday)",
+            "Opening hours (Tuesday)",
+            "Opening hours (Wednesday)",
+            "Opening hours (Thursday)",
+            "Opening hours (Friday)",
+            "Opening hours (Saturday)",
+            "Opening hours (Sunday)",
+        ];
+
+        this._add_infoPane_nested_object(object_json, "Opening Hours", open_hours_attributes, true);
+
+        this._add_infoPane_floorplan_button();
+
+        this._add_infoPane_extra_buttons();
+
+    }
+
+
+    _add_infoPane_title(object_json) {
+
+        let div = document.createElement("div");
+
+        div.className = "info-pane-header";
+
+        let h3 = document.createElement("h3");
+
+        h3.className = "info-pane-title";
+
+        const title_text = object_json.attributes["Name (EN)"];
+
+        h3.appendChild(document.createTextNode(title_text));
+
+        let close_button = document.createElement("button");
+
+        close_button.className = "info-pane-close"
+        close_button["aria-label"] = "Close";
+        close_button.value = "&times";
+        close_button.appendChild(document.createTextNode("x"));
+
+        close_button.addEventListener('click', () => this.hide());
+
+        div.appendChild(h3);
+        div.appendChild(close_button);
+
+        this.pane.appendChild(div);
+
+    }
+
+    _add_infoPane_object(object_json, attribute_name) {
+
+        let div = document.createElement("div");
+        div.className = "info-pane-row";
+
+
+        let label_span = document.createElement("span");
+        label_span.className = "info-pane-label";
+        label_span.appendChild(document.createTextNode(attribute_name));
+
+
+        let value_span = document.createElement("span");
+        value_span.className = "info-pane-value";
+        value_span.appendChild(document.createTextNode(object_json.attributes[attribute_name]));
+
+
+        div.appendChild(label_span);
+        div.appendChild(value_span);
+
+        this.pane.appendChild(div);
+
+    }
+
+
+    _add_infoPane_nested_object(object_json, title, attribute_names, open=false) {
+
+        let div = document.createElement("div");
+
+        // div.className = "info-pane-row";
+
+
+        let det = document.createElement("details");
+
+        det.open = open;
+
+
+        let ul = document.createElement("ul");
+        det.appendChild(ul);
+
+
+        attribute_names.forEach((current_attribute_name) => {
+
+            const current_attribute_value = object_json.attributes[current_attribute_name];
+
+            let label_span = document.createElement("span");
+            label_span.className = "info-pane-label";
+            label_span.appendChild(document.createTextNode(current_attribute_name));
+
+
+            let value_span = document.createElement("span");
+            value_span.className = "info-pane-value";
+            value_span.appendChild(document.createTextNode(current_attribute_value));
+
+            let li = document.createElement("li");
+
+            li.appendChild(label_span);
+            li.appendChild(value_span);
+
+            ul.appendChild(li);
+
+        });
+
+
+        let sum = document.createElement("summary");
+        let sum_span = document.createElement("span");
+        sum_span.className = "info-pane-label";
+        sum_span.appendChild(document.createTextNode(title));
+        sum.appendChild(sum_span);
+
+        det.appendChild(sum);
+
+        div.appendChild(det);
+
+        this.pane.appendChild(div);
+    }
+
+
+    _add_infoPane_floorplan_button() {
+
+        let div = document.createElement("div");
+        div.className = "info-pane-button-background";
+
+        let button = document.createElement("button");
+        button.className = "info-pane-button";
+
+        let button_icon = document.createElement("i");
+        button_icon.className = "fa-solid fa-layer-group";
+
+        button.appendChild(button_icon);
+        button.append(document.createTextNode("View Floorplan"));
+
+        button.addEventListener('click', () => {
+            if (this.buildingView) {
+                this.buildingView.initiate_buildingView();
+            }
+        });
+
+        div.appendChild(button);
+        this.pane.appendChild(div);
+
+    }
+
+    _add_infoPane_extra_buttons() {
+
+        let div = document.createElement("div");
+        div.className = "info-pane-button-background";
+        div.classList.add("info-pane-row");
+
+
+        let report_button_span = document.createElement("span");
+
+        let report_button = document.createElement("button");
+        report_button.className = "info-pane-button";
+
+        report_button.append(document.createTextNode("Report Issue"));
+
+        report_button.addEventListener('click', () => {
+            console.log("Go to issue page");
+        });
+
+        report_button_span.appendChild(report_button);
+
+
+        let book_room_button_span = document.createElement("span");
+
+        let book_room_button = document.createElement("button");
+        book_room_button.className = "info-pane-button";
+
+        book_room_button.append(document.createTextNode("Book a room"));
+
+        book_room_button.addEventListener('click', () => {
+            console.log("Go to book room page");
+        });
+
+        book_room_button_span.appendChild(book_room_button);
+
+
+        div.appendChild(report_button_span);
+        div.appendChild(book_room_button_span);
+
+        this.pane.appendChild(div);
+
+    }
+
 
     /**
      * Hide the info pane

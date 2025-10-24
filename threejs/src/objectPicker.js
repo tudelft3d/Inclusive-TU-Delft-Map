@@ -15,7 +15,6 @@ export class ObjectPicker {
      * @param {BuildingView} buildingView
      */
     constructor(
-        infoPaneElement,
         pickHighlighter,
         scene,
         cameraManager,
@@ -30,7 +29,7 @@ export class ObjectPicker {
         this.raycaster = new Raycaster();
 
         // Create InfoPane instance from the DOM element
-        this.infoPane = new InfoPane(infoPaneElement, this.buildingView);
+        this.infoPane = new InfoPane(document.getElementById("info-pane"), this.buildingView);
     }
 
     _raycastPosition(normalizedPosition) {
