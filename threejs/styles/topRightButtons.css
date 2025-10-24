@@ -16,8 +16,8 @@
 /* Force consistent sizing for svg/img inside the buttons */
 #basemap-btn img,
 #basemap-btn svg,
-#layer-btn img,
-#layer-btn svg {
+#layers-btn img,
+#layers-btn svg {
   height: 25px;
   max-width: 100%;
   display: block;
@@ -67,12 +67,12 @@
 }
 
 .satellite-basemap #basemap-btn,
-.satellite-basemap #layer-btn {
+.satellite-basemap #layers-btn {
   background: #cc3722;
   color: #ffffff;
 }
 .satellite-basemap #basemap-btn:hover,
-.satellite-basemap #layer-btn:hover {
+.satellite-basemap #layers-btn:hover {
   background: #56170f;
 }
 
