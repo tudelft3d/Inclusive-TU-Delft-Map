@@ -130,35 +130,53 @@
   transform: translateY(0);
 }
 
-/* Satellite basemap color for bottom-right controls */
 .satellite-basemap #reset-btn,
 .satellite-basemap #compass-btn,
 .satellite-basemap #location-btn,
 .satellite-basemap #zoom-btn,
 .satellite-basemap #zoom-btn .zoom-half,
 .satellite-basemap #view-toggle-btn.shows-2d {
-  background: #cc3722; 
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  background: #f3f3f3;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .satellite-basemap #zoom-btn .zoom-half:last-child{
-  background: #c95b4d; 
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  background: #dddddd;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
+/* invert external SVG images to appear black; also set inline SVG color */
+.satellite-basemap #reset-btn img,
+.satellite-basemap #reset-btn svg,
+.satellite-basemap #compass-btn img,
+.satellite-basemap #compass-btn svg,
+.satellite-basemap #location-btn img,
+.satellite-basemap #location-btn svg,
+.satellite-basemap #zoom-btn img,
+.satellite-basemap #zoom-btn svg,
+.satellite-basemap #view-toggle-btn img,
+.satellite-basemap #view-toggle-btn svg {
+  filter: invert(1);
+  color: #000;
+}
+
+/* hover state for the light theme */
 .satellite-basemap #reset-btn:hover,
 .satellite-basemap #compass-btn:hover,
 .satellite-basemap #location-btn:hover,
 .satellite-basemap #zoom-btn .zoom-half:hover,
-.satellite-basemap #view-toggle-btn:hover {
-  background: #56170f; 
+.satellite-basemap #view-toggle-btn:hover,
+.satellite-basemap #view-toggle-btn.shows-2d:hover {
+  background: #b0b0b0;
   transform: translateY(-1px);
 }
 
+/* view-toggle specific */
 .satellite-basemap #view-toggle-btn {
-  background: #c95b4d; 
+  background: #dddddd;
+  color: #000;
 }
 
 #zoom-btn img,

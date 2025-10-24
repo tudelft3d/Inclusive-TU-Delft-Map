@@ -15,11 +15,18 @@
 
 /* Force consistent sizing for svg/img inside the buttons */
 #basemap-btn img,
-#basemap-btn svg,
-#layers-btn img,
-#layers-btn svg {
+#basemap-btn svg {
   height: 25px;
   max-width: 100%;
+  display: block;
+  object-fit: contain;
+  line-height: 0;
+}
+
+#layers-btn img,
+#layers-btn svg {
+  height: 30px;
+  max-width: 120%;
   display: block;
   object-fit: contain;
   line-height: 0;
@@ -68,12 +75,26 @@
 
 .satellite-basemap #basemap-btn,
 .satellite-basemap #layers-btn {
-  background: #cc3722;
-  color: #ffffff;
+  /* light background instead of red */
+  background: #f3f3f3;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
+
+/* Make the icons (external SVGs used via <img>) appear black by inverting them.
+   Also support inline SVGs by ensuring they use currentColor / color. */
+.satellite-basemap #basemap-btn img,
+.satellite-basemap #basemap-btn svg,
+.satellite-basemap #layers-btn img,
+.satellite-basemap #layers-btn svg {
+  filter: invert(1);
+  color: #000;
+}
+
+/* subtle hover for the light theme */
 .satellite-basemap #basemap-btn:hover,
 .satellite-basemap #layers-btn:hover {
-  background: #56170f;
+  background: #b0b0b0;
 }
 
 #layers-dropdown {
@@ -114,7 +135,7 @@
 
 .satellite-basemap #basemap-dropdown a:hover,
 .satellite-basemap #layers-dropdown a:hover {
-  background: #cc362214;
+  background: #a8a8a82f;
 }
 
 /* Mobile adjustments for narrow screens */
