@@ -514,24 +514,36 @@ class BuildingUnitContainer(CityJSONObject):
         raise NotImplementedError()
 
 
-class BuildingUnit(BuildingUnitContainer):
+class BuildingUnit(CityJSONObject):
 
     type_name = "BuildingUnit"
     icon_z_offset = 0.5
+    id_prefix = "BuildingUnit"
 
     def __init__(
         self,
         object_id: str,
         unit_code: str,
+        unit_storeys: list[str],
+        geometry: Geometry | None = None,
         attributes: dict[str, Any] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
+        geometries = [geometry] if geometry is not None else None
         super().__init__(
             object_id=object_id,
-            unit_code=unit_code,
+            geometries=geometries,
             attributes=attributes,
             icon_position=icon_position,
         )
+        self.unit_code = unit_code
+        code_name = ARGUMENT_TO_NAME["code"]
+        self.add_attributes({code_name: unit_code})
+
+        self.unit_storeys = unit_storeys
+        storeys_name = ARGUMENT_TO_NAME["unit_storeys"]
+        self.add_attributes({storeys_name: unit_storeys})
+
         self.unit_spaces: set[str] = set()
 
     def _add_space(self, new_space_id: str) -> None:

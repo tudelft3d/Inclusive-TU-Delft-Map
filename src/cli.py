@@ -210,6 +210,14 @@ def load_custom_building(
             exists=True,
         ),
     ],
+    units_gltf_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--units_gltf",
+            help="Paths to building units in glTF format.",
+            exists=True,
+        ),
+    ],
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -292,6 +300,7 @@ def load_custom_building(
             load_units_from_csv(
                 cj_file=cj_file,
                 csv_path=units_path,
+                gltf_path=units_gltf_path,
                 # code_column=units_code_column,
                 # spaces_column=units_spaces_column,
             )

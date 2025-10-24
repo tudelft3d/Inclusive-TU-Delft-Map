@@ -15,7 +15,9 @@ BAG_COLUMN = "3D BAG Buildings IDs [list,str]"
 SKIP_COLUMN = "Skip [bool]"
 PARENT_ID_COLUMN = "Parent Number [str]"
 CODE_COLUMN = "Type Code [str]"
+UNIT_GLTF_COLUMN = "glTF Name [str]"
 UNIT_SPACES_COLUMN = "Numbers [list,str]"
+UNIT_STOREYS_COLUMN = "Storeys [list,str]"
 STOREY_LEVEL_COLUMN = "Level [float]"
 STOREY_ID_COLUMN = "Storey Number [str]"
 
@@ -27,6 +29,7 @@ ARGUMENT_TO_NAME = {
     "parent_object_id": "parent_object_id",
     "code": "code",
     "unit_spaces": "unit_spaces",
+    "unit_storeys": "unit_storeys",
     "parent_units": "parent_units",
     "space_id": "space_id",
 }
@@ -38,7 +41,9 @@ COL_TO_NAME = {
     SKIP_COLUMN: "skip",
     PARENT_ID_COLUMN: "parent_object_id",
     CODE_COLUMN: "code",
+    UNIT_GLTF_COLUMN: "unit_gltf",
     UNIT_SPACES_COLUMN: "unit_spaces",
+    UNIT_STOREYS_COLUMN: "unit_storeys",
     STOREY_LEVEL_COLUMN: "storey_level",
     STOREY_ID_COLUMN: "storey_id",
 }
@@ -180,7 +185,13 @@ class BdgUnitCtnrAttr(Attr):
 
 class BdgUnitAttr(Attr):
 
-    specific_columns = (CODE_COLUMN, UNIT_SPACES_COLUMN, ICON_POSITION_COLUMN)
+    specific_columns = (
+        ICON_POSITION_COLUMN,
+        CODE_COLUMN,
+        UNIT_GLTF_COLUMN,
+        UNIT_SPACES_COLUMN,
+        UNIT_STOREYS_COLUMN,
+    )
     id_index = None
     id_builder_index = 0
 
@@ -190,13 +201,24 @@ class BdgUnitAttr(Attr):
         object_id: str,
         icon_position: IconPosition | list[float] | None,
         code: str,
+        unit_gltf: str,
         unit_spaces: list[str],
+        unit_storeys: list[str],
     ) -> None:
         super().__init__(
             attributes=attributes, object_id=object_id, icon_position=icon_position
         )
         self.code = code
+        self.unit_gltf = None if unit_gltf == "" else unit_gltf
         self.unit_spaces = unit_spaces
+        self.unit_storeys = unit_storeys
+
+        if len(self.unit_storeys) == 0:
+            unit_storeys_set: set[str] = set()
+            for space in self.unit_spaces:
+                storey = ".".join(space.split(".")[:-1])
+                unit_storeys_set.add(storey)
+            self.unit_storeys = list(unit_storeys_set)
 
 
 A = TypeVar("A", bound=Attr)
@@ -232,10 +254,10 @@ class AttrReader(Generic[A], ABC):
             self.attributes_all, self.specific_values_all
         ):
             if self.attr_class.id_index is None:
-                _, id_base_value = specific_values[
+                col_name, id_base_value = specific_values[
                     cast(int, self.attr_class.id_builder_index)
                 ]
-                object_id = self._build_object_id(id_base_value)
+                object_id = self._build_object_id(col_name)
             else:
                 _, object_id = specific_values[self.attr_class.id_index]
 
@@ -254,10 +276,10 @@ class AttrReader(Generic[A], ABC):
                 attributes=attributes, **specific_values_map
             )
 
-    def _build_object_id(self, value: str) -> str:
-        count = self._id_builder_counts[value]
-        object_id = f"{value}@{count}"
-        self._id_builder_counts[value] += 1
+    def _build_object_id(self, col_name: str) -> str:
+        count = self._id_builder_counts[col_name]
+        object_id = f"{col_name}@{count}"
+        self._id_builder_counts[col_name] += 1
         return object_id
 
     def get_id_to_attr(self):

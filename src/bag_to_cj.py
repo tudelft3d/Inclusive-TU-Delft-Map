@@ -287,6 +287,7 @@ class Bag2Cityjson(CityjsonLoader):
             unit = BuildingUnit(
                 object_id=obj_id,
                 unit_code="Z",
+                unit_storeys=[],
                 icon_position=bdgs_sub_attributes.icon_position,
             )
             unit.add_attributes({"subdivision_number": unit_id})

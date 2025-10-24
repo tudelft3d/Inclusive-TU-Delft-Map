@@ -81,9 +81,16 @@ def _unit_code_to_parent(code: str) -> str:
         return code[:-2]
 
 
+def _get_unit_geometry_from_id(scene: trimesh.Scene, object_id: str) -> Geometry:
+    mesh = _get_scene_geometry_from_id(scene=scene, object_id=object_id)
+    orient_polygons_z_up(mesh)
+    return MultiSurface.from_mesh(lod=0, mesh=mesh)
+
+
 def load_units_from_csv(
     cj_file: CityJSONFile,
     csv_path: Path,
+    gltf_path: Path | None,
     # code_column: str,
     # spaces_column: str,
 ) -> None:
@@ -97,6 +104,10 @@ def load_units_from_csv(
     unit_main_container = BuildingUnitObject(prefix=prefix)
     CityJSONObject.add_parent_child(parent=root, child=unit_main_container)
 
+    # Read the units geometry
+    if gltf_path is not None:
+        scene = trimesh.load_scene(gltf_path)
+
     all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
 
     # Process the CSV file to find all the units
@@ -106,6 +117,15 @@ def load_units_from_csv(
     for object_id, units_attributes in units_attributes_iterator:
         unit_code = units_attributes.code
 
+        # Get the potential geometry
+        unit_geometry = None
+        if gltf_path is not None:
+            unit_gltf = units_attributes.unit_gltf
+            if unit_gltf is not None:
+                unit_geometry = _get_unit_geometry_from_id(
+                    scene=scene, object_id=unit_gltf
+                )
+
         current_units_same_code = len(all_units[unit_code])
         unit_id = BuildingUnit.unit_code_to_id(
             code=unit_code, prefix=prefix, number=current_units_same_code
@@ -114,6 +134,8 @@ def load_units_from_csv(
         unit = BuildingUnit(
             object_id=unit_id,
             unit_code=unit_code,
+            unit_storeys=units_attributes.unit_storeys,
+            geometry=unit_geometry,
             attributes=units_attributes.attributes,
             icon_position=units_attributes.icon_position,
         )
