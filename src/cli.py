@@ -322,8 +322,9 @@ def load_gj_icons(
             exists=True,
         ),
     ],
+    output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
 ):
-    load_geojson_icons(gj_path=input_gj_path)
+    load_geojson_icons(gj_path=input_gj_path, output_cj_path=output_cj_path)
 
 
 @app.command(

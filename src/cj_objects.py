@@ -330,7 +330,7 @@ class CityJSONSpace(CityJSONObject):
         )
         self.space_id = space_id
         space_id_key = ARGUMENT_TO_NAME["space_id"]
-        self.add_attributes({"space_id": space_id})
+        self.add_attributes({space_id_key: space_id})
         self.parent_units: set[str] = set()
 
     def _add_unit(self, new_unit_id: str) -> None:
@@ -467,6 +467,7 @@ class BuildingUnitContainer(CityJSONObject):
 
     type_name = "CityObjectGroup"
     main_parent_code = ""
+    id_prefix = "BuildingUnitContainer"
 
     def __init__(
         self,
@@ -489,7 +490,7 @@ class BuildingUnitContainer(CityJSONObject):
     def unit_code_to_id(cls, code: str, prefix: str) -> str:
         code = code.replace(".", "_").replace("-", "_")
         prefix = prefix.replace("-", "_")
-        return f"{prefix}-{cls.type_name}-BuildingUnits_{code}"
+        return f"{prefix}-{cls.type_name}-{cls.id_prefix}_{code}"
 
     def apply_attr(self, attr: BdgAttr, overwrite: bool) -> None:
         raise NotImplementedError()
@@ -536,12 +537,43 @@ class BuildingUnit(BuildingUnitContainer):
     def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
         code_instance = cls.unit_code_to_code_instance(code=code, number=number)
         prefix = prefix.replace("-", "_")
-        return f"{prefix}-{cls.type_name}-BuildingUnits_{code_instance}"
+        return f"{prefix}-{cls.type_name}-{cls.id_prefix}_{code_instance}"
 
     def apply_attr(self, attr: BdgUnitAttr, overwrite: bool) -> None:
         self.add_attributes(new_attributes=attr.attributes)
         if attr.icon_position is not None:
             self.set_icon(attr.icon_position, overwrite=overwrite)
+
+
+class BuildingNavigationElement(CityJSONObject):
+
+    type_name = "BuildingConstructiveElement"
+    icon_z_offset = 0.5
+    id_prefix = "BuildingNavigationElement"
+
+    def __init__(
+        self,
+        object_id: str,
+        geometries: Sequence[Geometry],
+        attributes: dict[str, Any] | None = None,
+        icon_position: IconPosition | None = None,
+    ) -> None:
+        super().__init__(
+            object_id=object_id,
+            attributes=attributes,
+            geometries=geometries,
+            icon_position=icon_position,
+        )
+
+    @classmethod
+    def number_to_id(cls, prefix: str, number: int) -> str:
+        prefix = prefix.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{cls.id_prefix}@{number}"
+
+
+class BuildingNavigationStairs(BuildingNavigationElement):
+
+    id_prefix = "BuildingNavigationElement"
 
 
 class BuildingRoot(CityJSONObject):
@@ -560,7 +592,87 @@ class BuildingRoot(CityJSONObject):
         )
 
 
+class OutdoorObject(CityJSONObject):
+
+    type_name = "CityObjectGroup"
+    icon_z_offset = 2
+    id_prefix = "OutdoorObject"
+
+    def __init__(self, prefix: str) -> None:
+        super().__init__(
+            object_id=f"{prefix}-{self.type_name}-{self.id_prefix}",
+            attributes={},
+            geometries=None,
+            icon_position=None,
+        )
+
+    def apply_attr(self, attr: Attr, overwrite: bool) -> None:
+        raise NotImplementedError()
+
+
+class OutdoorUnitContainer(BuildingUnitContainer):
+
+    type_name = "CityObjectGroup"
+    main_parent_code = ""
+    id_prefix = "OutdoorUnitContainer"
+
+    def __init__(
+        self,
+        object_id: str,
+        unit_code: str,
+        attributes: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            object_id=object_id,
+            unit_code=unit_code,
+            attributes=attributes,
+            icon_position=None,
+        )
+
+    def apply_attr(self, attr: BdgAttr, overwrite: bool) -> None:
+        raise NotImplementedError()
+
+
+class OutdoorUnit(BuildingUnitContainer):
+
+    type_name = "GenericCityObject"
+    icon_z_offset = 2
+    id_prefix = "OutdoorUnit"
+
+    def __init__(
+        self,
+        object_id: str,
+        unit_code: str,
+        attributes: dict[str, Any] | None = None,
+        icon_position: IconPosition | None = None,
+    ) -> None:
+        super().__init__(
+            object_id=object_id,
+            unit_code=unit_code,
+            attributes=attributes,
+            icon_position=icon_position,
+        )
+
+    @classmethod
+    def unit_code_to_code_instance(cls, code: str, number: int) -> str:
+        number_str = str(number).replace(".", "_").replace("-", "_")
+        code = code.replace(".", "_").replace("-", "_")
+        return f"{code}@{number_str}"
+
+    @classmethod
+    def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
+        code_instance = cls.unit_code_to_code_instance(code=code, number=number)
+        prefix = prefix.replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{cls.id_prefix}_{code_instance}"
+
+
 CityJSONSpaceSubclass = Building | BuildingPart | BuildingStorey | BuildingRoom
 CityJSONObjectSubclass = (
-    CityJSONSpaceSubclass | BuildingUnit | BuildingUnitContainer | BuildingRoot
+    CityJSONSpaceSubclass
+    | BuildingUnit
+    | BuildingUnitContainer
+    | BuildingRoot
+    | OutdoorObject
+    | OutdoorUnitContainer
+    | OutdoorUnit
 )

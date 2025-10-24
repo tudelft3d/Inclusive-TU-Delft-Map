@@ -16,7 +16,8 @@ SKIP_COLUMN = "Skip [bool]"
 PARENT_ID_COLUMN = "Parent Number [str]"
 CODE_COLUMN = "Type Code [str]"
 UNIT_SPACES_COLUMN = "Numbers [list,str]"
-STOREY_LEVEL = "Level [float]"
+STOREY_LEVEL_COLUMN = "Level [float]"
+STOREY_ID_COLUMN = "Storey Number [str]"
 
 ARGUMENT_TO_NAME = {
     "object_id": "object_id",
@@ -29,6 +30,7 @@ ARGUMENT_TO_NAME = {
     "parent_units": "parent_units",
     "space_id": "space_id",
 }
+
 COL_TO_NAME = {
     ID_COLUMN: "object_id",
     ICON_POSITION_COLUMN: "icon_position",
@@ -37,7 +39,8 @@ COL_TO_NAME = {
     PARENT_ID_COLUMN: "parent_object_id",
     CODE_COLUMN: "code",
     UNIT_SPACES_COLUMN: "unit_spaces",
-    STOREY_LEVEL: "storey_level",
+    STOREY_LEVEL_COLUMN: "storey_level",
+    STOREY_ID_COLUMN: "storey_id",
 }
 
 
@@ -121,7 +124,7 @@ class BdgPartAttr(Attr):
 
 class BdgStoreyAttr(Attr):
 
-    specific_columns = (ID_COLUMN, STOREY_LEVEL)
+    specific_columns = (ID_COLUMN, STOREY_LEVEL_COLUMN, STOREY_ID_COLUMN)
     id_index = 0
     id_builder_index = None
 
@@ -130,9 +133,11 @@ class BdgStoreyAttr(Attr):
         attributes: dict[str, Any],
         object_id: str,
         storey_level: float,
+        storey_id: str,
     ) -> None:
         super().__init__(attributes=attributes, object_id=object_id, icon_position=None)
         self.storey_level = storey_level
+        self.storey_id = storey_id
 
 
 class BdgRoomAttr(Attr):
