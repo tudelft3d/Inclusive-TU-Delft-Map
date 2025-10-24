@@ -28,6 +28,7 @@
 
 #search-bar input {
   padding: var(--search-padding-vertical) var(--search-padding-horizontal);
+  padding-left: calc(var(--search-padding-horizontal) + 32px);
   font-size: 14px;
   font-family: "Open Sans", sans-serif;
   font-weight: 500;
@@ -53,7 +54,7 @@
 
 #search-icon {
   position: absolute;
-  right: var(--search-padding-horizontal);
+  left: var(--search-padding-horizontal);
   top: 50%;
   transform: translateY(-50%);
   width: 20px;

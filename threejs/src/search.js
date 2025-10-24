@@ -39,8 +39,10 @@ export class Searcher {
             threshold: 0.3,
             ignoreLocation: true,
             includeScore: true,
+            includeMatches: true,
             keys: ["attributes.space_id",
                 "attributes.key",
+                "attributes.Name",
                 "attributes.Name (EN)",
                 "attributes.Name (NL)",
                 "attributes.Nicknames"]
@@ -73,11 +75,9 @@ export class Searcher {
             if (object.item.type == "BuildingUnit") {
                 if (object.item.attributes["unit_spaces"].length == 0) {
                     var parent = this.raw_json["CityObjects"][object.item.parents[0]];
-                    // console.log(parent);
                     while (parent.type != "Building") {
                         parent = this.raw_json["CityObjects"][parent.parents[0]];
                     }
-                    console.log(parent);
                     all_objects.push({ item: parent });
                 }
                 else {
@@ -106,7 +106,7 @@ export class Searcher {
             threejs_objects.push(scene.getObjectByName(threejs_object_name));
 
         }
-        console.log('all objects: ', threejs_objects);
+        // console.log('all objects: ', threejs_objects);
         return threejs_objects;
     }
 
@@ -126,7 +126,7 @@ export class Searcher {
         const result = this._search_pattern(pattern, 1);
         console.log('pattern: ', pattern);
 
-        const threejs_object = this._retrieve_threejs_objects(result, this.scene)[0];
+        const threejs_object = this._retrieve_threejs_objects(result, this.scene);
 
         this.picker.pickMesh(threejs_object);
     }
@@ -135,13 +135,12 @@ export class Searcher {
     search_n_best_matches(pattern, n) {
 
         const results = this._search_pattern(pattern, n);
-
         const results_obj = [];
         for (var i = 0; i < results.length; i++) {
             const r = results[i];
             const attr = r.item.attributes;
             if (!attr.display_name) {
-                attr.display_name = this.results_to_name(results[i].item);
+                attr.display_name = this.results_to_name(results[i]);
             }
             results_obj.push(results[i]);
         };
@@ -150,10 +149,40 @@ export class Searcher {
     }
 
     results_to_name(obj) {
-        const attr = obj.attributes;
-        if (attr["Name"]) return attr["Name"];
-        if (attr["Name (EN)"] && attr["Name (EN)"].trim() !== "") return attr["Name (EN)"];
-        if (attr["Nicknames"] && attr["Nicknames"].length > 0) return attr["Nicknames"][0];
-        return "No name found";
+        const matchItem = obj.item;
+        const attr = matchItem.attributes;
+        let displayName = "";
+        if (obj.matches) {
+            let nicknameMatch = obj.matches.find(m => m.key === "attributes.Name (EN)");
+            if (nicknameMatch) displayName = nicknameMatch.value;
+        }
+        if (!displayName) {
+            if (attr["Name"]) displayName = attr["Name"];
+            else if (attr["Name (EN)"] && attr["Name (EN)"].trim() !== "")
+                displayName = attr["Name (EN)"];
+            else if (attr["Nicknames"] && attr["Nicknames"].length > 0)
+                displayName = attr["Nicknames"][0];
+            else displayName = "No name found";
+        }
+
+        if (matchItem.type === "BuildingRoom" || matchItem.type === "BuildingUnit") {
+            let parent = this.raw_json["CityObjects"][matchItem.parents[0]];
+
+            // Traverse upward until we find the Building
+            while (parent.type !== "Building") {
+                parent = this.raw_json["CityObjects"][parent.parents[0]];
+            }
+
+            if (parent && parent.attributes) {
+                const buildingName =
+                    parent.attributes["Name (EN)"] ||
+                    parent.attributes["Name (NL)"] ||
+                    parent.attributes["Name"] ||
+                    "Unknown Building";
+
+                displayName += ` (${buildingName})`;
+            }
+        }
+        return displayName;
     }
 }

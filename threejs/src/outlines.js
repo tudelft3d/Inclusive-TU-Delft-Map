@@ -126,7 +126,11 @@ export class OutlineManager {
 
         const outlineObjects = [];
         for (const obj of objectList) {
-            const target = this.scene.getObjectByName(`${obj}-${lod}`);
+            let target;
+            if (obj.includes('lod_')) {
+                target = this.scene.getObjectByName(obj);
+            }
+            else target = this.scene.getObjectByName(`${obj}-${lod}`);
             if (target) outlineObjects.push(target);
         }
 
@@ -136,7 +140,6 @@ export class OutlineManager {
 
     outlineObjects(objects, code = "default") {
         this.setStyle(code);
-        // this.renderer.update();
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
     }

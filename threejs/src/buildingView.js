@@ -25,7 +25,7 @@ export class BuildingView {
         this.layer_manager = layer_manager;
         this.picker = picker;
 
-        this.selectedKey;
+        this.meshKey;
         this.building_key;
         this.building_json;
         this.building_threejs;
@@ -39,15 +39,16 @@ export class BuildingView {
             return;
         }
 
-        this.selectedKey = key;
+        this.meshKey = key;
         this.building_key = key.split("-").slice(0, 3).join("-");
+        // console.log(this.meshKey);
 
         // Alternatively
         // this.building_key = this.scene.getObjectByName(key).parent.name;
 
     }
 
-    initiate_buildingView(floor = "00") {
+    initiate_buildingView(floor = "00", pass = true) {
 
         if (!this.building_key) {
             console.log("no building selected");
@@ -65,7 +66,6 @@ export class BuildingView {
 
         this.active = true;
 
-
         this.cameraManager.switchToOrthographic();
 
         // Hide all other buildings except the current one
@@ -77,9 +77,8 @@ export class BuildingView {
 
         this.building_threejs = this.scene.getObjectByName(this.building_key);
 
-        // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
-        // this should fix it?
-        this.picker.unpick();
+        // Carry over highlights
+        if (pass) this.picker.unpick();
 
         this._unhide_objects_recursive(this.building_threejs);
 
@@ -107,7 +106,8 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        const selectedBuilding = this.scene.getObjectByName(this.selectedKey);
+        const selectedBuilding = this.scene.getObjectByName(this.meshKey);
+
         this._unhide_objects([selectedBuilding]);
 
         this.outlineManager.setOutline(this.buildings);
@@ -135,7 +135,7 @@ export class BuildingView {
     _apply_outlines(threejs_objects, lod, style) {
 
         let keys = [];
-
+        console.log(threejs_objects);
         threejs_objects.forEach((current_object) => {
             keys.push(current_object.name.split("-").slice(0, 3).join("-"));
         });
@@ -369,6 +369,7 @@ export class BuildingView {
         }
 
         console.log(`Showing all ${worldGroup.children.length} buildings`);
+        this._apply_outlines(worldGroup.children, 'lod_2', 'default');
 
         // Make all buildings visible again
         worldGroup.children.forEach((building) => {

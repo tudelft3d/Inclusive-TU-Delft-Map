@@ -15,7 +15,6 @@ export class Highlighter {
     highlight(meshes) {
         if (!Array.isArray(meshes)) meshes = [meshes];
         this.unhighlight();
-
         for (const mesh of meshes) {
             var originalColor;
             // To prevent the modification from applying to all objects
@@ -36,6 +35,7 @@ export class Highlighter {
 
             // Save the mesh
             this.highlighted.push(mesh);
+
         }
     }
 
