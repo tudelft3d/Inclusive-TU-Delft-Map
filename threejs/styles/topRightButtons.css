@@ -18,8 +18,7 @@
 #basemap-btn svg,
 #layer-btn img,
 #layer-btn svg {
-  width: 18px;
-  height: 18px;
+  height: 25px;
   max-width: 100%;
   display: block;
   object-fit: contain;
@@ -67,6 +66,16 @@
   transform: translateY(-1px);
 }
 
+.satellite-basemap #basemap-btn,
+.satellite-basemap #layer-btn {
+  background: #cc3722;
+  color: #ffffff;
+}
+.satellite-basemap #basemap-btn:hover,
+.satellite-basemap #layer-btn:hover {
+  background: #56170f;
+}
+
 #layers-dropdown {
   display: none;
   position: absolute;
@@ -99,6 +108,11 @@
 #basemap-dropdown a:hover,
 #layers-dropdown a:hover {
   background: #027eab0e;
+}
+
+.satellite-basemap #basemap-dropdown a:hover,
+.satellite-basemap #layers-dropdown a:hover {
+  background: #cc362214;
 }
 
 /* Mobile adjustments for narrow screens */

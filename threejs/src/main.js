@@ -125,9 +125,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.warn('No basemap setter on map', url, layer);
                 }
+                const isSatellite = (
+                    (item.dataset.satellite === 'true') ||
+                    (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                    (url && url.toString().toLowerCase().includes('satellite')) ||
+                    (layer && layer.toString().toLowerCase().includes('ortho')) || 
+                    (url && url.toString().toLowerCase().includes('ortho'))
+                );
+                document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+
                 basemapDropdown.style.display = 'none';
             });
         });
+
+        // Apply satellite class on initial load:
+        (function applyInitialBasemapClass() {
+            // Prefer an explicitly marked/selected item, otherwise fall back to the first entry
+            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
+            if (!selected) return;
+            const url = selected.dataset.url;
+            const layer = selected.dataset.layer;
+            const isSatellite = (
+                (selected.dataset.satellite === 'true') ||
+                (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                (url && url.toString().toLowerCase().includes('satellite')) ||
+                (layer && layer.toString().toLowerCase().includes('ortho')) ||
+                (url && url.toString().toLowerCase().includes('ortho'))
+            );
+            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        })();
+
     }
 
     // Layers dropdown wiring

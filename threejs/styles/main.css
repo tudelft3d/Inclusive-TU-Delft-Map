@@ -38,7 +38,7 @@ h1 {
 }
 
 /* BOTTOM LEFT SIDEBAR CONTROLS */
-#bottom-left-sidebar-controls {
+/* #bottom-left-sidebar-controls {
   position: fixed;
   bottom: 20px;
   left: 20px;
@@ -46,7 +46,7 @@ h1 {
   flex-direction: column;
   gap: 6px;
   z-index: 30;
-}
+} */
 
 #bv-btn,
 #bv-storey-btn {
@@ -101,6 +101,7 @@ h1 {
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
   z-index: 9999;
+  font-weight: normal;
 }
 
 [data-tooltip]::after {
@@ -115,6 +116,7 @@ h1 {
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
   z-index: 9999;
+  font-weight: normal;
 }
 
 [data-tooltip]:hover::before,

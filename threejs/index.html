@@ -46,7 +46,7 @@
                     src="assets/threejs/graphics/icons/ui-buttons/basemap_white.svg" /></button>
             <div id="basemap-dropdown">
                 <a href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
-                    data-layer="Actueel_orthoHR">Satellite Imagery</a>
+                    data-layer="Actueel_orthoHR" data-satellite="true">Satellite Imagery</a>
                 <a href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0"
                     data-layer="standaard">Topographic Map</a>
                 <a href="#" data-url="https://service.pdok.nl/lv/bgt/wmts/v1_0" data-layer="achtergrondvisualisatie">BGT
@@ -82,26 +82,26 @@
     <!-- BOTTOM RIGHT SIDEBAR CONTROLS -->
     <div id="bottom-right-sidebar-controls">
         <div id="reset-container">
-            <button id="reset-btn" data-tooltip="Reset view"><img
+            <button id="reset-btn" data-tooltip="Reset view" aria-label="Reset view"><img
                     src="assets/threejs/graphics/icons/ui-buttons/reset_white.svg" /></button>
         </div>
 
         <div id="zoom-btn" role="group" aria-label="Zoom controls">
-            <button class="zoom-half" id="zoom-in-btn" aria-label="Zoom in">
+            <button class="zoom-half" id="zoom-in-btn" data-tooltip="Zoom-in" aria-label="Zoom in">
                 <img src="assets/threejs/graphics/icons/ui-buttons/plus_white.svg" alt="Zoom in" />
             </button>
-            <button class="zoom-half" id="zoom-out-btn" aria-label="Zoom out">
+            <button class="zoom-half" id="zoom-out-btn" data-tooltip="Zoom-out" aria-label="Zoom out">
                 <img src="assets/threejs/graphics/icons/ui-buttons/minus_white.svg" alt="Zoom out" />
             </button>
         </div>
 
         <div id="compass-container">
-            <button id="compass-btn" data-tooltip="Reset compass"><img
+            <button id="compass-btn" data-tooltip="Reset compass" aria-label="Reset compass"><img
                     src="assets/threejs/graphics/icons/ui-buttons/compass_white.svg" /></button>
         </div>
 
         <div id="location-container">
-            <button id="location-btn" data-tooltip="Find my location"><img
+            <button id="location-btn" data-tooltip="Find my location" aria-label="Find my location"><img
                     src="assets/threejs/graphics/icons/ui-buttons/locate_white.svg" /></button>
         </div>
 

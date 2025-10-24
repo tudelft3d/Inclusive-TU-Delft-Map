@@ -89,7 +89,7 @@
   display: flex;
   flex-direction: column;
   border-radius: var(--brb-btn-radius);
-  overflow: hidden;
+  overflow: visible; 
   background: var(--brb-btn-bg); 
   box-shadow: var(--brb-btn-shadow);
   z-index: var(--brb-z-control);
@@ -104,12 +104,15 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border-radius: var(--brb-btn-radius) var(--brb-btn-radius) 0 0;
   transition: background 0.15s ease, transform 0.08s ease;
   -webkit-tap-highlight-color: transparent;
+  
 }
 
 #zoom-btn .zoom-half:last-child{
-    background: #4694b1;
+  background: #4694b1;
+  border-radius: 0 0 var(--brb-btn-radius) var(--brb-btn-radius);
 }
 
 /* separator between halves */
@@ -125,6 +128,37 @@
 
 #zoom-btn .zoom-half:active {
   transform: translateY(0);
+}
+
+/* Satellite basemap color for bottom-right controls */
+.satellite-basemap #reset-btn,
+.satellite-basemap #compass-btn,
+.satellite-basemap #location-btn,
+.satellite-basemap #zoom-btn,
+.satellite-basemap #zoom-btn .zoom-half,
+.satellite-basemap #view-toggle-btn.shows-2d {
+  background: #cc3722; 
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.satellite-basemap #zoom-btn .zoom-half:last-child{
+  background: #c95b4d; 
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.satellite-basemap #reset-btn:hover,
+.satellite-basemap #compass-btn:hover,
+.satellite-basemap #location-btn:hover,
+.satellite-basemap #zoom-btn .zoom-half:hover,
+.satellite-basemap #view-toggle-btn:hover {
+  background: #56170f; 
+  transform: translateY(-1px);
+}
+
+.satellite-basemap #view-toggle-btn {
+  background: #c95b4d; 
 }
 
 #zoom-btn img,
@@ -146,8 +180,8 @@
 #location-btn svg,
 #view-toggle-btn img,
 #view-toggle-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 27px;
+  height: 27px;
   display: block;
   max-width: 100%;
   object-fit: contain;
@@ -161,8 +195,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--brb-btn-bg);
   color: var(--brb-btn-color);
+  background: #4694b1;
   border: none;
   border-radius: var(--brb-btn-radius);
   cursor: pointer;
@@ -177,10 +211,9 @@
 
 /* when the button shows "2D" change color */
 #view-toggle-btn.shows-2d {
-  background: #4694b1;
+  background: var(--brb-btn-bg);
 }
 
-/* keep the hover transform when showing 2D */
 #view-toggle-btn.shows-2d:hover {
   background: #5ba9c5;
   transform: translateY(-1px);
@@ -234,5 +267,6 @@
     transform: translateY(12%);
   } */
 }
+
 
 
