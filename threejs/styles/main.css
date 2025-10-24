@@ -152,7 +152,7 @@ h1 {
   min-width: 425px;
   opacity: 0;
   transition: opacity 0.2s ease;
-  z-index: 30;
+  z-index: 10000;
   font-family: Sans-Serif;
   overflow: hidden;
   pointer-events: auto;

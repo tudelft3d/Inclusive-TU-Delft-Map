@@ -1,37 +1,40 @@
-import csv
+import logging
 from collections import defaultdict
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import trimesh
 from tqdm import tqdm
 
+from cj_attributes import (
+    BdgAttr,
+    BdgAttrReader,
+    BdgRoomAttr,
+    BdgRoomAttrReader,
+    BdgUnitAttr,
+    BdgUnitAttrReader,
+)
 from cj_geometry import Geometry, IconPosition, MultiSurface
 from cj_objects import (
     Building,
     BuildingPart,
     BuildingRoom,
-    BuildingRoot,
     BuildingStorey,
     BuildingUnit,
     BuildingUnitContainer,
+    BuildingUnitObject,
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
     CityJSONSpace,
     CityJSONSpaceSubclass,
 )
-from csv_utils import csv_format_type, csv_get_row_value, csv_read_attributes
 from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
 
 
-def _get_scene_geometry_from_id(
-    scene: trimesh.Scene, object_id: str
-) -> trimesh.Trimesh:
+def _get_scene_geometry_from_id(scene: trimesh.Scene, cj_key: str) -> trimesh.Trimesh:
     # Load the geometry
-    transform, geometry_name = scene.graph.get(frame_to=object_id)
+    transform, geometry_name = scene.graph.get(frame_to=cj_key)
     geometry_local = scene.geometry[geometry_name]
 
     # Transform to global coordinates
@@ -51,45 +54,43 @@ def _get_scene_geometry_from_id(
 
 
 def _geom_and_name_from_scene_id(
-    scene: trimesh.Scene, object_id: str
+    scene: trimesh.Scene, cj_key: str
 ) -> tuple[Geometry, str]:
-    mesh = _get_scene_geometry_from_id(scene=scene, object_id=object_id)
-    lod = int(object_id[-1])
-    name = object_id[:-6]
+    mesh = _get_scene_geometry_from_id(scene=scene, cj_key=cj_key)
+    lod = int(cj_key[-1])
+    name = cj_key[:-6]
     if lod == 0:
         orient_polygons_z_up(mesh)
     return MultiSurface.from_mesh(lod=lod, mesh=mesh), name
 
 
 def _unit_code_to_parent(code: str) -> str:
-    if code == BuildingUnitContainer.main_parent:
-        raise ValueError(f"BuildingUnitContainer.main_parent does not have a parent.")
+    if len(code) == 0:
+        raise ValueError(f"Code '{code}' is not a correct value.")
+    if code == BuildingUnitContainer.main_parent_code:
+        raise ValueError(
+            f"BuildingUnitContainer.main_parent_code does not have a parent."
+        )
     elif len(code) == 1:
-        return BuildingUnitContainer.main_parent
+        return BuildingUnitContainer.main_parent_code
     elif len(code) == 2:
         return code[:-1]
     else:
         return code[:-2]
 
 
-def load_attributes_from_csv(
-    csv_path: Path, id_column: str
-) -> dict[str, dict[str, Any]]:
-    attributes_all, specific_values_all = csv_read_attributes(
-        csv_path=csv_path, specific_columns=(id_column,)
-    )
-    id_to_attributes: dict[str, dict[str, Any]] = {}
-    for i in range(len(attributes_all)):
-        _, id_value = specific_values_all[i][0]
-        id_to_attributes[id_value] = attributes_all[i]
-    return id_to_attributes
+def _get_unit_geometry_from_id(scene: trimesh.Scene, cj_key: str) -> Geometry:
+    mesh = _get_scene_geometry_from_id(scene=scene, cj_key=cj_key)
+    orient_polygons_z_up(mesh)
+    return MultiSurface.from_mesh(lod=0, mesh=mesh)
 
 
 def load_units_from_csv(
     cj_file: CityJSONFile,
     csv_path: Path,
-    code_column: str,
-    spaces_column: str,
+    gltf_path: Path | None,
+    # code_column: str,
+    # spaces_column: str,
 ) -> None:
     root_pos = cj_file.get_root_position()
     root = cj_file.city_objects[root_pos]
@@ -97,51 +98,85 @@ def load_units_from_csv(
         raise RuntimeError(
             f"The root of the `cj_file` should be a Building, not a {type(root)}"
         )
-    prefix = CityJSONSpace.space_number_to_prefix(number=root.space_id)
+    prefix = CityJSONSpace.key_to_prefix(key=root.cj_key)
+    unit_main_container = BuildingUnitObject(prefix=prefix)
+    CityJSONObject.add_parent_child(parent=root, child=unit_main_container)
+
+    # Read the units geometry
+    if gltf_path is not None:
+        scene = trimesh.load_scene(gltf_path)
 
     all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
 
     # Process the CSV file to find all the units
     unit_to_spaces: dict[str, list[str]] = {}
-    specific_columns = (code_column, spaces_column)
-    attributes_all, specific_values_all = csv_read_attributes(
-        csv_path=csv_path, specific_columns=specific_columns
-    )
-    for attributes, specific_values in zip(attributes_all, specific_values_all):
-        _, unit_code = specific_values[0]
-        _, unit_spaces = specific_values[1]
+    units_attributes_all = BdgUnitAttrReader(csv_path=csv_path)
+    units_attributes_iterator = units_attributes_all.iterator()
+    for cj_key, units_attributes in units_attributes_iterator:
+        unit_code = units_attributes.code
+
+        # Get the potential geometry
+        unit_geometry = None
+        if gltf_path is not None:
+            unit_gltf = units_attributes.unit_gltf
+            if unit_gltf is not None:
+                unit_geometry = _get_unit_geometry_from_id(
+                    scene=scene, cj_key=unit_gltf
+                )
 
         current_units_same_code = len(all_units[unit_code])
-        unit_id = BuildingUnit.unit_code_to_id(
-            code=unit_code, prefix=prefix, number=current_units_same_code
+        unit_id = BuildingUnit.unit_code_to_cj_key(
+            code=unit_code, prefix=prefix, index=current_units_same_code
         )
 
         unit = BuildingUnit(
-            object_id=unit_id,
+            cj_key=unit_id,
             unit_code=unit_code,
-            attributes=attributes,
+            unit_storeys=units_attributes.unit_storeys,
+            geometry=unit_geometry,
+            attributes=units_attributes.attributes,
+            icon_position=units_attributes.icon_position,
         )
-        unit_to_spaces[unit.id] = unit_spaces
+        unit_to_spaces[unit.id] = units_attributes.unit_spaces
         all_units[unit_code].append(unit)
 
-    # Add the missing hierarchy in the codes
-    main_container_id = BuildingUnitContainer.unit_code_to_id(code="", prefix=prefix)
-    all_unit_containers: dict[str, BuildingUnitContainer] = {
-        BuildingUnitContainer.main_parent: BuildingUnitContainer(
-            object_id=main_container_id, unit_code=""
+    unit_containers: list[BuildingUnitContainer] = []
+    for code, units in all_units.items():
+        unit_container_id = BuildingUnitContainer.unit_code_to_cj_key(
+            code=code, prefix=prefix
         )
-    }
-    current_codes = list(all_units.keys())
-    for code in current_codes:
-        while code != BuildingUnitContainer.main_parent:
-            if not code in all_units.keys():
-                all_units[code] = []
-            if not code in all_unit_containers.keys():
-                obj_id = BuildingUnitContainer.unit_code_to_id(code=code, prefix=prefix)
-                all_unit_containers[code] = BuildingUnitContainer(
-                    object_id=obj_id, unit_code=code
-                )
-            code = _unit_code_to_parent(code=code)
+        unit_container = BuildingUnitContainer(
+            cj_key=unit_container_id, unit_code=code, attributes={}
+        )
+        unit_containers.append(unit_container)
+
+        CityJSONObject.add_parent_child(
+            parent=unit_main_container, child=unit_container
+        )
+        for unit in units:
+            CityJSONObject.add_parent_child(parent=unit_container, child=unit)
+
+    # # Add the missing hierarchy in the codes
+    # main_container_id = BuildingUnitContainer.unit_code_to_cj_key(
+    #     code=BuildingUnitContainer.main_parent_code, prefix=prefix
+    # )
+    # all_unit_containers: dict[str, BuildingUnitContainer] = {
+    #     BuildingUnitContainer.main_parent_code: BuildingUnitContainer(
+    #         cj_key=main_container_id,
+    #         unit_code=BuildingUnitContainer.main_parent_code,
+    #     )
+    # }
+    # current_codes = list(all_units.keys())
+    # for code in current_codes:
+    #     while code != BuildingUnitContainer.main_parent_code:
+    #         if not code in all_units.keys():
+    #             all_units[code] = []
+    #         if not code in all_unit_containers.keys():
+    #             obj_key = BuildingUnitContainer.unit_code_to_cj_key(code=code, prefix=prefix)
+    #             all_unit_containers[code] = BuildingUnitContainer(
+    #                 cj_key=obj_key, unit_code=code
+    #             )
+    #         code = _unit_code_to_parent(code=code)
 
     # Extract all the spaces from the given CityJSON file
     spaces_ids_to_pos = {}
@@ -150,22 +185,22 @@ def load_units_from_csv(
         if isinstance(cj_obj, CityJSONSpaceSubclass):
             spaces_ids_to_pos[cj_obj.space_id] = i
 
-    # Apply the parent-child relationships of unit containers
-    for code, unit_container in all_unit_containers.items():
-        if code == BuildingUnitContainer.main_parent:
-            CityJSONObject.add_parent_child(
-                parent=cj_file.city_objects[root_pos],
-                child=unit_container,
-            )
-            continue
-        parent_code = _unit_code_to_parent(code=code)
-        # Add the link to its parent
-        CityJSONObject.add_parent_child(
-            parent=all_unit_containers[parent_code], child=unit_container
-        )
-        # Add the link to its units
-        for unit in all_units[code]:
-            CityJSONObject.add_parent_child(parent=unit_container, child=unit)
+    # # Apply the parent-child relationships of unit containers
+    # for code, unit_container in all_unit_containers.items():
+    #     if code == BuildingUnitContainer.main_parent_code:
+    #         CityJSONObject.add_parent_child(
+    #             parent=cj_file.city_objects[root_pos],
+    #             child=unit_container,
+    #         )
+    #         continue
+    #     parent_code = _unit_code_to_parent(code=code)
+    #     # Add the link to its parent
+    #     CityJSONObject.add_parent_child(
+    #         parent=all_unit_containers[parent_code], child=unit_container
+    #     )
+    #     # Add the link to its units
+    #     for unit in all_units[code]:
+    #         CityJSONObject.add_parent_child(parent=unit_container, child=unit)
 
     # Add the links from spaces to the units they belong in
     all_units_flattened = [unit for units in all_units.values() for unit in units]
@@ -200,7 +235,8 @@ def load_units_from_csv(
         )
         unit.set_icon(icon_position=icon_position)
 
-    cj_file.add_cityjson_objects(list(all_unit_containers.values()))
+    cj_file.add_cityjson_objects([unit_main_container])
+    cj_file.add_cityjson_objects(unit_containers)
     cj_file.add_cityjson_objects(
         [unit for units in all_units.values() for unit in units]
     )
@@ -220,8 +256,8 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
     all_objects_geoms: dict[str, list[Geometry]] = defaultdict(lambda: [])
 
     # Process all the objects and their geometries
-    for obj_id in tqdm(all_objects_ids, desc="Process all geometries"):
-        geom, name = _geom_and_name_from_scene_id(scene=scene, object_id=obj_id)
+    for obj_key in tqdm(all_objects_ids, desc="Process all geometries"):
+        geom, name = _geom_and_name_from_scene_id(scene=scene, cj_key=obj_key)
         all_objects_geoms[name].append(geom)
 
     # Add LoD 0 geometry to all objects that only have higher geometries
@@ -235,20 +271,24 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
             lod_0_mesh = flatten_trimesh(base_mesh)
             object_geoms.append(MultiSurface.from_mesh(lod=0, mesh=lod_0_mesh))
 
+    logging.info("Add the missing hierarchy.")
+
     # Add the missing hierarchy without geometry
     current_objects = list(all_objects_geoms.keys())
-    for obj_name in current_objects:
-        last_dot_position = obj_name.rfind(".")
+    for space_id in current_objects:
+        last_dot_position = space_id.rfind(".")
         while last_dot_position != -1:
-            parent_name = obj_name[:last_dot_position]
-            if parent_name not in all_objects_geoms.keys():
-                all_objects_geoms[parent_name] = []
-            last_dot_position = parent_name.rfind(".")
+            parent_space_id = space_id[:last_dot_position]
+            if parent_space_id not in all_objects_geoms.keys():
+                all_objects_geoms[parent_space_id] = []
+            last_dot_position = parent_space_id.rfind(".")
+
+    logging.info("Transform into actual CityJSON objects.")
 
     # Store the geometry into actual objects
     all_objects_cj: dict[str, CityJSONObjectSubclass] = {}
-    for name, geoms in all_objects_geoms.items():
-        hierarchy_level = name.count(".")
+    for space_id, geoms in all_objects_geoms.items():
+        hierarchy_level = space_id.count(".")
         if hierarchy_level == 0:
             obj_func = Building
         elif hierarchy_level == 1:
@@ -258,16 +298,20 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
         elif hierarchy_level == 3:
             obj_func = BuildingRoom
         else:
-            raise RuntimeError(f"Unexpected format for an object name: '{name}'")
+            raise RuntimeError(
+                f"Unexpected format for an object space id: '{space_id}'"
+            )
 
-        obj_id = obj_func.space_number_to_id(number=name)
+        obj_key = obj_func.key_to_cj_key(key=space_id)
 
-        all_objects_cj[name] = obj_func(
-            object_id=obj_id, space_id=name, geometries=geoms
+        all_objects_cj[space_id] = obj_func(
+            cj_key=obj_key, space_id=space_id, geometries=geoms
         )
 
     # # Add the root group
-    # root = BuildingRoot(object_id=f"Root-08")
+    # root = BuildingRoot(cj_key=f"Root-08")
+
+    logging.info("Apply the parent-child relationships.")
 
     # Apply the parent-child relationships
     for obj_name in all_objects_cj.keys():
@@ -286,5 +330,7 @@ def full_building_from_gltf(gltf_path: Path) -> CityJSONFile:
     )
     # cj_file.add_cityjson_objects([root])
     cj_file.add_cityjson_objects(list(all_objects_cj.values()))
+
+    logging.info("Done processing the full building.")
 
     return cj_file

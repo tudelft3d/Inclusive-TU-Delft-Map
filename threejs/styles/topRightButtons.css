@@ -1,5 +1,5 @@
 #basemap-btn,
-#layer-btn{
+#layers-btn{
     width: 34px;
     height: 34px;
     display: flex;
@@ -61,7 +61,7 @@
 }
 
 #basemap-btn:hover,
-#layer-btn:hover {
+#layers-btn:hover {
   background: #026e95;
   transform: translateY(-1px);
 }
@@ -89,8 +89,10 @@
   padding: 8px 0px;
   border-radius: 5px;
   min-width: 200px;
+  max-height: 300px;
   z-index: 999;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* Link styles inside the dropdowns */
@@ -119,15 +121,15 @@
 @media (max-width: 620px) {
   /* smaller buttons */
   #basemap-btn,
-  #layer-btn {
+  #layers-btn {
     width: 34px;
     height: 34px;
     border-radius: 8px;
   }
 
   /* smaller icons inside buttons */
-  #layer-btn img,
-  #layer-btn svg {
+  #layers-btn img,
+  #layers-btn svg {
     width: 20px;
     height: 20px;
     display: block;

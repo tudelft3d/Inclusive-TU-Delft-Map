@@ -1,9 +1,10 @@
 import { InfoPane } from "./infoPane";
 import { Highlighter } from "./highlighter";
 import { BuildingView } from "./buildingView";
-import { Vector2, Scene, Camera, Raycaster, Mesh } from "three";
+import { Vector2, Scene, Camera, Raycaster, Mesh, Vector3 } from "three";
 import { CamerasControls } from "./camera";
 import { HOVERED_COLOR } from "./constants";
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
 export class ObjectPicker {
     /**
@@ -88,13 +89,33 @@ export class ObjectPicker {
 
 
     /**
-     * Picks the closest object at the given position.
+     * Picks the closest object at the given screen position.
      *
      * @param {Vector2} normalizedPosition
      */
-    pickPosition(normalizedPosition) {
+    pickScreenPosition(normalizedPosition) {
         const mesh = this._raycastPosition(normalizedPosition);
-        this.pickMesh(mesh);
+        if (!mesh || !mesh.name) {
+            this.unpick();
+        }
+        else {
+            this.pickMesh(mesh);
+        }
+    }
+
+    /**
+     * Pick the object based on the given name, using its icon position.
+     * 
+     * @param {string} cj_name
+     * @param {Vector3} icon_position
+     * @param {number} distance
+     */
+    pickIcon(cj_name, icon_position, distance) {
+        // Zoom to the mesh
+        this.cameraManager.zoomToCoordinates(icon_position, distance);
+
+        // Show info pane with object name - InfoPane handles everything else
+        this.infoPane.show(cj_name);
     }
 
     /**
@@ -103,36 +124,37 @@ export class ObjectPicker {
      * @param {Mesh | null} mesh 
      */
     pickMesh(mesh) {
-        if (!mesh || !mesh.name) {
-            // Unhighlight
-            this.unpick();
-
-            // Reset the building view
-            if (this.buildingView) {
-                this.buildingView.set_target(null);
-            }
-
-            // Reset the camera
-            this.cameraManager.zoomToObject(null);
-        } else {
-            // Highlight the mesh
-            this.pickHighlighter.highlight([mesh]);
-
-            // Set the building view
-            if (this.buildingView) {
-                this.buildingView.set_target(mesh.name);
-            }
-
-            // Zoom to the mesh
-            this.cameraManager.zoomToObject(mesh);
-
-            // Show info pane with object name - InfoPane handles everything else
-            this.infoPane.show(mesh.name);
+        if (!mesh) {
+            console.error(mesh, "Mesh is not correct");
         }
+        // Highlight the mesh
+        this.pickHighlighter.highlight([mesh]);
+
+        // Set the building view
+        if (this.buildingView) {
+            this.buildingView.set_target(mesh.name);
+        }
+
+        // Zoom to the mesh
+        this.cameraManager.zoomToObject(mesh);
+
+        // Show info pane with object name - InfoPane handles everything else
+        this.infoPane.show(mesh.name);
     }
 
     unpick() {
+        // Unhighlight
         this.pickHighlighter.unhighlight();
+
+        // Reset the building view
+        if (this.buildingView) {
+            this.buildingView.set_target(null);
+        }
+
+        // Reset the camera
+        this.cameraManager.zoomToObject(null);
+
+        // Hide the info pane
         this.infoPane.hide();
     }
 }

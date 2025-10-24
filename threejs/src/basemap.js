@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+export const BASEMAP_MIN_X = 84000;
+export const BASEMAP_MAX_X = 87500;
+export const BASEMAP_MIN_Y = 443500;
+export const BASEMAP_MAX_Y = 448000;
+export const BASEMAP_BOUNDARIES = [BASEMAP_MIN_X, BASEMAP_MIN_Y, BASEMAP_MAX_X, BASEMAP_MAX_Y];
+
 // Function to calculate viewport center in map coordinates
 function getViewportCenter(bbox) {
   const [minX, minY, maxX, maxY] = bbox;
@@ -104,7 +110,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
       107.52, 53.76, 26.88, 13.44, 6.72,
       3.36, 1.68, 0.84, 0.42, 0.21
     ],
-    bbox = [84000, 443500, 87500, 448000], // better option: to change query bbox to camera view
+    bbox = BASEMAP_BOUNDARIES, // better option: to change query bbox to camera view
     originX = -285401.92,
     originY = 903401.92,
     maxConcurrentLoads = 6

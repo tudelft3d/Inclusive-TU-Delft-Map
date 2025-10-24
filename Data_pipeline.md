@@ -161,14 +161,10 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
     uv run python cli.py load_3dbag \
         ../threejs/assets/processing_input/bag_geometry/subset.city.json \
         ../threejs/assets/processing_output/3dbag.city.json \
-        -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv \
-        -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv \
-        --bag "3D BAG Buildings IDs [list,str]" \
-        --id "Number [str]" \
-        --skip "Skip [bool]" \
-        --parent "Parent Number [str]" \
+        -b ../threejs/assets/processing_input/attributes/buildings.csv \
+        -s ../threejs/assets/processing_input/attributes/subdivisions.csv \
         --overwrite \
-        -v
+        -vv
     ```
 
 3. Process custom geometry:
@@ -177,33 +173,41 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
     uv run python cli.py load_custom_building \
         ../threejs/assets/processing_input/custom_geometry/08.glb \
         ../threejs/assets/processing_output/08.city.json \
+        -b ../threejs/assets/processing_input/attributes/buildings.csv \
+        -p ../threejs/assets/processing_input/attributes/parts.csv \
+        -s ../threejs/assets/processing_input/attributes/storeys.csv \
+        -r ../threejs/assets/processing_input/attributes/rooms.csv \
         -u ../threejs/assets/processing_input/attributes/units.csv \
-        --units-code-column "Type Code [str]" \
-        --units-spaces-column "Numbers [list,str]" \
-        -a ../threejs/assets/processing_input/attributes/rooms_attributes.csv \
-        -c "Number [str]" \
-        -a ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv \
-        -c "Number [str]" \
+        --units_gltf ../threejs/assets/processing_input/custom_geometry/08-navigation_elements.glb \
         --overwrite \
-        -v
+        -vv
     ```
 
-4. Merge them together:
+4. Process the outdoor icons:
+
+    ```bash
+    uv run python cli.py load_gj_icons \
+        ../threejs/assets/processing_input/all_outdoor_objects.geojson \
+        ../threejs/assets/processing_output/outdoor.city.json
+    ```
+
+5. Merge them together:
 
     ```bash
     uv run cjio ../threejs/assets/processing_output/08.city.json \
+        merge ../threejs/assets/processing_output/outdoor.city.json \
         merge ../threejs/assets/processing_output/3dbag.city.json \
         save  ../threejs/assets/processing_output/all_buildings.city.json
     ```
 
-5. Split into CityJSON and glTF used by the map:
+6. Split into CityJSON and glTF used by the map:
 
     ```bash
     uv run python cli.py split_cj \
         ../threejs/assets/processing_output/all_buildings.city.json \
         ../threejs/assets/threejs/buildings \
         --overwrite \
-        -v
+        -vv
     ```
 
 ### With the database
@@ -219,13 +223,13 @@ The current pipeline looks like this:
 2. Process 3DBAG data:
 
     ```bash
-    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/3dbag.city.json -b ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -s ../threejs/assets/processing_input/attributes/3dbag_buildings_subdivisions_attributes.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
+    uv run python cli.py load_3dbag ../threejs/assets/processing_input/bag_geometry/subset.city.json ../threejs/assets/processing_output/3dbag.city.json -b ../threejs/assets/processing_input/attributes/buildings.csv -s ../threejs/assets/processing_input/attributes/subdivisions.csv --bag "3D BAG Buildings IDs (list,)" --id "Final Number" --skip "Skip" --parent "Parent Final Number"
     ```
 
 3. Process custom geometry:
 
     ```bash
-    uv run python cli.py load_custom_building ../threejs/assets/processing_input/custom_geometry/08.glb ../threejs/assets/processing_output/08.city.json -u ../threejs/assets/processing_input/attributes/units.csv --units-code-column "Type Code [str]" --units-spaces-column "Numbers [list,str]" -a ../threejs/assets/processing_input/attributes/rooms_attributes.csv -c "Number [str]" -a ../threejs/assets/processing_input/attributes/3dbag_buildings_attributes.csv -c "Number [str]"
+    uv run python cli.py load_custom_building ../threejs/assets/processing_input/custom_geometry/08.glb ../threejs/assets/processing_output/08.city.json -u ../threejs/assets/processing_input/attributes/units.csv --units-code-column "Type Code [str]" --units-spaces-column "Numbers [list,str]" -a ../threejs/assets/processing_input/attributes/rooms.csv -c "Number [str]" -a ../threejs/assets/processing_input/attributes/buildings.csv -c "Number [str]"
     ```
 
 4. Prepare the database arguments:

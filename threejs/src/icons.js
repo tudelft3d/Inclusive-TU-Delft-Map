@@ -11,14 +11,14 @@ export class IconSet {
      *
      * @param {string} key
      * @param {SvgIcon[]} svgIcons
-     * @param {TextIcon} textIcon
+     * @param {TextIcon | null} textIcon
      * @param {THREE.Vector3} worldPos
      * @param {*} onClick
      */
     constructor(key, svgIcons, textIcon, worldPos, onClick) {
         this.key = key;
         this.basePos = worldPos;
-        this.onClick = onClick;
+        // this.onClick = onClick;
 
         this.svgIcons = {};
         svgIcons.map((svgIcon) => {
@@ -37,25 +37,43 @@ export class IconSet {
         this.wrapper = document.createElement("div");
         this.wrapper.className = "icons-container";
 
-        // Inside wrapper to move the position anchor
-        this.wrapperInner = document.createElement("div");
-        this.wrapperInner.className = "icons-centered-box";
-        this.wrapper.appendChild(this.wrapperInner);
+        // Subwrapper
+        this.subWrapper = document.createElement("div");
+        this.subWrapper.className = "icons-subcontainer";
+        this.wrapper.appendChild(this.subWrapper);
+
+        // Subsubwrapper to move the position anchor
+        this.subSubWrapper = document.createElement("div");
+        this.subSubWrapper.className = "icons-subsubcontainer";
+        this.subWrapper.appendChild(this.subSubWrapper);
 
         // Add the text
-        if (!(this.textIcon.container instanceof HTMLElement)) {
-            throw new Error("text must be a string or HTMLElement");
+        if (this.textIcon) {
+            if (!(this.textIcon.container instanceof HTMLElement)) {
+                throw new Error("text must be a string or HTMLElement");
+            }
+            this.subSubWrapper.appendChild(this.textIcon.container);
         }
-        this.wrapperInner.appendChild(this.textIcon.container);
 
         // Build the row of icons
         this._makeIconsRow();
 
+        // Pointing arrow
+        this.iconsArrow = document.createElement("img");
+        this.iconsArrow.src = '/assets/threejs/graphics/icons/thematic-layers/triangle.svg';
+        this.iconsArrow.className = "icons-arrow";
+        this.iconsArrow.style.setProperty('--triangle-fill', "white");
+        this.subWrapper.appendChild(this.iconsArrow);
+
+        // Make the actual three.js object
         this.wrapperObject = new CSS2DObject(this.wrapper);
         this.wrapper.addEventListener("click", (e) => {
-            console.log("HERE");
             onClick(e);
         });
+    }
+
+    hasText() {
+        return (!this.textIcon);
     }
 
     addSvgIcon(svgIcon) {
@@ -76,14 +94,21 @@ export class IconSet {
         }
 
         delete this.svgIcons[key];
+
         this._makeIconsRow();
     }
 
     _makeIconsRow() {
+
         // Remove the previous row
         if (this.svgIconsRow) {
-            this.wrapperInner.removeChild(this.svgIconsRow);
+            this.subSubWrapper.removeChild(this.svgIconsRow);
+            this.svgIconsRow = null;
         }
+
+        if (Object.keys(this.svgIcons).length === 0) {
+            return;
+        };
 
         // Build the row of icons
         this.svgIconsRow = document.createElement("div");
@@ -94,7 +119,7 @@ export class IconSet {
             }
             this.svgIconsRow.appendChild(svgIcon.container);
         }
-        this.wrapperInner.appendChild(this.svgIconsRow);
+        this.subSubWrapper.appendChild(this.svgIconsRow);
     }
 
     /**
@@ -104,7 +129,7 @@ export class IconSet {
      */
     _setScale(scale) {
         const baseOffset = new Vector3(0, (50 * (1 - scale)) / 2, 0);
-        this.wrapperInner.style.transform = `scale(${scale}) translate(0, -50%)`;
+        this.subWrapper.style.transform = `scale(${scale}) translate(0, -50%)`;
         this.wrapperObject.position.copy(this.basePos.clone().add(baseOffset));
     }
 
@@ -146,7 +171,7 @@ export class IconsSceneManager {
      *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
-     * @param {HTMLElement} mainContainer
+     * @param {HTMLElement} iconContainer
      * @param {HTMLElement} mainContainer
      */
     constructor(scene, renderer, iconContainer, mainContainer) {
@@ -213,15 +238,15 @@ export class IconsSceneManager {
         delete this.iconSets[key];
     }
 
-    /**
-     * Remove all IconSets from the scene.
-     *
-     */
-    removeAllIconSets() {
-        for (const [key, icon] of Object.entries(this.iconSets)) {
-            this.removeIconSet(key);
-        }
-    }
+    // /**
+    //  * Remove all IconSets from the scene.
+    //  *
+    //  */
+    // removeAllIconSets() {
+    //     for (const [key, icon] of Object.entries(this.iconSets)) {
+    //         this.removeIconSet(key);
+    //     }
+    // }
 
     /**
      * Resize the icons based on the camera position.
@@ -279,7 +304,12 @@ export class TextIcon {
 
         // Assemble the hierarchy
         this.container.appendChild(this.content);
+
     }
+
+    // is_populated() {
+    //     return !(this.content["innerText"] == "");
+    // }
 }
 
 export class SvgIcon {

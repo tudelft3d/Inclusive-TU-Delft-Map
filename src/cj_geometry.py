@@ -108,6 +108,8 @@ class CityJSONGeometries:
         self.unique_vertices, self.boundaries = self._deduplicate_vertices()
 
     def get_optimal_translate(self, scale: NDArray[np.float64]) -> NDArray[np.float64]:
+        if self.unique_vertices.shape[0] == 0:
+            return np.array([0, 0, 0], dtype=np.float64)
         translate = np.mean(self.unique_vertices, axis=0, dtype=np.float64)
         # Apply the scale to have a coherent precision
         translate = np.round(translate / scale) * scale
@@ -174,6 +176,14 @@ class IconPosition:
         self.z = z
 
     @classmethod
+    def from_list(cls, xyz: list[float]) -> Self:
+        if len(xyz) != 3:
+            raise ValueError(
+                f"IconPosition.from_list requires a input of length 3, not '{xyz}'"
+            )
+        return cls(x=xyz[0], y=xyz[1], z=xyz[2])
+
+    @classmethod
     def from_mesh(cls, mesh: Trimesh, z_offset: float) -> Self:
         if not isinstance(mesh, Trimesh):
             raise TypeError(
@@ -182,3 +192,6 @@ class IconPosition:
 
         pos_array = icon_position_from_mesh(mesh=mesh, z_offset=z_offset)
         return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])
+
+    def to_list(self) -> list[float]:
+        return [self.x, self.y, self.z]
