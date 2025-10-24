@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any
@@ -171,7 +172,7 @@ class CityJSONObject(ABC):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
         icon_position: IconPosition | None = None,
@@ -187,7 +188,7 @@ class CityJSONObject(ABC):
                         f"The attributes of a CityJSONObject should have strings as keys."
                     )
 
-        self.id = object_id
+        self.id = cj_key
         self.attributes = attributes if attributes is not None else {}
         self.parent_id = None
         self.children_ids: set[str] = set()
@@ -315,7 +316,7 @@ class CityJSONSpace(CityJSONObject):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
@@ -323,11 +324,12 @@ class CityJSONSpace(CityJSONObject):
     ) -> None:
 
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             attributes=attributes,
             geometries=geometries,
             icon_position=icon_position,
         )
+        self.cj_key = cj_key
         self.space_id = space_id
         space_id_key = ARGUMENT_TO_NAME["space_id"]
         self.add_attributes({space_id_key: space_id})
@@ -345,14 +347,14 @@ class CityJSONSpace(CityJSONObject):
         return content_dict
 
     @classmethod
-    def space_number_to_prefix(cls, number: str) -> str:
-        return f"Building_{number.split(".")[0]}"
+    def key_to_prefix(cls, key: str) -> str:
+        return f"Building_{key.split(".")[0]}"
 
     @classmethod
-    def space_number_to_id(cls, number: str) -> str:
-        prefix = cls.space_number_to_prefix(number=number)
-        number = number.replace(".", "_").replace("-", "_")
-        return f"{prefix}-{cls.type_name}-{number}"
+    def key_to_cj_key(cls, key: str) -> str:
+        prefix = cls.key_to_prefix(key=key)
+        key = key.replace(".", "_").replace("-", "_")
+        return f"{prefix}-{cls.type_name}-{key}"
 
 
 class Building(CityJSONSpace):
@@ -362,14 +364,14 @@ class Building(CityJSONSpace):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             space_id=space_id,
             attributes=attributes,
             geometries=geometries,
@@ -389,14 +391,14 @@ class BuildingPart(CityJSONSpace):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             space_id=space_id,
             attributes=attributes,
             geometries=geometries,
@@ -416,14 +418,14 @@ class BuildingStorey(CityJSONSpace):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             space_id=space_id,
             attributes=attributes,
             geometries=geometries,
@@ -443,14 +445,14 @@ class BuildingRoom(CityJSONSpace):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         space_id: str,
         attributes: dict[str, Any] | None = None,
         geometries: Sequence[Geometry] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             space_id=space_id,
             attributes=attributes,
             geometries=geometries,
@@ -471,7 +473,7 @@ class BuildingUnitObject(CityJSONObject):
 
     def __init__(self, prefix: str) -> None:
         super().__init__(
-            object_id=f"{prefix}-{self.type_name}-{self.id_prefix}",
+            cj_key=f"{prefix}-{self.type_name}-{self.id_prefix}",
             attributes={},
             geometries=None,
             icon_position=None,
@@ -489,13 +491,13 @@ class BuildingUnitContainer(CityJSONObject):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         unit_code: str,
         attributes: dict[str, Any] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             attributes=attributes,
             geometries=None,
             icon_position=icon_position,
@@ -505,7 +507,7 @@ class BuildingUnitContainer(CityJSONObject):
         self.add_attributes({code_name: unit_code})
 
     @classmethod
-    def unit_code_to_id(cls, code: str, prefix: str) -> str:
+    def unit_code_to_cj_key(cls, code: str, prefix: str) -> str:
         code = code.replace(".", "_").replace("-", "_")
         prefix = prefix.replace("-", "_")
         return f"{prefix}-{cls.type_name}-{cls.id_prefix}_{code}"
@@ -522,7 +524,7 @@ class BuildingUnit(CityJSONObject):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         unit_code: str,
         unit_storeys: list[str],
         geometry: Geometry | None = None,
@@ -531,7 +533,7 @@ class BuildingUnit(CityJSONObject):
     ) -> None:
         geometries = [geometry] if geometry is not None else None
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             geometries=geometries,
             attributes=attributes,
             icon_position=icon_position,
@@ -558,14 +560,14 @@ class BuildingUnit(CityJSONObject):
         return content_dict
 
     @classmethod
-    def unit_code_to_code_instance(cls, code: str, number: int) -> str:
-        number_str = str(number).replace(".", "_").replace("-", "_")
+    def unit_code_to_code_instance(cls, code: str, index: int) -> str:
+        index_str = str(index).replace(".", "_").replace("-", "_")
         code = code.replace(".", "_").replace("-", "_")
-        return f"{code}@{number_str}"
+        return f"{code}@{index_str}"
 
     @classmethod
-    def unit_code_to_id(cls, code: str, prefix: str, number: int) -> str:
-        code_instance = cls.unit_code_to_code_instance(code=code, number=number)
+    def unit_code_to_cj_key(cls, code: str, prefix: str, index: int) -> str:
+        code_instance = cls.unit_code_to_code_instance(code=code, index=index)
         prefix = prefix.replace("-", "_")
         return f"{prefix}-{cls.type_name}-{cls.id_prefix}_{code_instance}"
 
@@ -583,13 +585,13 @@ class BuildingNavigationElement(CityJSONObject):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         geometries: Sequence[Geometry],
         attributes: dict[str, Any] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             attributes=attributes,
             geometries=geometries,
             icon_position=icon_position,
@@ -612,11 +614,11 @@ class BuildingRoot(CityJSONObject):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         attributes: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             attributes=attributes,
             geometries=None,
         )
@@ -630,7 +632,7 @@ class OutdoorObject(CityJSONObject):
 
     def __init__(self, prefix: str) -> None:
         super().__init__(
-            object_id=f"{prefix}-{self.type_name}-{self.id_prefix}",
+            cj_key=f"{prefix}-{self.type_name}-{self.id_prefix}",
             attributes={},
             geometries=None,
             icon_position=None,
@@ -648,12 +650,12 @@ class OutdoorUnitContainer(BuildingUnitContainer):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         unit_code: str,
         attributes: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             unit_code=unit_code,
             attributes=attributes,
             icon_position=None,
@@ -671,13 +673,13 @@ class OutdoorUnit(BuildingUnitContainer):
 
     def __init__(
         self,
-        object_id: str,
+        cj_key: str,
         unit_code: str,
         attributes: dict[str, Any] | None = None,
         icon_position: IconPosition | None = None,
     ) -> None:
         super().__init__(
-            object_id=object_id,
+            cj_key=cj_key,
             unit_code=unit_code,
             attributes=attributes,
             icon_position=icon_position,

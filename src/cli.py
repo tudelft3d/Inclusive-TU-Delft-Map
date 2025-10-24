@@ -254,19 +254,19 @@ def load_custom_building(
         ] = []
         if buidlings_path is not None:
             all_attributes.append(
-                BdgAttrReader(csv_path=buidlings_path).get_id_to_attr()
+                BdgAttrReader(csv_path=buidlings_path).get_key_to_attr()
             )
         if parts_path is not None:
             all_attributes.append(
-                BdgPartAttrReader(csv_path=parts_path).get_id_to_attr()
+                BdgPartAttrReader(csv_path=parts_path).get_key_to_attr()
             )
         if storeys_path is not None:
             all_attributes.append(
-                BdgStoreyAttrReader(csv_path=storeys_path).get_id_to_attr()
+                BdgStoreyAttrReader(csv_path=storeys_path).get_key_to_attr()
             )
         if rooms_path is not None:
             all_attributes.append(
-                BdgRoomAttrReader(csv_path=rooms_path).get_id_to_attr()
+                BdgRoomAttrReader(csv_path=rooms_path).get_key_to_attr()
             )
 
         logging.info("Add the attributes to the spaces...")
@@ -345,10 +345,10 @@ def subset_cj(
         Path, typer.Argument(help="Input CityJSON file.", exists=True)
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
-    subset: Annotated[
-        List[str],
+    subset_txt_path: Annotated[
+        Path,
         typer.Argument(
-            help="Object ids to keep, separated with spaces.",
+            help="Object ids to keep, separated with new lines.",
         ),
     ],
 ):
@@ -358,8 +358,10 @@ def subset_cj(
         raise ValueError("The output path should end with '.json'")
 
     command = ["cjio", str(input_cj_path.absolute()), "subset"]
-    for obj_id in subset:
-        command.extend(["--id", obj_id])
+    with open(subset_txt_path) as f:
+        for obj_key_line in f.readlines():
+            obj_key = obj_key_line.strip()
+            command.extend(["--id", obj_key])
     command.extend(["save", str(output_cj_path.absolute())])
     subprocess.run(command)
 

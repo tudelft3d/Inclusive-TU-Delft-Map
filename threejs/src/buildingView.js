@@ -112,10 +112,6 @@ export class BuildingView {
         // Show all other buildings again
         this._showOtherBuildings();
 
-        // I disabled this because I expect when I exit orthographic view, 
-        // the building remains selected (target)
-        // this.building_key = undefined; 
-
         this.active = false;
 
         this.cameraManager.switchToOrbit();

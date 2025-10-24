@@ -26,11 +26,12 @@ MENTION:
 
 export class LayerManager {
 
-	constructor(scene, iconsSceneManager, svgLoader) {
+	constructor(scene, iconsSceneManager, svgLoader, cameraManager) {
 
 		this.scene = scene;
 		this.iconsSceneManager = iconsSceneManager;
 		this.svgLoader = svgLoader;
+		this.cameraManager = cameraManager;
 
 		this.layer_definition = {};
 
@@ -57,6 +58,8 @@ export class LayerManager {
 
 		this.campus_buildings_codes = this._isolate_building_room_codes();
 
+		this.campus_outdoor_codes = this._isolate_oudoor_units_codes();
+
 		this.current_building_key;
 
 		this.current_storey_room_keys;
@@ -80,6 +83,27 @@ export class LayerManager {
 		}
 
 		return campus_buildings_json;
+	}
+
+	_isolate_oudoor_units_codes() {
+		const campus_unit_codes = {};
+		const outdoor_code_containers = cityjson.CityObjects["Outdoor-CityObjectGroup-OutdoorObject"]["children"];
+		for (const [_, code_container_key] of Object.entries(outdoor_code_containers)) {
+
+			const code_container = cityjson.CityObjects[code_container_key];
+			const code = code_container["attributes"]["code"];
+
+			if (!code_container["children"]) {
+				console.error("A code container does not have children!")
+			}
+
+			for (const unit_key of code_container["children"]) {
+				campus_unit_codes[unit_key] = new Set([code]);
+			}
+
+		}
+
+		return campus_unit_codes;
 	}
 
 	_isolate_building_room_codes() {
@@ -171,8 +195,8 @@ export class LayerManager {
 				continue;
 			}
 
-			if (building_json.attributes.space_id.includes("NL")) {
-				continue;
+			if (!building_json.attributes["space_id"]) {
+				continue
 			}
 
 			const position = this._convert_cityjson_position(building_json.attributes.icon_position);
@@ -301,7 +325,7 @@ export class LayerManager {
 
 			if (code in icon_set_object.svgIcons) {
 
-				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.textIcon.is_populated()) {
+				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.hasText()) {
 
 					icon_set_object.removeSvgIcon(code);
 
@@ -321,6 +345,7 @@ export class LayerManager {
 	_add_icon(code) {
 
 		this._add_icon_buildings(code);
+		this._add_icon_outdoors(code);
 
 		if (this.building_view_active) {
 
@@ -348,6 +373,11 @@ export class LayerManager {
 					this._add_icon_svg(building_key, code, path, color);
 
 				} else {
+
+					console.log(building_json.attributes["space_id"]);
+					if (!building_json.attributes["space_id"]) {
+						continue
+					}
 
 					const position = this._convert_cityjson_position(building_json.attributes.icon_position);
 
@@ -414,6 +444,36 @@ export class LayerManager {
 
 	}
 
+	_add_icon_outdoors(code) {
+		for (const [key, codes] of Object.entries(this.campus_outdoor_codes)) {
+
+			if (codes.has(code)) {
+
+				if (this.iconsSceneManager.iconSets[key]) {
+
+					const path = [this.layer_definition[code]["path from assets"]];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(key, code, path, color);
+
+				} else {
+					const icon_position = cityjson.CityObjects[key]["attributes"]["icon_position"];
+					const position = this._convert_cityjson_position(icon_position);
+
+					this._add_icon_set(
+						key,
+						null,
+						[this.layer_definition[code]["path from assets"]],
+						[code],
+						["#f7c286ff"],
+						position);
+
+				}
+
+			}
+		}
+	}
+
 
 	_convert_cityjson_position(position_object) {
 
@@ -438,28 +498,44 @@ export class LayerManager {
 
 	}
 
-	_generate_icon_onclick(object_key) {
+	_generate_icon_onclick(cj_key) {
 
-		const object_json = cityjson.CityObjects[object_key];
+		const object_json = cityjson.CityObjects[cj_key];
 
 		let object_threejs_name;
+		let icon_position_vector;
 
 		if (object_json.type == "Building") {
 
-			object_threejs_name = object_key + "-lod_2";
+			object_threejs_name = cj_key + "-lod_2";
+			icon_position_vector = null;
 
 		} else if (object_json.type == "BuildingRoom") {
 
-			object_threejs_name = object_key + "-lod_0";
+			object_threejs_name = cj_key + "-lod_0";
+
+		} else if (object_json.type == "GenericCityObject") {
+
+			object_threejs_name = null;
+			const icon_position = object_json["attributes"]["icon_position"];
+			icon_position_vector = this._convert_cityjson_position(icon_position);
 
 		} else {
 
-			console.error("UNRECOGNIZED OBJECT type:", object_key);
+			console.error("UNRECOGNIZED OBJECT type:", cj_key);
 
 		}
 
 		const onClick = (e) => {
-			this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+			if (!object_threejs_name) {
+				if (!icon_position_vector) {
+					console.error("Either the object or the position of the icon must be given.")
+				}
+				this.picker.pickIcon(cj_key, icon_position_vector, 50);
+			}
+			else {
+				this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+			}
 		};
 
 		return onClick;

@@ -121,17 +121,17 @@ class Bag2Cityjson(CityjsonLoader):
         all_objects_cj: dict[str, CityJSONObjectSubclass] = {}
 
         def _process_bag_element(
-            obj_id: str,
+            obj_key: str,
             bag_ids: list[str],
             unprocessed_bag_ids: set[str] | None = None,
             skip: bool = False,
         ) -> list[MultiSurface] | None:
-            logging.log(logging.DEBUG, f"Processing {obj_id}")
+            logging.log(logging.DEBUG, f"Processing {obj_key}")
 
             # Check if the key is already used
-            if obj_id in all_objects_cj.keys():
+            if obj_key in all_objects_cj.keys():
                 raise RuntimeError(
-                    f"Object id {obj_id} already corresponds to another building."
+                    f"Object id {obj_key} already corresponds to another building."
                 )
 
             # Skip the building if using custom geometry instead
@@ -213,15 +213,16 @@ class Bag2Cityjson(CityjsonLoader):
         if bdgs_attr_path is not None:
             bdgs_attributes_all = BdgAttrReader(csv_path=bdgs_attr_path)
             bdgs_iterator = bdgs_attributes_all.iterator()
-            for space_id, bdg_attributes in tqdm(
+            for key, bdg_attributes in tqdm(
                 bdgs_iterator,
                 desc="Processing the buildings with attributes",
                 total=len(bdgs_attributes_all),
             ):
-                obj_id = Building.space_number_to_id(number=space_id)
+                space_id = bdg_attributes.space_id
+                obj_key = Building.key_to_cj_key(key=bdg_attributes.cj_key)
 
                 geoms = _process_bag_element(
-                    obj_id=obj_id,
+                    obj_key=obj_key,
                     bag_ids=bdg_attributes.bag_ids,
                     unprocessed_bag_ids=unprocessed_bag_ids,
                     skip=bdg_attributes.skip,
@@ -229,46 +230,47 @@ class Bag2Cityjson(CityjsonLoader):
 
                 if geoms is not None:
                     building = Building(
-                        object_id=obj_id,
+                        cj_key=obj_key,
                         space_id=space_id,
                         geometries=geoms,
                         icon_position=bdg_attributes.icon_position,
                     )
                     building.add_attributes(bdg_attributes.attributes)
-                    all_objects_cj[obj_id] = building
+                    all_objects_cj[obj_key] = building
 
         # Iterate over the units
         if bdgs_sub_attr_path is not None:
             bdgs_sub_attributes_all = BdgSubAttrReader(csv_path=bdgs_sub_attr_path)
             bdgs_sub_iterator = bdgs_sub_attributes_all.iterator()
-        for unit_id, bdgs_sub_attributes in tqdm(
+        for key, bdgs_sub_attributes in tqdm(
             bdgs_sub_iterator,
             desc="Processing the units",
             total=len(bdgs_sub_attributes_all),
         ):
-            parent_space_id = bdgs_sub_attributes.parent_object_id
-            prefix = CityJSONSpace.space_number_to_prefix(number=parent_space_id)
+            space_id = bdgs_sub_attributes.space_id
+            parent_key = bdgs_sub_attributes.parent_cj_key
+            prefix = CityJSONSpace.key_to_prefix(key=parent_key)
 
             # Add the missing hierarchy in the codes
-            main_container_id = BuildingUnitContainer.unit_code_to_id(
+            main_container_id = BuildingUnitContainer.unit_code_to_cj_key(
                 code=BuildingUnitContainer.main_parent_code, prefix=prefix
             )
             if main_container_id not in all_objects_cj:
                 main_container = BuildingUnitContainer(
-                    object_id=main_container_id,
+                    cj_key=main_container_id,
                     unit_code=BuildingUnitContainer.main_parent_code,
                 )
-                bdg_obj_id = Building.space_number_to_id(number=parent_space_id)
-                bdg_obj = all_objects_cj[bdg_obj_id]
+                bdg_obj_key = Building.key_to_cj_key(key=parent_key)
+                bdg_obj = all_objects_cj[bdg_obj_key]
                 all_objects_cj[main_container_id] = main_container
                 CityJSONObject.add_parent_child(parent=bdg_obj, child=main_container)
 
-            z_container_id = BuildingUnitContainer.unit_code_to_id(
+            z_container_id = BuildingUnitContainer.unit_code_to_cj_key(
                 code="Z", prefix=prefix
             )
             if z_container_id not in all_objects_cj:
                 z_container = BuildingUnitContainer(
-                    object_id=z_container_id, unit_code="Z"
+                    cj_key=z_container_id, unit_code="Z"
                 )
                 all_objects_cj[z_container_id] = z_container
                 CityJSONObject.add_parent_child(
@@ -280,19 +282,19 @@ class Bag2Cityjson(CityjsonLoader):
             # Find the number of units with the same code
             units_same_code = len(z_container.children_ids)
 
-            obj_id = BuildingUnit.unit_code_to_id(
-                code="Z", prefix=prefix, number=units_same_code
+            obj_key = BuildingUnit.unit_code_to_cj_key(
+                code="Z", prefix=prefix, index=units_same_code
             )
 
             unit = BuildingUnit(
-                object_id=obj_id,
+                cj_key=obj_key,
                 unit_code="Z",
                 unit_storeys=[],
                 icon_position=bdgs_sub_attributes.icon_position,
             )
-            unit.add_attributes({"subdivision_number": unit_id})
+            unit.add_attributes({"subdivision_number": space_id})
             unit.add_attributes(bdgs_sub_attributes.attributes)
-            all_objects_cj[obj_id] = unit
+            all_objects_cj[obj_key] = unit
 
             # Connect to the parent building
             CityJSONObject.add_parent_child(parent=z_container, child=unit)
@@ -301,23 +303,24 @@ class Bag2Cityjson(CityjsonLoader):
         for bag_2d_id in tqdm(
             unprocessed_bag_ids, desc="Processing the remaining buildings"
         ):
+            print(bag_2d_id)
             # Skip the children
             if bag_2d_id[-2] == "-":
                 continue
 
-            obj_id = Building.space_number_to_id(number=bag_2d_id)
+            obj_key = Building.key_to_cj_key(key=bag_2d_id)
 
             geoms = _process_bag_element(
-                obj_id=obj_id,
+                obj_key=obj_key,
                 bag_ids=[bag_2d_id],
             )
 
             if geoms is not None:
 
                 building = Building(
-                    object_id=obj_id, space_id=bag_2d_id, geometries=geoms
+                    cj_key=obj_key, space_id=bag_2d_id, geometries=geoms
                 )
-                all_objects_cj[obj_id] = building
+                all_objects_cj[obj_key] = building
 
         cj_file = CityJSONFile(
             scale=np.array([0.00001, 0.00001, 0.00001], dtype=np.float64),

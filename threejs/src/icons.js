@@ -72,6 +72,10 @@ export class IconSet {
         });
     }
 
+    hasText() {
+        return (!this.textIcon);
+    }
+
     addSvgIcon(svgIcon) {
         const key = svgIcon.key;
         if (key in this.svgIcons) {
@@ -303,9 +307,9 @@ export class TextIcon {
 
     }
 
-    is_populated() {
-        return !(this.content["innerText"] == "");
-    }
+    // is_populated() {
+    //     return !(this.content["innerText"] == "");
+    // }
 }
 
 export class SvgIcon {

@@ -67,7 +67,7 @@ def load_geojson_icons(gj_path: Path, output_cj_path: Path):
 
         # Create the outdoor unit
         unit = OutdoorUnit(
-            object_id=unit_id,
+            cj_key=unit_id,
             unit_code=unit_code,
             attributes={},
             icon_position=icon_position,
@@ -77,11 +77,11 @@ def load_geojson_icons(gj_path: Path, output_cj_path: Path):
     # Create the unit containers
     unit_containers: list[OutdoorUnitContainer] = []
     for code, units in all_units.items():
-        unit_container_id = OutdoorUnitContainer.unit_code_to_id(
+        unit_container_id = OutdoorUnitContainer.unit_code_to_cj_key(
             code=code, prefix=prefix
         )
         unit_container = OutdoorUnitContainer(
-            object_id=unit_container_id, unit_code=code, attributes={}
+            cj_key=unit_container_id, unit_code=code, attributes={}
         )
         unit_containers.append(unit_container)
 
