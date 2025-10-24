@@ -463,6 +463,24 @@ class BuildingRoom(CityJSONSpace):
             self.set_icon(attr.icon_position, overwrite=overwrite)
 
 
+class BuildingUnitObject(CityJSONObject):
+
+    type_name = "CityObjectGroup"
+    icon_z_offset = 2
+    id_prefix = "BuildingUnitObject"
+
+    def __init__(self, prefix: str) -> None:
+        super().__init__(
+            object_id=f"{prefix}-{self.type_name}-{self.id_prefix}",
+            attributes={},
+            geometries=None,
+            icon_position=None,
+        )
+
+    def apply_attr(self, attr: Attr, overwrite: bool) -> None:
+        raise NotImplementedError()
+
+
 class BuildingUnitContainer(CityJSONObject):
 
     type_name = "CityObjectGroup"
@@ -669,6 +687,7 @@ class OutdoorUnit(BuildingUnitContainer):
 CityJSONSpaceSubclass = Building | BuildingPart | BuildingStorey | BuildingRoom
 CityJSONObjectSubclass = (
     CityJSONSpaceSubclass
+    | BuildingUnitObject
     | BuildingUnit
     | BuildingUnitContainer
     | BuildingRoot

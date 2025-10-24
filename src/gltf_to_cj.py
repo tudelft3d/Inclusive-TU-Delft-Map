@@ -22,6 +22,7 @@ from cj_objects import (
     BuildingStorey,
     BuildingUnit,
     BuildingUnitContainer,
+    BuildingUnitObject,
     CityJSONFile,
     CityJSONObject,
     CityJSONObjectSubclass,
@@ -93,22 +94,16 @@ def load_units_from_csv(
             f"The root of the `cj_file` should be a Building, not a {type(root)}"
         )
     prefix = CityJSONSpace.space_number_to_prefix(number=root.space_id)
+    unit_main_container = BuildingUnitObject(prefix=prefix)
+    CityJSONObject.add_parent_child(parent=root, child=unit_main_container)
 
     all_units: dict[str, list[BuildingUnit]] = defaultdict(lambda: [])
 
     # Process the CSV file to find all the units
     unit_to_spaces: dict[str, list[str]] = {}
-    # specific_columns = (UNITS_CODE_COLUMN, UNITS_SPACES_COLUMN, ICON_POSITION_COLUMN)
-    # attributes_all, specific_values_all = csv_read_attributes(
-    #     csv_path=csv_path, specific_columns=specific_columns
-    # )
     units_attributes_all = BdgUnitAttrReader(csv_path=csv_path)
     units_attributes_iterator = units_attributes_all.iterator()
     for object_id, units_attributes in units_attributes_iterator:
-        # _, unit_code = specific_values[0]
-        # _, unit_spaces = specific_values[1]
-        # _, icon_position = specific_values[2]
-
         unit_code = units_attributes.code
 
         current_units_same_code = len(all_units[unit_code])
@@ -125,27 +120,43 @@ def load_units_from_csv(
         unit_to_spaces[unit.id] = units_attributes.unit_spaces
         all_units[unit_code].append(unit)
 
-    # Add the missing hierarchy in the codes
-    main_container_id = BuildingUnitContainer.unit_code_to_id(
-        code=BuildingUnitContainer.main_parent_code, prefix=prefix
-    )
-    all_unit_containers: dict[str, BuildingUnitContainer] = {
-        BuildingUnitContainer.main_parent_code: BuildingUnitContainer(
-            object_id=main_container_id,
-            unit_code=BuildingUnitContainer.main_parent_code,
+    unit_containers: list[BuildingUnitContainer] = []
+    for code, units in all_units.items():
+        unit_container_id = BuildingUnitContainer.unit_code_to_id(
+            code=code, prefix=prefix
         )
-    }
-    current_codes = list(all_units.keys())
-    for code in current_codes:
-        while code != BuildingUnitContainer.main_parent_code:
-            if not code in all_units.keys():
-                all_units[code] = []
-            if not code in all_unit_containers.keys():
-                obj_id = BuildingUnitContainer.unit_code_to_id(code=code, prefix=prefix)
-                all_unit_containers[code] = BuildingUnitContainer(
-                    object_id=obj_id, unit_code=code
-                )
-            code = _unit_code_to_parent(code=code)
+        unit_container = BuildingUnitContainer(
+            object_id=unit_container_id, unit_code=code, attributes={}
+        )
+        unit_containers.append(unit_container)
+
+        CityJSONObject.add_parent_child(
+            parent=unit_main_container, child=unit_container
+        )
+        for unit in units:
+            CityJSONObject.add_parent_child(parent=unit_container, child=unit)
+
+    # # Add the missing hierarchy in the codes
+    # main_container_id = BuildingUnitContainer.unit_code_to_id(
+    #     code=BuildingUnitContainer.main_parent_code, prefix=prefix
+    # )
+    # all_unit_containers: dict[str, BuildingUnitContainer] = {
+    #     BuildingUnitContainer.main_parent_code: BuildingUnitContainer(
+    #         object_id=main_container_id,
+    #         unit_code=BuildingUnitContainer.main_parent_code,
+    #     )
+    # }
+    # current_codes = list(all_units.keys())
+    # for code in current_codes:
+    #     while code != BuildingUnitContainer.main_parent_code:
+    #         if not code in all_units.keys():
+    #             all_units[code] = []
+    #         if not code in all_unit_containers.keys():
+    #             obj_id = BuildingUnitContainer.unit_code_to_id(code=code, prefix=prefix)
+    #             all_unit_containers[code] = BuildingUnitContainer(
+    #                 object_id=obj_id, unit_code=code
+    #             )
+    #         code = _unit_code_to_parent(code=code)
 
     # Extract all the spaces from the given CityJSON file
     spaces_ids_to_pos = {}
@@ -154,22 +165,22 @@ def load_units_from_csv(
         if isinstance(cj_obj, CityJSONSpaceSubclass):
             spaces_ids_to_pos[cj_obj.space_id] = i
 
-    # Apply the parent-child relationships of unit containers
-    for code, unit_container in all_unit_containers.items():
-        if code == BuildingUnitContainer.main_parent_code:
-            CityJSONObject.add_parent_child(
-                parent=cj_file.city_objects[root_pos],
-                child=unit_container,
-            )
-            continue
-        parent_code = _unit_code_to_parent(code=code)
-        # Add the link to its parent
-        CityJSONObject.add_parent_child(
-            parent=all_unit_containers[parent_code], child=unit_container
-        )
-        # Add the link to its units
-        for unit in all_units[code]:
-            CityJSONObject.add_parent_child(parent=unit_container, child=unit)
+    # # Apply the parent-child relationships of unit containers
+    # for code, unit_container in all_unit_containers.items():
+    #     if code == BuildingUnitContainer.main_parent_code:
+    #         CityJSONObject.add_parent_child(
+    #             parent=cj_file.city_objects[root_pos],
+    #             child=unit_container,
+    #         )
+    #         continue
+    #     parent_code = _unit_code_to_parent(code=code)
+    #     # Add the link to its parent
+    #     CityJSONObject.add_parent_child(
+    #         parent=all_unit_containers[parent_code], child=unit_container
+    #     )
+    #     # Add the link to its units
+    #     for unit in all_units[code]:
+    #         CityJSONObject.add_parent_child(parent=unit_container, child=unit)
 
     # Add the links from spaces to the units they belong in
     all_units_flattened = [unit for units in all_units.values() for unit in units]
@@ -204,7 +215,8 @@ def load_units_from_csv(
         )
         unit.set_icon(icon_position=icon_position)
 
-    cj_file.add_cityjson_objects(list(all_unit_containers.values()))
+    cj_file.add_cityjson_objects([unit_main_container])
+    cj_file.add_cityjson_objects(unit_containers)
     cj_file.add_cityjson_objects(
         [unit for units in all_units.values() for unit in units]
     )
