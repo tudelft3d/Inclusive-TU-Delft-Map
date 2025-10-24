@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Annotated, List, Mapping, Optional
 
 import typer
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from bag_to_cj import Bag2Cityjson
 from cj_attributes import (
@@ -24,12 +25,11 @@ from cj_objects import (
     CityJSONSpace,
 )
 from cj_to_gltf import Cityjson2Gltf
+from codelists import format_codelist
+from gj_to_cj import load_geojson_icons
 from gltf_to_cj import full_building_from_gltf, load_units_from_csv
 
 app = typer.Typer()
-from tqdm.contrib.logging import logging_redirect_tqdm
-
-from gj_to_cj import load_geojson_icons
 
 
 @app.command(
@@ -364,6 +364,37 @@ def subset_cj(
             command.extend(["--id", obj_key])
     command.extend(["save", str(output_cj_path.absolute())])
     subprocess.run(command)
+
+
+@app.command(
+    "format_codelist",
+    help="Format the codelist for the units from a CSV input into a JSON file.",
+)
+def format_codelist_cli(
+    input_csv_path: Annotated[
+        Path, typer.Argument(help="Input CSV file.", exists=True)
+    ],
+    output_json_path: Annotated[Path, typer.Argument(help="Output JSON path.")],
+    overwrite: Annotated[
+        bool,
+        typer.Option(
+            "-o",
+            "--overwrite",
+            help="Overwrite the output file if the file already exists.",
+        ),
+    ] = False,
+):
+    if not input_csv_path.suffix == ".csv":
+        raise ValueError("The input path should end with '.csv'")
+    if not output_json_path.suffix == ".json":
+        raise ValueError("The output path should end with '.json'")
+
+    if output_json_path.exists() and not overwrite:
+        raise ValueError(
+            f"There is already a file at {output_json_path.absolute()}. Set `overwrite` to True to overwrite it."
+        )
+
+    format_codelist(input_csv_path=input_csv_path, output_json_path=output_json_path)
 
 
 def setup_logging(verbose: int):

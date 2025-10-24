@@ -64,19 +64,19 @@ def _geom_and_name_from_scene_id(
     return MultiSurface.from_mesh(lod=lod, mesh=mesh), name
 
 
-def _unit_code_to_parent(code: str) -> str:
-    if len(code) == 0:
-        raise ValueError(f"Code '{code}' is not a correct value.")
-    if code == BuildingUnitContainer.main_parent_code:
-        raise ValueError(
-            f"BuildingUnitContainer.main_parent_code does not have a parent."
-        )
-    elif len(code) == 1:
-        return BuildingUnitContainer.main_parent_code
-    elif len(code) == 2:
-        return code[:-1]
-    else:
-        return code[:-2]
+# def _unit_code_to_parent(code: str) -> str:
+#     if len(code) == 0:
+#         raise ValueError(f"Code '{code}' is not a correct value.")
+#     if code == BuildingUnitContainer.main_parent_code:
+#         raise ValueError(
+#             f"BuildingUnitContainer.main_parent_code does not have a parent."
+#         )
+#     elif len(code) == 1:
+#         return BuildingUnitContainer.main_parent_code
+#     elif len(code) == 2:
+#         return code[:-1]
+#     else:
+#         return code[:-2]
 
 
 def _get_unit_geometry_from_id(scene: trimesh.Scene, cj_key: str) -> Geometry:
@@ -98,7 +98,7 @@ def load_units_from_csv(
         raise RuntimeError(
             f"The root of the `cj_file` should be a Building, not a {type(root)}"
         )
-    prefix = CityJSONSpace.key_to_prefix(key=root.cj_key)
+    prefix = CityJSONSpace.key_to_prefix(key=root.space_id)
     unit_main_container = BuildingUnitObject(prefix=prefix)
     CityJSONObject.add_parent_child(parent=root, child=unit_main_container)
 

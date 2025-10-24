@@ -266,11 +266,11 @@ class Bag2Cityjson(CityjsonLoader):
                 CityJSONObject.add_parent_child(parent=bdg_obj, child=main_container)
 
             z_container_id = BuildingUnitContainer.unit_code_to_cj_key(
-                code="Z", prefix=prefix
+                code="BS", prefix=prefix
             )
             if z_container_id not in all_objects_cj:
                 z_container = BuildingUnitContainer(
-                    cj_key=z_container_id, unit_code="Z"
+                    cj_key=z_container_id, unit_code="BS"
                 )
                 all_objects_cj[z_container_id] = z_container
                 CityJSONObject.add_parent_child(
@@ -283,12 +283,12 @@ class Bag2Cityjson(CityjsonLoader):
             units_same_code = len(z_container.children_ids)
 
             obj_key = BuildingUnit.unit_code_to_cj_key(
-                code="Z", prefix=prefix, index=units_same_code
+                code="BS", prefix=prefix, index=units_same_code
             )
 
             unit = BuildingUnit(
                 cj_key=obj_key,
-                unit_code="Z",
+                unit_code="BS",
                 unit_storeys=[],
                 icon_position=bdgs_sub_attributes.icon_position,
             )
