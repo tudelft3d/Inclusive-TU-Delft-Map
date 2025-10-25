@@ -39,9 +39,9 @@ export class LayerManager {
 
 		for (const [key, value] of Object.entries(layers_definition_json)) {
 
-			// if (value["Include"] == "Y") {
-			this.layer_definition[key] = value;
-			// }
+			if (value["Include"] && value["Shown with icon"]) {
+				this.layer_definition[key] = value;
+			}
 
 		}
 
@@ -224,7 +224,7 @@ export class LayerManager {
 
 		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
 
-		const paths = needed_layers.map((element) => { return this.layer_definition[element]["Path from assets"] });
+		const paths = needed_layers.map((element) => { return this._get_icon_path(element) });
 		const colors = Array(needed_layers.length).fill("#f7c286ff");
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
@@ -302,7 +302,7 @@ export class LayerManager {
 
 			active_parent_unit_codes.forEach((code) => {
 
-				paths.push(this.layer_definition[code]["Path from assets"]);
+				paths.push(this._get_icon_path(code));
 				keys.push(code);
 				colors.push("#f7c286ff");
 
@@ -318,6 +318,10 @@ export class LayerManager {
 
 		});
 
+	}
+
+	_get_icon_path(code) {
+		return `../assets/threejs/graphics/icons/thematic-layers/${this.layer_definition[code]["Icon name"]}`
 	}
 
 	// Used when removing a thematic layer
@@ -369,7 +373,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[building_key]) {
 
-					const path = [this.layer_definition[code]["Path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(building_key, code, path, color);
@@ -386,7 +390,7 @@ export class LayerManager {
 					this._add_icon_set(
 						building_key,
 						null,
-						[this.layer_definition[code]["Path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -421,7 +425,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[current_key]) {
 
-					const path = [this.layer_definition[code]["Path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(current_key, code, path, color);
@@ -433,7 +437,7 @@ export class LayerManager {
 					this._add_icon_set(
 						current_key,
 						null,
-						[this.layer_definition[code]["Path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -453,7 +457,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[key]) {
 
-					const path = [this.layer_definition[code]["Path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(key, code, path, color);
@@ -465,7 +469,7 @@ export class LayerManager {
 					this._add_icon_set(
 						key,
 						null,
-						[this.layer_definition[code]["Path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -557,7 +561,9 @@ export class LayerManager {
 		for (var i = 0; i < paths.length; i++) {
 			const svg = svgs[i];
 			// Skip if no correct SVG was found
-			if (!svg) { continue }
+			if (!svg) {
+				console.error("A SVG icon is missing.")
+			}
 
 			const key = icon_keys[i];
 			const bgColor = bg_colors[i];
@@ -671,7 +677,7 @@ export class LayerManager {
 
 		}
 
-		for (const [layer_key, layer_attributes] of Object.entries(this.layer_definition)) {
+		for (const [layer_code, layer_attributes] of Object.entries(this.layer_definition)) {
 
 			var a = document.createElement("a");
 
@@ -681,7 +687,7 @@ export class LayerManager {
 			img.setAttribute('width', '20');
 			img.setAttribute('height', '20');
 			img.setAttribute('align', 'top');
-			img.src = layer_attributes["Path from assets"];
+			img.src = this._get_icon_path(layer_code);
 
 			a.appendChild(img);
 			a.appendChild(text);
