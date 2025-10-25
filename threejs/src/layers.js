@@ -9,11 +9,6 @@ import {
 	TextIcon,
 	SvgIcon,
 	SvgLoader,
-	IconSet,
-	IconsSceneManager,
-	TextIcon,
-	SvgIcon,
-	SvgLoader,
 } from "./icons";
 
 /*
