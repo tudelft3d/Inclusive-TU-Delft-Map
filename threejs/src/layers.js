@@ -694,7 +694,7 @@ export class LayerManager {
 
 			a.addEventListener("click", (event) => {
 
-				this._update_active_layers(layer_key);
+				this._update_active_layers(layer_code);
 
 				if (event.srcElement.style.backgroundColor == "green") {
 
