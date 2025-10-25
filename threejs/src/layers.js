@@ -547,19 +547,23 @@ export class LayerManager {
 	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
-
-		const svgs = await Promise.all(
-			paths.map((p) => this.svgLoader.getSvg(p))
-		);
+		// Load SVGs by handling errors
+		const svgPromises = paths.map(p => this.svgLoader.getSvg(p));
+		const settled = await Promise.allSettled(svgPromises);
+		const svgs = settled.map(r => r.value);
 
 		const icons = [];
 
 		for (var i = 0; i < paths.length; i++) {
 			const svg = svgs[i];
+			// Skip if no correct SVG was found
+			if (!svg) { continue }
+
 			const key = icon_keys[i];
 			const bgColor = bg_colors[i];
 			const icon = new SvgIcon(key, svg, { bgColor: bgColor });
 			icons.push(icon);
+
 		}
 
 		var text_icon;
