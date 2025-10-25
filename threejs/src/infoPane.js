@@ -1,4 +1,5 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
+import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 
 /**
  * InfoPane class - handles all info pane UI logic
@@ -28,7 +29,7 @@ export class InfoPane {
             const attrs = buildingData.attributes || {};
 
             return {
-                name: attrs["Name (EN)"] || attrs["Name (NL)"] || cleanName,
+                name: attrs["Name"] || attrs["Name (EN)"] || layers_definition_json[attrs["code"]]["Name (EN)"],
                 nameNL: attrs["Name (NL)"],
                 nicknames: attrs.Nicknames ? attrs.Nicknames.join(", ") : undefined,
                 address: attrs.Address,

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
+import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import layers_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
 import Papa from 'papaparse';
 
 import {
@@ -35,15 +37,15 @@ export class LayerManager {
 
 		this.layer_definition = {};
 
-		for (const [key, value] of Object.entries(layers_json["Layer Definition"])) {
+		for (const [key, value] of Object.entries(layers_definition_json)) {
 
-			if (value["Include"] == "Y") {
-				this.layer_definition[key] = value;
-			}
+			// if (value["Include"] == "Y") {
+			this.layer_definition[key] = value;
+			// }
 
 		}
 
-		this.layer_hierarchy = layers_json["Layer Hierarchy"];
+		this.layer_hierarchy = layers_hierarchy_json;
 
 		// Maybe have these taken from codelist?
 		// Or otherwise pass as argument
@@ -222,7 +224,7 @@ export class LayerManager {
 
 		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
 
-		const paths = needed_layers.map((element) => { return this.layer_definition[element]["path from assets"] });
+		const paths = needed_layers.map((element) => { return this.layer_definition[element]["Path from assets"] });
 		const colors = Array(needed_layers.length).fill("#f7c286ff");
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
@@ -300,7 +302,7 @@ export class LayerManager {
 
 			active_parent_unit_codes.forEach((code) => {
 
-				paths.push(this.layer_definition[code]["path from assets"]);
+				paths.push(this.layer_definition[code]["Path from assets"]);
 				keys.push(code);
 				colors.push("#f7c286ff");
 
@@ -367,7 +369,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[building_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this.layer_definition[code]["Path from assets"]];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(building_key, code, path, color);
@@ -384,7 +386,7 @@ export class LayerManager {
 					this._add_icon_set(
 						building_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this.layer_definition[code]["Path from assets"]],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -419,7 +421,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[current_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this.layer_definition[code]["Path from assets"]];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(current_key, code, path, color);
@@ -431,7 +433,7 @@ export class LayerManager {
 					this._add_icon_set(
 						current_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this.layer_definition[code]["Path from assets"]],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -451,7 +453,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this.layer_definition[code]["Path from assets"]];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(key, code, path, color);
@@ -463,7 +465,7 @@ export class LayerManager {
 					this._add_icon_set(
 						key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this.layer_definition[code]["Path from assets"]],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -525,6 +527,13 @@ export class LayerManager {
 			console.error("UNRECOGNIZED OBJECT type:", cj_key);
 
 		}
+
+		if (!this.scene.getObjectByName(object_threejs_name)) {
+			object_threejs_name = null;
+			const icon_position = object_json["attributes"]["icon_position"];
+			icon_position_vector = this._convert_cityjson_position(icon_position);
+		}
+
 
 		const onClick = (e) => {
 			if (!object_threejs_name) {
@@ -667,13 +676,13 @@ export class LayerManager {
 
 			var a = document.createElement("a");
 
-			let text = document.createTextNode(layer_attributes["Name (EN) [str]"]);
+			let text = document.createTextNode(layer_attributes["Name (EN)"]);
 
 			let img = document.createElement("img");
 			img.setAttribute('width', '20');
 			img.setAttribute('height', '20');
 			img.setAttribute('align', 'top');
-			img.src = layer_attributes["path from assets"];
+			img.src = layer_attributes["Path from assets"];
 
 			a.appendChild(img);
 			a.appendChild(text);
