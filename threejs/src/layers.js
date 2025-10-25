@@ -519,8 +519,6 @@ export class LayerManager {
 		} else if (object_json.type == "GenericCityObject") {
 
 			object_threejs_name = null;
-			const icon_position = object_json["attributes"]["icon_position"];
-			icon_position_vector = this._convert_cityjson_position(icon_position);
 
 		} else {
 
@@ -528,15 +526,12 @@ export class LayerManager {
 
 		}
 
-		if (!this.scene.getObjectByName(object_threejs_name)) {
-			object_threejs_name = null;
-			const icon_position = object_json["attributes"]["icon_position"];
-			icon_position_vector = this._convert_cityjson_position(icon_position);
-		}
+		const icon_position = object_json["attributes"]["icon_position"];
+		icon_position_vector = this._convert_cityjson_position(icon_position);
 
 
 		const onClick = (e) => {
-			if (!object_threejs_name) {
+			if (!object_threejs_name || !this.scene.getObjectByName(object_threejs_name)) {
 				if (!icon_position_vector) {
 					console.error("Either the object or the position of the icon must be given.")
 				}
