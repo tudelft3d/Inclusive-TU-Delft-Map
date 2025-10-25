@@ -567,7 +567,6 @@ export class LayerManager {
 				current_layer_button.className = "layer-button";
 
 				current_layer_button.addEventListener('click', () => {
-					console.log(layer_code);
 					this._update_active_layers(layer_code);
 		        });
 
@@ -583,7 +582,13 @@ export class LayerManager {
 		    });
 
 		    activate_button.addEventListener('click', (event) => {
-		    	console.log("Activate:", group_name, layers);
+
+		    	for (const [layer_name, layer_code] of Object.entries(group_layers)) {
+
+		    		this._update_active_layers(layer_code);
+
+				}
+
 		    });
 
 
