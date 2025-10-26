@@ -566,7 +566,6 @@ export class LayerManager {
 			const bgColor = bg_colors[i];
 			const icon = new SvgIcon(key, svg, { bgColor: bgColor });
 			icons.push(icon);
-
 		}
 
 		var text_icon;
@@ -574,7 +573,16 @@ export class LayerManager {
 		if (!icon_set_text || icon_set_text == "") {
 			text_icon = null;
 		} else {
-			text_icon = new TextIcon(icon_set_text);
+			// Get the object from the CityJSON
+			const cityObject = cityjson.CityObjects[icon_set_key];
+			
+			// Only add building name if of type "Building", and its' "ShortName (EN)" is not empty. Otherwise only show number
+			let fullText = icon_set_text;
+			if (cityObject?.type === "Building" && cityObject?.attributes?.["ShortName (EN)"]) {
+				fullText = `${icon_set_text} | ${cityObject.attributes["ShortName (EN)"]}`;
+			}
+			
+			text_icon = new TextIcon(fullText);
 		}
 
 		const onClick = this._generate_icon_onclick(icon_set_key);
@@ -582,7 +590,6 @@ export class LayerManager {
 		const icon_set = new IconSet(icon_set_key, icons, text_icon, position, onClick);
 
 		this.iconsSceneManager.addIconSet(icon_set);
-
 	}
 
 	_update_active_layers(code) {
