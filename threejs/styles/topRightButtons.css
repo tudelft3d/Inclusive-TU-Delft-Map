@@ -55,7 +55,7 @@
   right: 85%;            /* place left of the control */
   transform: translateY(-20%);
   margin-right: 12px;     /* gap between button and dropdown */
-  background: #f1f1f1;
+  background: #fafafa;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
   padding: 8px 0px;
@@ -78,8 +78,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
-/* Make the icons (external SVGs used via <img>) appear black by inverting them.
-   Also support inline SVGs by ensuring they use currentColor / color. */
+/* Make the icons blue by inverting them */
 .satellite-basemap #basemap-btn img,
 .satellite-basemap #basemap-btn svg,
 .satellite-basemap #layers-btn img,
@@ -100,7 +99,7 @@
   top: var(--layers-top, calc(var(--height, 64px) + 14px)); 
   right: 69px;               /* distance from right edge */
   margin-right: 0;
-  background: #f1f1f1;
+  background: #fafafa;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
   text-align: left;
   padding: 10px 0;
@@ -187,13 +186,13 @@
     bottom: 0;
     top: auto;
     margin: 0;
-    background: #f1f1f1;
+    background: #fafafa;
     border-radius: 0px 0px 0 0;
     min-width: 100%;
     max-width: 100%;
     max-height: 68vh;
     overflow-y: auto;
-    padding: 10px 8px;
+    padding: 10px 0px;
     box-shadow: 0 -10px 30px rgba(0,0,0,0.14);
     transform: translateY(100%); /* start hidden offscreen */
     transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
@@ -211,7 +210,7 @@
   #layers-dropdown .sheet-handle {
     width: 36px;
     height: 4px;
-    background: #d0d0d0;
+    background: #fafafa;
     border-radius: 3px;
     margin: 6px auto 10px;
   }
@@ -271,12 +270,11 @@
   }
 }
 
-/* -------------------------------------------------------------------------------------------- */
 /* Grouped layer dropdown UI */
 .layer-group {
-  padding: 3px 10px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 3px; /* optional small gap to ensure visible separation */
+  padding: 3px 0px;
+  border-bottom: 1px solid #fafafa;
+  margin-bottom: 3px; 
 }
 
 .layer-group-header {
@@ -286,7 +284,7 @@
   gap: 8px;
   cursor: pointer;
   user-select: none;
-  padding: 6px 2px;
+  padding: 6px 14px;
 }
 
 .layer-group-title {
@@ -324,14 +322,23 @@
 
 /* container for the checklist items (collapsible) */
 .layer-group-items {
-  margin-top: 2px; 
-  padding: 6px 4px;
+  margin-top: 8px; 
+  padding: 8px 10px 8px 30px;
   display: none; /* toggled via JS */
-  gap: 9px;
+  gap: 8px;
   flex-direction: column;
+  background: #fefefe; 
+  border-radius: none;
 }
 
-/* each facility row */
+.layer-group-items .layer-item {
+  background: transparent;
+  padding: 8px 6px;
+  border-radius: 6px;
+}
+
+.layer-group-items .layer-item.depth-2 { padding-left: 20px; /* no background */ }
+
 .layer-item {
   display: flex;
   align-items: center;
@@ -411,3 +418,12 @@
   flex: 1;
   display: inline-block;
 }
+
+.layer-group-items .layer-item:hover {
+  background: #e6f3f6;
+}
+
+.satellite-basemap .layer-group-items .layer-item:hover {
+  background: #b0b0b022;
+}
+

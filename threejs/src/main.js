@@ -137,21 +137,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Apply satellite class on initial load:
+//         (function applyInitialBasemapClass() {
+//             const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
+//             if (!selected) return;
+//             const url = selected.dataset.url;
+//             const layer = selected.dataset.layer;
+//             const isSatellite = (
+//                 (selected.dataset.satellite === 'true') ||
+//                 (layer && layer.toString().toLowerCase().includes('satellite')) ||
+//                 (url && url.toString().toLowerCase().includes('satellite')) ||
+//                 (layer && layer.toString().toLowerCase().includes('ortho')) ||
+//                 (url && url.toString().toLowerCase().includes('ortho'))
+//             );
+//             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+//         })();
+
         (function applyInitialBasemapClass() {
-            // Prefer an explicitly marked/selected item, otherwise fall back to the first entry
-            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
-            if (!selected) return;
-            const url = selected.dataset.url;
-            const layer = selected.dataset.layer;
-            const isSatellite = (
-                (selected.dataset.satellite === 'true') ||
-                (layer && layer.toString().toLowerCase().includes('satellite')) ||
-                (url && url.toString().toLowerCase().includes('satellite')) ||
-                (layer && layer.toString().toLowerCase().includes('ortho')) ||
-                (url && url.toString().toLowerCase().includes('ortho'))
-            );
-            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-        })();
+            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]');
+            if (!selected) return;
+            const url = selected.dataset.url;
+            const layer = selected.dataset.layer;
+            const isSatellite = (
+                (selected.dataset.satellite === 'true') ||
+                (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                (url && url.toString().toLowerCase().includes('satellite')) ||
+                (layer && layer.toString().toLowerCase().includes('ortho')) ||
+                (url && url.toString().toLowerCase().includes('ortho'))
+            );
+            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        })();
 
     }
 

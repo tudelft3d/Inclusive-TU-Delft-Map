@@ -17,7 +17,7 @@ import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
 import { LayerManager } from "./layers";
-import { BuildingColorManager } from "./BuildingColorManager";
+import { BuildingColorManager } from "./buildingColorManager";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
 import { Highlighter } from "./highlighter";
