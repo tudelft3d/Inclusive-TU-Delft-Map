@@ -214,7 +214,7 @@ function preloadLayer(wmtsBaseURL, layer, layerName, options = {}) {
   }
 }
 
-export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0", layer = "Actueel_orthoHR", options = {}) {
+export function addBasemap(scene, wmtsBaseURL = "https://service.pdok.nl/lv/bgt/wmts/v1_0", layer = "achtergrondvisualisatie", options = {}) {
   const {
     matrixSet = "EPSG:28992",
     zoom = 12,
