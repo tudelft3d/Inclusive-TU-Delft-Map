@@ -108,6 +108,8 @@ class CityJSONGeometries:
         self.unique_vertices, self.boundaries = self._deduplicate_vertices()
 
     def get_optimal_translate(self, scale: NDArray[np.float64]) -> NDArray[np.float64]:
+        if self.unique_vertices.shape[0] == 0:
+            return np.array([0, 0, 0], dtype=np.float64)
         translate = np.mean(self.unique_vertices, axis=0, dtype=np.float64)
         # Apply the scale to have a coherent precision
         translate = np.round(translate / scale) * scale

@@ -15,16 +15,17 @@ export class BuildingView {
      * @param {[]} buildings 
      * @param {OutlineManager} outlineManager
      */
-    constructor(cameraManager, scene, buildings, outlineManager, layer_manager) {
+    constructor(cameraManager, scene, buildings, outlineManager, layer_manager, picker) {
         this.active = false;
 
         this.cameraManager = cameraManager;
         this.scene = scene;
         this.buildings = buildings;
         this.outlineManager = outlineManager;
-        this.layer_manager = layer_manager
+        this.layer_manager = layer_manager;
+        this.picker = picker;
 
-        this.selectedKey;
+        this.meshKey;
         this.building_key;
         this.building_json;
         this.building_threejs;
@@ -38,15 +39,16 @@ export class BuildingView {
             return;
         }
 
-        this.selectedKey = key;
+        this.meshKey = key;
         this.building_key = key.split("-").slice(0, 3).join("-");
+        // console.log(this.meshKey);
 
         // Alternatively
         // this.building_key = this.scene.getObjectByName(key).parent.name;
 
     }
 
-    initiate_buildingView() {
+    initiate_buildingView(floor = "00", pass = true) {
 
         if (!this.building_key) {
             console.log("no building selected");
@@ -64,7 +66,6 @@ export class BuildingView {
 
         this.active = true;
 
-
         this.cameraManager.switchToOrthographic();
 
         // Hide all other buildings except the current one
@@ -76,14 +77,15 @@ export class BuildingView {
 
         this.building_threejs = this.scene.getObjectByName(this.building_key);
 
-        // REMINDER FOR MJ: UN-HIGHLIGHT THIS BUILDING
+        // Carry over highlights
+        if (pass) this.picker.unpick();
 
         this._unhide_objects_recursive(this.building_threejs);
 
         this._hide_mesh_children(this.building_threejs);
 
 
-        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects("00");
+        const [storey_00_room_keys, storey_00_room_threejs] = this._retrieve_room_keys_and_room_threejs_objects(floor);
         this._unhide_objects(storey_00_room_threejs);
 
 
@@ -104,17 +106,14 @@ export class BuildingView {
 
         this._hide_mesh_children(this.building_threejs);
 
-        const selectedBuilding = this.scene.getObjectByName(this.selectedKey);
+        const selectedBuilding = this.scene.getObjectByName(this.meshKey);
+
         this._unhide_objects([selectedBuilding]);
 
         this.outlineManager.setOutline(this.buildings);
 
         // Show all other buildings again
         this._showOtherBuildings();
-
-        // I disabled this because I expect when I exit orthographic view, 
-        // the building remains selected (target)
-        // this.building_key = undefined; 
 
         this.active = false;
 
@@ -132,7 +131,7 @@ export class BuildingView {
     _apply_outlines(threejs_objects, lod, style) {
 
         let keys = [];
-
+        console.log(threejs_objects);
         threejs_objects.forEach((current_object) => {
             keys.push(current_object.name.split("-").slice(0, 3).join("-"));
         });
@@ -366,6 +365,7 @@ export class BuildingView {
         }
 
         console.log(`Showing all ${worldGroup.children.length} buildings`);
+        this._apply_outlines(worldGroup.children, 'lod_2', 'default');
 
         // Make all buildings visible again
         worldGroup.children.forEach((building) => {

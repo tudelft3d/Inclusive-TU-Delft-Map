@@ -72,6 +72,10 @@ export class IconSet {
         });
     }
 
+    hasText() {
+        return (!!this.textIcon);
+    }
+
     addSvgIcon(svgIcon) {
         const key = svgIcon.key;
         if (key in this.svgIcons) {
@@ -99,13 +103,13 @@ export class IconSet {
         // Remove the previous row
         if (this.svgIconsRow) {
             this.subSubWrapper.removeChild(this.svgIconsRow);
+            this.svgIconsRow = null;
         }
 
         if (Object.keys(this.svgIcons).length === 0) {
-
             return;
         };
-        
+
         // Build the row of icons
         this.svgIconsRow = document.createElement("div");
         this.svgIconsRow.className = "icons-svg-row";
@@ -303,9 +307,9 @@ export class TextIcon {
 
     }
 
-    is_populated() {
-        return !(this.content["innerText"] == "");
-    }
+    // is_populated() {
+    //     return !(this.content["innerText"] == "");
+    // }
 }
 
 export class SvgIcon {

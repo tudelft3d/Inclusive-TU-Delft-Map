@@ -11,8 +11,10 @@ const ORTHOGRAPHIC_CAMERA = 2;
 const fov = 75;
 const near = 0.1;
 const far = 100000;
-
 const frustumSize = 1;
+
+const MIN_AZIMUTH_ANGLE = -Infinity
+const MAX_AZIMUTH_ANGLE = Infinity
 
 function frustrumHeight(camera, distance) {
     const field_of_view = (camera.fov * Math.PI) / 180;
@@ -32,6 +34,7 @@ export class CamerasControls {
         this._initControls(target);
 
         this.cameraInt = MAP_CAMERA;
+        this.previousCameraInt = ORTHOGRAPHIC_CAMERA;
         this.tweens = [];
 
         // Initial compass rotation
@@ -63,7 +66,7 @@ export class CamerasControls {
 
         this.orbitControls = new OrbitControls(this.orbitCamera, this.container);
         this.orbitControls.mouseButtons = {
-            LEFT: THREE.MOUSE.PAN,
+            LEFT: THREE.MOUSE.ROTATE,
             MIDDLE: THREE.MOUSE.DOLLY,
             RIGHT: THREE.MOUSE.ROTATE
         }
@@ -94,6 +97,11 @@ export class CamerasControls {
             console.error("Unexpected input to '_changeCameraInt'.");
         }
 
+        if (this.cameraInt == newCameraInt) {
+            return
+        }
+
+        this.previousCameraInt = this.cameraInt;
         this.cameraInt = newCameraInt;
 
         this.previousCamera = this.camera;
@@ -213,25 +221,38 @@ export class CamerasControls {
             return;
         }
 
-        var newTarget;
-        var newPosition;
         if (this.usesOrthographicCamera()) {
             const distance = this.orthographicDistance();
-            newTarget = this.orthographicControls.target.clone();
+            const initTheta = this.orthographicControls._spherical.theta;
+            var newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
-            newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
+            const newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
+
+            this.mapCamera.position.copy(newPosition);
+            this.mapControls.target.copy(newTarget);
+
+            this.mapControls.minAzimuthAngle = initTheta;
+            this.mapControls.maxAzimuthAngle = initTheta;
+
+            this.mapCamera.updateProjectionMatrix();
+            this.mapControls.update();
+
+            this.mapControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
+            this.mapControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
+
         } else if (this.usesOrbitCamera()) {
-            newTarget = this.orbitControls.target.clone();
-            newPosition = this.orbitCamera.position.clone();
+            const newTarget = this.orbitControls.target.clone();
+            const newPosition = this.orbitCamera.position.clone();
+
+            this.mapCamera.position.copy(newPosition);
+            this.mapControls.target.copy(newTarget);
+
+            this.mapCamera.updateProjectionMatrix();
+            this.mapControls.update();
+
         } else {
             console.error("Not using any of the expected cameras!");
         }
-
-        this.mapCamera.position.copy(newPosition);
-        this.mapControls.target.copy(newTarget);
-
-        this.mapCamera.updateProjectionMatrix();
-        this.mapControls.update();
 
         this._changeCameraInt(MAP_CAMERA);
     }
@@ -245,25 +266,38 @@ export class CamerasControls {
             return;
         }
 
-        var newTarget;
-        var newPosition;
         if (this.usesOrthographicCamera()) {
             const distance = this.orthographicDistance();
-            newTarget = this.orthographicControls.target.clone();
+            const initTheta = this.orthographicControls._spherical.theta;
+            var newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
-            newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
+            const newPosition = newTarget.clone().add(new THREE.Vector3(0, distance, 0));
+
+            this.orbitCamera.position.copy(newPosition);
+            this.orbitControls.target.copy(newTarget);
+
+            this.orbitControls.minAzimuthAngle = initTheta;
+            this.orbitControls.maxAzimuthAngle = initTheta;
+
+            this.orbitCamera.updateProjectionMatrix();
+            this.orbitControls.update();
+
+            this.orbitControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
+            this.orbitControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
+
         } else if (this.usesMapCamera()) {
-            newTarget = this.mapControls.target.clone();
-            newPosition = this.mapCamera.position.clone();
+            const newTarget = this.mapControls.target.clone();
+            const newPosition = this.mapCamera.position.clone();
+
+            this.orbitCamera.position.copy(newPosition);
+            this.orbitControls.target.copy(newTarget);
+
+            this.orbitCamera.updateProjectionMatrix();
+            this.orbitControls.update();
+
         } else {
             console.error("Not using any of the expected cameras!");
         }
-
-        this.orbitCamera.position.copy(newPosition);
-        this.orbitControls.target.copy(newTarget);
-
-        this.orbitCamera.updateProjectionMatrix();
-        this.orbitControls.update();
 
         this._changeCameraInt(ORBIT_CAMERA);
     }
@@ -274,16 +308,38 @@ export class CamerasControls {
     switchToOrthographic() {
         console.log("Switching to orthographic");
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
-            // Where we end up
+            // Compute the animation for the current camera
+            const initPosition = this.camera.position;
+            const initTarget = this.controls.target;
+
+            const distance = initPosition.distanceTo(initTarget);
+
+            const finalPosition = initTarget.clone().add(new THREE.Vector3(0, distance, 0));
+            const finalTarget = initTarget.clone();
+
+            // Limit theta to prevent it from being reset
+            const initTheta = this.controls._spherical.theta;
+            const initControls = this.controls;
+            initControls.minAzimuthAngle = initTheta;
+            initControls.maxAzimuthAngle = initTheta;
+
+            const onComplete = () => {
+                initControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
+                initControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
+                this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
+            }
+
+            // Animate the transition
+            this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
+
+            // Where we end up with the orthographic camera
             const newTarget = this.controls.target.clone();
             newTarget.y = 0;
             const newPosition = newTarget.clone().add(new THREE.Vector3(0, 1000, 0));
             this.orthographicCamera.position.copy(newPosition);
             this.orthographicControls.target.copy(newTarget);
-            // this.orthographicCamera.quaternion.copy(this.camera.quaternion);
-            // this.orthographicCamera.up.copy(this.camera.up);
 
-            const distance = this.camera.position.distanceTo(this.controls.target);
+            // Compute the new orthographic camera settings
             const halfHeight = frustrumHeight(this.camera, distance) / 2;
             const halfWidth = frustrumWidth(this.camera, distance) / 2;
 
@@ -294,19 +350,27 @@ export class CamerasControls {
 
             this.orthographicCamera.zoom = 1;
 
+            // Limit theta for the rotation before updating
+            this.orthographicControls.minAzimuthAngle = initTheta;
+            this.orthographicControls.maxAzimuthAngle = initTheta;
+
             this.orthographicCamera.updateProjectionMatrix();
             this.orthographicControls.update();
-        }
 
-        this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
+            // Reset theta limitations
+            this.orthographicControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
+            this.orthographicControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
+        }
     }
 
     toggleOrthographic() {
+        if (this._animating()) { return }
         if (this.cameraInt != ORTHOGRAPHIC_CAMERA) {
             this.switchToOrthographic();
             this.updateCompassRotation();
         } else {
-            this.switchToMap();
+            if (this.previousCameraInt == MAP_CAMERA) { this.switchToMap(); }
+            else { this.switchToOrbit(); }
             this.updateCompassRotation();
         }
     }
@@ -472,6 +536,10 @@ export class CamerasControls {
         } else {
             return this._zoomPerspective(newTarget, distance, onComplete);
         }
+    }
+
+    _animating() {
+        return this.tweens.length != 0;
     }
 
     _createAnimation(

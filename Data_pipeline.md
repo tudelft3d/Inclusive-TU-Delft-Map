@@ -178,19 +178,29 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
         -s ../threejs/assets/processing_input/attributes/storeys.csv \
         -r ../threejs/assets/processing_input/attributes/rooms.csv \
         -u ../threejs/assets/processing_input/attributes/units.csv \
+        --units_gltf ../threejs/assets/processing_input/custom_geometry/08-navigation_elements.glb \
         --overwrite \
         -vv
     ```
 
-4. Merge them together:
+4. Process the outdoor icons:
+
+    ```bash
+    uv run python cli.py load_gj_icons \
+        ../threejs/assets/processing_input/all_outdoor_objects.geojson \
+        ../threejs/assets/processing_output/outdoor.city.json
+    ```
+
+5. Merge them together:
 
     ```bash
     uv run cjio ../threejs/assets/processing_output/08.city.json \
+        merge ../threejs/assets/processing_output/outdoor.city.json \
         merge ../threejs/assets/processing_output/3dbag.city.json \
         save  ../threejs/assets/processing_output/all_buildings.city.json
     ```
 
-5. Split into CityJSON and glTF used by the map:
+6. Split into CityJSON and glTF used by the map:
 
     ```bash
     uv run python cli.py split_cj \

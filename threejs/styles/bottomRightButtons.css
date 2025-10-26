@@ -89,7 +89,7 @@
   display: flex;
   flex-direction: column;
   border-radius: var(--brb-btn-radius);
-  overflow: hidden;
+  overflow: visible; 
   background: var(--brb-btn-bg); 
   box-shadow: var(--brb-btn-shadow);
   z-index: var(--brb-z-control);
@@ -104,12 +104,15 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border-radius: var(--brb-btn-radius) var(--brb-btn-radius) 0 0;
   transition: background 0.15s ease, transform 0.08s ease;
   -webkit-tap-highlight-color: transparent;
+  
 }
 
 #zoom-btn .zoom-half:last-child{
-    background: #4694b1;
+  background: #4694b1;
+  border-radius: 0 0 var(--brb-btn-radius) var(--brb-btn-radius);
 }
 
 /* separator between halves */
@@ -127,12 +130,81 @@
   transform: translateY(0);
 }
 
+.satellite-basemap #reset-btn,
+.satellite-basemap #compass-btn,
+.satellite-basemap #location-btn,
+.satellite-basemap #zoom-btn,
+.satellite-basemap #zoom-btn .zoom-half,
+.satellite-basemap #view-toggle-btn.shows-2d {
+  background: #f3f3f3;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.satellite-basemap #zoom-btn .zoom-half:last-child{
+  background: #dddddd;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+/* invert external SVG images to appear black; also set inline SVG color */
+.satellite-basemap #reset-btn img,
+.satellite-basemap #reset-btn svg,
+.satellite-basemap #compass-btn img,
+.satellite-basemap #compass-btn svg,
+.satellite-basemap #location-btn img,
+.satellite-basemap #location-btn svg,
+.satellite-basemap #zoom-btn img,
+.satellite-basemap #zoom-btn svg,
+.satellite-basemap #view-toggle-btn img,
+.satellite-basemap #view-toggle-btn svg {
+  filter: invert(1);
+  color: #000;
+}
+
+/* hover state for the light theme */
+.satellite-basemap #reset-btn:hover,
+.satellite-basemap #compass-btn:hover,
+.satellite-basemap #location-btn:hover,
+.satellite-basemap #zoom-btn .zoom-half:hover,
+.satellite-basemap #view-toggle-btn:hover,
+.satellite-basemap #view-toggle-btn.shows-2d:hover {
+  background: #b0b0b0;
+  transform: translateY(-1px);
+}
+
+/* view-toggle specific */
+.satellite-basemap #view-toggle-btn {
+  background: #dddddd;
+  color: #000;
+}
+
 #zoom-btn img,
 #zoom-btn svg {
   width: 23px;
   height: 23px;
-  display: block;
+  display: block;            
+  max-width: 100%;
   object-fit: contain;
+  line-height: 0;
+}
+
+/* Also ensure other control imgs behave the same */
+#reset-btn img,
+#reset-btn svg,
+#compass-btn img,
+#compass-btn svg,
+#location-btn img,
+#location-btn svg,
+#view-toggle-btn img,
+#view-toggle-btn svg {
+  width: 27px;
+  height: 27px;
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+  line-height: 0;
+
 }
 
 #view-toggle-btn {
@@ -141,8 +213,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--brb-btn-bg);
   color: var(--brb-btn-color);
+  background: #4694b1;
   border: none;
   border-radius: var(--brb-btn-radius);
   cursor: pointer;
@@ -157,10 +229,9 @@
 
 /* when the button shows "2D" change color */
 #view-toggle-btn.shows-2d {
-  background: #4694b1;
+  background: var(--brb-btn-bg);
 }
 
-/* keep the hover transform when showing 2D */
 #view-toggle-btn.shows-2d:hover {
   background: #5ba9c5;
   transform: translateY(-1px);
@@ -214,5 +285,6 @@
     transform: translateY(12%);
   } */
 }
+
 
 

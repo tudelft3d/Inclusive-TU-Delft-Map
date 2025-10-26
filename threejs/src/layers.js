@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
+import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import layers_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
 import Papa from 'papaparse';
 
 import {
@@ -26,36 +28,36 @@ MENTION:
 
 export class LayerManager {
 
-	constructor(scene, iconsSceneManager, svgLoader) {
+	constructor(scene, iconsSceneManager, svgLoader, cameraManager) {
 
 		this.scene = scene;
 		this.iconsSceneManager = iconsSceneManager;
 		this.svgLoader = svgLoader;
+		this.cameraManager = cameraManager;
 
 		this.layer_definition = {};
 
-		for (const [key, value] of Object.entries(layers_json["Layer Definition"])) {
+		for (const [key, value] of Object.entries(layers_definition_json)) {
 
-			if (value["Include"] == "Y") {
+			if (value["Include"] && value["Shown with icon"]) {
 				this.layer_definition[key] = value;
 			}
 
 		}
 
-		this.layer_hierarchy = layers_json["Layer Hierarchy"];
+		this.layer_hierarchy = layers_hierarchy_json;
 
 		// Maybe have these taken from codelist?
 		// Or otherwise pass as argument
 		this.active_layers = [];
 
-
 		this._populate_layer_buttons();
-
-		// this._populate_layer_buttons_alt();
 
 		this.campus_buildings_json = this._isolate_building_json();
 
 		this.campus_buildings_codes = this._isolate_building_room_codes();
+
+		this.campus_outdoor_codes = this._isolate_oudoor_units_codes();
 
 		this.current_building_key;
 
@@ -80,6 +82,27 @@ export class LayerManager {
 		}
 
 		return campus_buildings_json;
+	}
+
+	_isolate_oudoor_units_codes() {
+		const campus_unit_codes = {};
+		const outdoor_code_containers = cityjson.CityObjects["Outdoor-CityObjectGroup-OutdoorObject"]["children"];
+		for (const [_, code_container_key] of Object.entries(outdoor_code_containers)) {
+
+			const code_container = cityjson.CityObjects[code_container_key];
+			const code = code_container["attributes"]["code"];
+
+			if (!code_container["children"]) {
+				console.error("A code container does not have children!")
+			}
+
+			for (const unit_key of code_container["children"]) {
+				campus_unit_codes[unit_key] = new Set([code]);
+			}
+
+		}
+
+		return campus_unit_codes;
 	}
 
 	_isolate_building_room_codes() {
@@ -171,8 +194,8 @@ export class LayerManager {
 				continue;
 			}
 
-			if (building_json.attributes.space_id.includes("NL")) {
-				continue;
+			if (!building_json.attributes["space_id"]) {
+				continue
 			}
 
 			const position = this._convert_cityjson_position(building_json.attributes.icon_position);
@@ -198,7 +221,7 @@ export class LayerManager {
 
 		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
 
-		const paths = needed_layers.map((element) => { return this.layer_definition[element]["path from assets"] });
+		const paths = needed_layers.map((element) => { return this._get_icon_path(element) });
 		const colors = Array(needed_layers.length).fill("#f7c286ff");
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
@@ -276,7 +299,7 @@ export class LayerManager {
 
 			active_parent_unit_codes.forEach((code) => {
 
-				paths.push(this.layer_definition[code]["path from assets"]);
+				paths.push(this._get_icon_path(code));
 				keys.push(code);
 				colors.push("#f7c286ff");
 
@@ -294,6 +317,10 @@ export class LayerManager {
 
 	}
 
+	_get_icon_path(code) {
+		return `../assets/threejs/graphics/icons/thematic-layers/${this.layer_definition[code]["Icon name"]}`
+	}
+
 	// Used when removing a thematic layer
 	_remove_icon(code) {
 
@@ -301,7 +328,7 @@ export class LayerManager {
 
 			if (code in icon_set_object.svgIcons) {
 
-				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.textIcon.is_populated()) {
+				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.hasText()) {
 
 					icon_set_object.removeSvgIcon(code);
 
@@ -321,6 +348,7 @@ export class LayerManager {
 	_add_icon(code) {
 
 		this._add_icon_buildings(code);
+		this._add_icon_outdoors(code);
 
 		if (this.building_view_active) {
 
@@ -342,19 +370,24 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[building_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(building_key, code, path, color);
 
 				} else {
 
+					console.log(building_json.attributes["space_id"]);
+					if (!building_json.attributes["space_id"]) {
+						continue
+					}
+
 					const position = this._convert_cityjson_position(building_json.attributes.icon_position);
 
 					this._add_icon_set(
 						building_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -389,7 +422,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[current_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(current_key, code, path, color);
@@ -401,7 +434,7 @@ export class LayerManager {
 					this._add_icon_set(
 						current_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -412,6 +445,36 @@ export class LayerManager {
 
 		});
 
+	}
+
+	_add_icon_outdoors(code) {
+		for (const [key, codes] of Object.entries(this.campus_outdoor_codes)) {
+
+			if (codes.has(code)) {
+
+				if (this.iconsSceneManager.iconSets[key]) {
+
+					const path = [this._get_icon_path(code)];
+					const color = ["#f7c286ff"];
+
+					this._add_icon_svg(key, code, path, color);
+
+				} else {
+					const icon_position = cityjson.CityObjects[key]["attributes"]["icon_position"];
+					const position = this._convert_cityjson_position(icon_position);
+
+					this._add_icon_set(
+						key,
+						null,
+						[this._get_icon_path(code)],
+						[code],
+						["#f7c286ff"],
+						position);
+
+				}
+
+			}
+		}
 	}
 
 
@@ -438,28 +501,46 @@ export class LayerManager {
 
 	}
 
-	_generate_icon_onclick(object_key) {
+	_generate_icon_onclick(cj_key) {
 
-		const object_json = cityjson.CityObjects[object_key];
+		const object_json = cityjson.CityObjects[cj_key];
 
 		let object_threejs_name;
+		let icon_position_vector;
 
 		if (object_json.type == "Building") {
 
-			object_threejs_name = object_key + "-lod_2";
+			object_threejs_name = cj_key + "-lod_2";
+			icon_position_vector = null;
 
 		} else if (object_json.type == "BuildingRoom") {
 
-			object_threejs_name = object_key + "-lod_0";
+			object_threejs_name = cj_key + "-lod_0";
+
+		} else if (object_json.type == "GenericCityObject") {
+
+			object_threejs_name = null;
 
 		} else {
 
-			console.error("UNRECOGNIZED OBJECT type:", object_key);
+			console.error("UNRECOGNIZED OBJECT type:", cj_key);
 
 		}
 
+		const icon_position = object_json["attributes"]["icon_position"];
+		icon_position_vector = this._convert_cityjson_position(icon_position);
+
+
 		const onClick = (e) => {
-			this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+			if (!object_threejs_name || !this.scene.getObjectByName(object_threejs_name)) {
+				if (!icon_position_vector) {
+					console.error("Either the object or the position of the icon must be given.")
+				}
+				this.picker.pickIcon(cj_key, icon_position_vector, 50);
+			}
+			else {
+				this.picker.pickMesh(this.scene.getObjectByName(object_threejs_name));
+			}
 		};
 
 		return onClick;
@@ -467,19 +548,25 @@ export class LayerManager {
 	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
-
-		const svgs = await Promise.all(
-			paths.map((p) => this.svgLoader.getSvg(p))
-		);
+		// Load SVGs by handling errors
+		const svgPromises = paths.map(p => this.svgLoader.getSvg(p));
+		const settled = await Promise.allSettled(svgPromises);
+		const svgs = settled.map(r => r.value);
 
 		const icons = [];
 
 		for (var i = 0; i < paths.length; i++) {
 			const svg = svgs[i];
+			// Skip if no correct SVG was found
+			if (!svg) {
+				console.error("A SVG icon is missing.")
+			}
+
 			const key = icon_keys[i];
 			const bgColor = bg_colors[i];
 			const icon = new SvgIcon(key, svg, { bgColor: bgColor });
 			icons.push(icon);
+
 		}
 
 		var text_icon;
@@ -516,115 +603,194 @@ export class LayerManager {
 
 	}
 
-	_populate_layer_buttons_alt() {
-
-		var layers_dropdown = document.getElementById("layers-dropdown");
-		// layers_dropdown.innerHTML = "";
-
-		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
-
-			console.log(group_name);
-			console.log(group_layers);
-
-			var ul = document.createElement("ul");
-
-			var a = document.createElement("a");
-
-			let header_text = document.createTextNode(group_name);
-
-			a.appendChild(header_text);
-
-			ul.appendChild(a);
-
-			let list_elements = [];
-
-			for (const [layer_name, layer_code] of Object.entries(group_layers)) {
-
-				var li = document.createElement("li");
-
-				var a_li = document.createElement("a");
-
-				let button_text = document.createTextNode(layer_name);
-
-				a_li.appendChild(button_text);
-
-				li.appendChild(a_li);
-
-				list_elements.push(li);
-				// list_elements.push(a_li);
-				// list_elements.push(button_text);
-
-				ul.appendChild(li);
-
-			}
-
-			a.addEventListener('click', () => {
-				list_elements.forEach((element) => {
-
-					console.log(element);
-
-					element.style.display = (element.style.display === 'collapse') ? 'none' : 'collapse';
-
-					// for (const child of element.children) {
-					// 	child.style.display = (child.style.display === 'block') ? 'none' : 'block';
-					// }
-
-				})
-			});
-
-			layers_dropdown.appendChild(ul);
-
-		}
-
+	_make_icon_img(path) {
+		const img = document.createElement("img");
+        img.className = "icon";
+        if (path) {
+            img.src = path;
+        } else {
+            img.src = "";
+        }
+        return img;
 	}
 
+//ALENA-start
 	_populate_layer_buttons() {
 
-		var layers_dropdown = document.getElementById("layers-dropdown");
-		layers_dropdown.innerHTML = "";
 
-		for (const [group_name, group_layers] of Object.entries(this.layer_definition)) {
+        var layers_dropdown = document.getElementById("layers-dropdown");
+        // clear current contents but keep dropdown container
+        layers_dropdown.innerHTML = "";
 
-		}
+        for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
 
-		for (const [layer_key, layer_attributes] of Object.entries(this.layer_definition)) {
+            // container for group
+            let group_div = document.createElement("div");
+            group_div.className = "layer-group";
+            layers_dropdown.appendChild(group_div);
 
-			var a = document.createElement("a");
+            // header row: title + small controls
+            let header = document.createElement("div");
+            header.className = "layer-group-header";
+            group_div.appendChild(header);
 
-			let text = document.createTextNode(layer_attributes["Name (EN) [str]"]);
+            // create title container 
+            let title = document.createElement("div");
+            title.className = "layer-group-title";
+            // create and append group checkbox inside the title
+            const sanitizeId = (s) => s.replace(/[^\w\-]/g, "_");
+            let groupCheckbox = document.createElement("input");
+            groupCheckbox.type = "checkbox";
+            groupCheckbox.className = "layer-group-checkbox";
+            groupCheckbox.id = `group_chk_${sanitizeId(group_name)}`;
+            title.appendChild(groupCheckbox);
 
-			let img = document.createElement("img");
-			img.setAttribute('width', '20');
-			img.setAttribute('height', '20');
-			img.setAttribute('align', 'top');
-			img.src = layer_attributes["path from assets"];
+            // text node for the group name
+            let titleText = document.createElement("span");
+            titleText.textContent = group_name;
+            title.appendChild(titleText);
 
-			a.appendChild(img);
-			a.appendChild(text);
+            header.appendChild(title);
 
-			a.addEventListener("click", (event) => {
+            // controls 
+            let controls = document.createElement("div");
+            controls.className = "layer-group-controls";
+            header.appendChild(controls);
 
-				this._update_active_layers(layer_key);
+            // caret / toggle button
+            let toggleBtn = document.createElement("button");
+            toggleBtn.className = "layer-group-toggle";
+            toggleBtn.type = "button";
+            const downIcon = new URL("../assets/threejs/graphics/icons/ui-buttons/carret-down.svg", import.meta.url).href;
+            const upIcon = new URL("../assets/threejs/graphics/icons/ui-buttons/carret-up.svg", import.meta.url).href;
+            const toggleImg = document.createElement("img");
+            toggleImg.className = "layer-group-toggle-icon";
+            toggleImg.src = downIcon;
+            toggleImg.alt = "expand/collapse";
+            toggleBtn.appendChild(toggleImg);
+             controls.appendChild(toggleBtn);
 
-				if (event.srcElement.style.backgroundColor == "green") {
+            // items container (collapsible)
+            let itemsContainer = document.createElement("div");
+            itemsContainer.className = "layer-group-items";
+            group_div.appendChild(itemsContainer);
 
-					event.srcElement.style.backgroundColor = "";
+            // convenience array of codes for this group
+            const codes = Object.values(group_layers);
 
-				} else {
+            // helper to sync group checkbox state (checked / indeterminate)
+            const updateGroupCheckbox = () => {
+                const activeCount = codes.filter(c => this.active_layers.includes(c)).length;
+                groupCheckbox.checked = activeCount === codes.length && codes.length > 0;
+                groupCheckbox.indeterminate = activeCount > 0 && activeCount < codes.length;
+            };
 
-					event.srcElement.style.backgroundColor = "green";
+            // add each layer / facility as a checklist row
+            for (const [layer_name, layer_code] of Object.entries(group_layers)) {
 
-				}
+            	if (typeof layer_code === 'string' || layer_code instanceof String) {
 
-			});
+            		this._add_single_layer(layer_name, layer_code, itemsContainer, updateGroupCheckbox);
 
-			a.href = "#";
+            	} else {
 
-			layers_dropdown.appendChild(a);
+            		for (const [sub_layer_name, sub_layer_code] of Object.entries(layer_code)) {
 
-		}
+            			this._add_single_layer(sub_layer_name, sub_layer_code, itemsContainer, updateGroupCheckbox);
 
-	}
+            		}
+            	}
+            }
+
+            // initialize group checkbox state
+            updateGroupCheckbox();
+
+            // Toggle open/close group when clicking header (but ignore clicks on controls area)
+            const toggleGroup = () => {
+                const isOpen = itemsContainer.style.display === "flex";
+                itemsContainer.style.display = isOpen ? "none" : "flex";
+                // swap image
+                toggleImg.src = isOpen ? downIcon : upIcon;
+             };
+
+            header.addEventListener("click", (ev) => {
+                if (controls.contains(ev.target)) return;
+                // toggleGroup();
+            });
+
+            toggleBtn.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                toggleGroup();
+            });
+
+            // group checkbox behavior: check/uncheck all members
+            groupCheckbox.addEventListener("change", (ev) => {
+                ev.stopPropagation();
+                const shouldActivate = ev.target.checked;
+                codes.forEach(c => {
+                    const alreadyActive = this.active_layers.includes(c);
+                    if (shouldActivate && !alreadyActive) {
+                        this._update_active_layers(c);
+                    } else if (!shouldActivate && alreadyActive) {
+                        this._update_active_layers(c);
+                    }
+                });
+                // refresh child checkboxes to match active_layers
+                itemsContainer.querySelectorAll("input[type=checkbox]").forEach(ch => {
+                    ch.checked = this.active_layers.includes(ch.value);
+                });
+                // no indeterminate after explicit user action
+                groupCheckbox.indeterminate = false;
+                updateGroupCheckbox();
+            });
+
+        }
+
+    }
+
+    _add_single_layer(layer_name, layer_code, itemsContainer_object, updateGroupCheckbox) {
+
+    	let itemRow = document.createElement("label");
+        itemRow.className = "layer-item";
+        itemRow.setAttribute("data-code", layer_code);
+
+        // checkbox
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = layer_code;
+        checkbox.id = `layer_chk_${layer_code}`;
+        checkbox.checked = this.active_layers.includes(layer_code);
+
+        // text 
+        let spanText = document.createElement("span");
+        spanText.textContent = layer_name;
+        spanText.style.flex = "1";
+
+        // icon
+        let iconImg = this._make_icon_img(
+            (this.layer_definition[layer_code] && this._get_icon_path(layer_code)) || ""
+        );
+
+
+        // wire change event -> update active layers and group checkbox
+        checkbox.addEventListener("change", (ev) => {
+        	ev.stopPropagation();
+            this._update_active_layers(layer_code);
+            // make sure UI matches resulting active_layers
+            ev.target.checked = this.active_layers.includes(layer_code);
+            updateGroupCheckbox();
+        });
+
+        // clicking the label toggles checkbox 
+        itemRow.appendChild(checkbox);
+        itemRow.appendChild(spanText);
+        itemRow.appendChild(iconImg);
+
+        itemsContainer_object.appendChild(itemRow);
+
+    }
+
+//ALENA-end
 
 	_alter_thematic_codelist_json() {
 
@@ -639,83 +805,115 @@ export class LayerManager {
 
 }
 
-// export async function populate_layer_buttons(path) {
 
+// Toggle layers dropdown as a mobile bottom sheet - Alena
+(function () {
+  const layersBtn = document.getElementById('layers-btn');
+  const layersDropdown = document.getElementById('layers-dropdown');
+  let overlay = document.getElementById('layers-overlay');
 
-// 	const all_layer_definition = await load_codelist(path); // this needs to be the codelist file
-// 	const layer_definition = all_layer_definition.filter((element) => {
-// 		return element["Include"] == "Y";
-// 	});
-// 	var layers_dropdown = document.getElementById("layers-dropdown");
-// 	layers_dropdown.innerHTML = "";
+  // create overlay if missing
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'layers-overlay';
+    document.body.appendChild(overlay);
+  }
 
+  // initial styles for overlay so it doesn't intercept taps until it's enabled
+  overlay.style.pointerEvents = 'none';
+  overlay.style.position = overlay.style.position || 'fixed';
+  overlay.style.inset = overlay.style.inset || '0';
+  // z-index: a default here if missing
+  if (!overlay.style.zIndex) overlay.style.zIndex = '999';
 
-// 	for (let i = 0; i < layer_definition.length; i++) {
+  let mobileOpen = false;
 
-// 		var a = document.createElement("a");
+  function openMobileLayers() {
+    // set state first
+    mobileOpen = true;
 
-// 		a.appendChild(document.createTextNode(layer_definition[i]["Name-EN"]));
+    // enable overlay pointer events *after* state is set so it doesn't catch the same tap
+    overlay.classList.add('visible');
+    overlay.style.pointerEvents = 'auto';
 
-// 		a.addEventListener("click", (event) => {
-// 			// if building view: toggle icons of objects that are in the current floor
-// 			// remove 3d view icons for only the current building, and vice versa when leaving building view
-// 			// this is to keep the icons for other buildings there
-// 			// consider how to deal with external icons (above should solve it)
-// 			// if 3d view: toggle icons with the building ID labels, above the building
+    layersDropdown.classList.add('mobile-open');
+    document.body.classList.add('layers-active-mobile');
+    // prevent background scrolling while open
+    document.body.style.overflow = 'hidden';
 
+    // mark attributes for accessibility 
+    layersBtn?.setAttribute('aria-expanded', 'true');
+    layersDropdown?.setAttribute('aria-hidden', 'false');
+  }
 
-// 			// hide or unhide layers (toggle function)
-// 			console.log(layer_definition[i]);
+  function closeMobileLayers() {
+    // set state early so handlers see the correct state
+    mobileOpen = false;
 
-// 		});
+    layersDropdown.classList.remove('mobile-open');
+    overlay.classList.remove('visible');
 
-// 		a.href = "#";
+    // disable pointer events so overlay cannot intercept accidental taps
+    overlay.style.pointerEvents = 'none';
 
-// 		layers_dropdown.appendChild(a);
+    document.body.classList.remove('layers-active-mobile');
+    document.body.style.overflow = '';
 
-// 	}
+    layersBtn?.setAttribute('aria-expanded', 'false');
+    layersDropdown?.setAttribute('aria-hidden', 'true');
+  }
 
-// }
-// export function load_codelist(path) {
-// 	return new Promise((resolve, reject) => {
-// 		Papa.parse(path, {
-// 			download: true,
-// 			header: true,
-// 			delimiter: ",",
-// 			skipEmptyLines: "greedy",
-// 			complete: (results) => resolve(results.data),
-// 			error: (err) => reject(err)
-// 		});
-// 	});
-// }
+  function toggleMobileLayers() {
+    if (mobileOpen) closeMobileLayers();
+    else openMobileLayers();
+  }
 
-// export async function outline_code(code, map) {
+  // check for small screens
+  function isSmallScreen() {
+    return window.matchMedia('(max-width: 620px)').matches;
+  }
 
-// 	var object_attribute_list = [];
+  // handle clicks and touch starts on the button 
+  function onButtonActivate(e) {
+    if (!isSmallScreen()) return; // only use mobile behavior on small screens
+    e.stopPropagation();
+    e.preventDefault();
 
-// 	for (const [key, value] of Object.entries(cityjson["CityObjects"])) {
+    // toggle using the explicit boolean state
+    toggleMobileLayers();
+  }
 
-// 		object_attribute_list.push(value);
-// 	}
+  // listen for both click and touchstart to avoid mobile tap delays / race conditions
+  layersBtn?.addEventListener('click', onButtonActivate, { passive: false });
+  layersBtn?.addEventListener('touchstart', onButtonActivate, { passive: false });
 
-// 	let keys = [];
-// 	let object_names = [];
+  // overlay should only close when the overlay background itself is clicked/touched
+  function onOverlayActivate(e) {
+    // only handle direct clicks/touches on the overlay background 
+    if (e.currentTarget !== e.target) return;
+    // close panel
+    closeMobileLayers();
+  }
 
-// 	object_attribute_list.forEach((current_object) => {
-// 		if (current_object.attributes["Usage Code"] == code) {
-// 			keys.push(current_object.attributes.key);
-// 			if (current_object.type == "Building") {
-// 				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_2'));
-// 			}
-// 			else {
-// 				object_names.push(map.scene.getObjectByName(current_object.attributes.key + '-lod_0'));
-// 			}
+  overlay.addEventListener('click', onOverlayActivate);
+  overlay.addEventListener('touchstart', onOverlayActivate, { passive: true });
 
-// 		}
+  // close when pressing Escape
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') {
+      closeMobileLayers();
+    }
+  });
 
-// 	});
-// 	console.log(object_names);
-// 	map.setOutline(keys, "lod_0", "single");
-// 	map.picker.highlight(object_names);
+  // Prevent clicks/touches inside dropdown from bubbling out and triggering overlay/document handlers
+  layersDropdown?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+  });
+  layersDropdown?.addEventListener('touchstart', (ev) => {
+    ev.stopPropagation();
+  }, { passive: true });
 
-// }
+  mobileOpen = layersDropdown?.classList.contains('mobile-open') || false;
+  // ensure overlay pointer-events matches the initial state
+  overlay.style.pointerEvents = mobileOpen ? 'auto' : 'none';
+})();

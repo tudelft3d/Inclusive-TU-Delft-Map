@@ -25,7 +25,12 @@ body{
 }
 
 /* Main / card */
-main{ padding: 60px 20px 96px; display:flex; justify-content:center; }
+main{ 
+  padding-top: 30px;
+  padding: 35px 20px 96px; 
+  display:flex; 
+  justify-content:center; 
+}
 .feedback-card{
   width:100%;
   max-width: var(--card-w);
@@ -44,7 +49,7 @@ main{ padding: 60px 20px 96px; display:flex; justify-content:center; }
   margin: 0;
   font-size: 24px;
   text-align:center;
-  font-weight:500;
+  font-weight:600;
   letter-spacing: -0.2px;
 }
 .lead{
@@ -178,9 +183,13 @@ select.field-input{
 
 /* Small screens - tried mobile version */
 @media (max-width:620px){
-  .card-inner{ padding:20px; }
-  main{ padding:28px 12px; }
-  #feedback_title{ font-size:18px; }
+  .card-inner{ padding:40px; }
+  main{ 
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 90px;
+  }
+  #feedback_title{ font-size:20px; font-weight: 600; }
 }
 
 /* Accessibility helpers */
