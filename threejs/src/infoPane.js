@@ -275,54 +275,44 @@ export class InfoPane {
 
     _add_infoPane_nested_object(object_json, title, attribute_names, open=false) {
 
-        let div = document.createElement("div");
+        let details = document.createElement("details");
+        details.open = open;
 
-        // div.className = "info-pane-row";
+        let summary = document.createElement("summary");
+        let summary_span = document.createElement("span");
+        summary_span.className = "info-pane-label";
+        summary_span.appendChild(document.createTextNode(title));
+        summary.appendChild(summary_span);
 
-
-        let det = document.createElement("details");
-
-        det.open = open;
-
-
-        let ul = document.createElement("ul");
-        det.appendChild(ul);
-
+        details.appendChild(summary);
 
         attribute_names.forEach((current_attribute_name) => {
 
             const current_attribute_value = object_json.attributes[current_attribute_name];
 
+            // Extract just the day name from "Opening hours (Monday)" -> "Monday"
+            const dayName = current_attribute_name.match(/\(([^)]+)\)/)?.[1] || current_attribute_name;
+
+            let div = document.createElement("div");
+            div.className = "info-pane-row";
+
             let label_span = document.createElement("span");
             label_span.className = "info-pane-label";
-            label_span.appendChild(document.createTextNode(current_attribute_name));
-
+            label_span.appendChild(document.createTextNode(dayName));
 
             let value_span = document.createElement("span");
             value_span.className = "info-pane-value";
             value_span.appendChild(document.createTextNode(current_attribute_value));
 
-            let li = document.createElement("li");
+            div.appendChild(label_span);
+            
+            div.appendChild(value_span);
 
-            li.appendChild(label_span);
-            li.appendChild(value_span);
-
-            ul.appendChild(li);
+            details.appendChild(div);
 
         });
 
-
-        let sum = document.createElement("summary");
-        let sum_span = document.createElement("span");
-        sum_span.className = "info-pane-label";
-        sum_span.appendChild(document.createTextNode(title));
-        sum.appendChild(sum_span);
-
-        det.appendChild(sum);
-
-        div.appendChild(det);
-
-        this.pane.appendChild(div);
+        this.pane.appendChild(details);
     }
 
 
