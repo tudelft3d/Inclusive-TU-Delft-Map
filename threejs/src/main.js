@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(movedSinceLastBtnPush);
             event.stopPropagation();
             if (!map.locationManager.initialised) {
-                map.locationManager.inititialise(true, () => {
+                map.locationManager.initialise(true, () => {
                     movedSinceLastBtnPush = false;
                 });
             } else if (movedSinceLastBtnPush || map.locationManager.hidden) {
