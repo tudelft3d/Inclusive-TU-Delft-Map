@@ -188,6 +188,11 @@ export class InfoPane {
 
         this._add_infoPane_title(object_json);
 
+        // Create content container
+        let content_div = document.createElement("div");
+        content_div.className = "info-pane-content";
+        this.pane.appendChild(content_div);
+
         const wanted_attributes = [
             "Address",
             "Phone number",
@@ -195,22 +200,48 @@ export class InfoPane {
         ];
 
         wanted_attributes.forEach((attribute_name) => {
-
-            this._add_infoPane_object(object_json, attribute_name);
-
+            this._add_infoPane_object(object_json, attribute_name, content_div);
         });
 
-        const open_hours_attributes = [
-            "Opening hours (Monday)",
-            "Opening hours (Tuesday)",
-            "Opening hours (Wednesday)",
-            "Opening hours (Thursday)",
-            "Opening hours (Friday)",
-            "Opening hours (Saturday)",
-            "Opening hours (Sunday)",
-        ];
+        // Opening Hours configuration
+        const opening_hours_config = {
+            title: "Opening Hours",
+            attributes: [
+                "Opening hours (Monday)",
+                "Opening hours (Tuesday)",
+                "Opening hours (Wednesday)",
+                "Opening hours (Thursday)",
+                "Opening hours (Friday)",
+                "Opening hours (Saturday)",
+                "Opening hours (Sunday)",
+            ],
+            open: true,
+            labelTransform: (attr) => {
+                // Extract day name from "Opening hours (Monday)" -> "Monday"
+                const match = attr.match(/\(([^)]+)\)/);
+                return match ? match[1] : attr;
+            }
+        };
 
-        this._add_infoPane_nested_object(object_json, "Opening Hours", open_hours_attributes, true);
+        this._add_infoPane_details_section(object_json, opening_hours_config, content_div);
+
+        // Wheelchair Accessibility configuration
+        const wheelchair_config = {
+            title: "Wheelchair Accessibility",
+            attributes: [
+                "Wheelchair accessibility (Parking)",
+                "Wheelchair accessibility (Entrances)",
+                "Wheelchair accessibility (Elevators)",
+            ],
+            open: false,
+            labelTransform: (attr) => {
+                // Extract category from "Wheelchair accessibility (Parking)" -> "Parking"
+                const match = attr.match(/\(([^)]+)\)/);
+                return match ? match[1] : attr;
+            }
+        };
+
+        this._add_infoPane_details_section(object_json, wheelchair_config, content_div);
 
         this._add_infoPane_floorplan_button();
 
@@ -249,7 +280,7 @@ export class InfoPane {
 
     }
 
-    _add_infoPane_object(object_json, attribute_name) {
+    _add_infoPane_object(object_json, attribute_name, container = null) {
 
         let div = document.createElement("div");
         div.className = "info-pane-row";
@@ -262,67 +293,97 @@ export class InfoPane {
 
         let value_span = document.createElement("span");
         value_span.className = "info-pane-value";
-        value_span.appendChild(document.createTextNode(object_json.attributes[attribute_name]));
+
+        const attribute_value = object_json.attributes[attribute_name];
+
+        // Check if it's a phone number or email and make it clickable
+        if (attribute_name === "Phone number") {
+            let link = document.createElement("a");
+            link.href = `tel:${attribute_value}`;
+            link.appendChild(document.createTextNode(attribute_value));
+            value_span.appendChild(link);
+        } else if (attribute_name === "Email") {
+            let link = document.createElement("a");
+            link.href = `mailto:${attribute_value}`;
+            link.appendChild(document.createTextNode(attribute_value));
+            value_span.appendChild(link);
+        } else {
+            value_span.appendChild(document.createTextNode(attribute_value));
+        }
 
 
         div.appendChild(label_span);
         div.appendChild(value_span);
 
-        this.pane.appendChild(div);
+        const target = container || this.pane;
+        target.appendChild(div);
 
     }
 
 
-    _add_infoPane_nested_object(object_json, title, attribute_names, open=false) {
+    /**
+     * Add a collapsible details section with configurable options
+     * @param {Object} object_json - The building JSON data
+     * @param {Object} config - Configuration object
+     * @param {string} config.title - Title of the details element
+     * @param {Array<string>} config.attributes - Array of the underlying attributes
+     * @param {boolean} config.open - Whether the details should be open by default, the default is false
+     * @param {Function} config.labelTransform - Optional function to transform attribute names for display
+     * @param {HTMLElement} container - Optional container element to append to
+     */
+    _add_infoPane_details_section(object_json, config, container = null) {
+        const {
+            title,
+            attributes,
+            open = false,
+            labelTransform = null
+        } = config;
 
-        let div = document.createElement("div");
+        // Check if any of the attributes exist before creating the section, otherwise do not include
+        const hasData = attributes.some(attr => object_json.attributes[attr]);
+        if (!hasData) return;
 
-        // div.className = "info-pane-row";
+        let details = document.createElement("details");
+        details.open = open;
 
+        let summary = document.createElement("summary");
+        let summary_span = document.createElement("span");
+        summary_span.className = "info-pane-label";
+        summary_span.appendChild(document.createTextNode(title));
+        summary.appendChild(summary_span);
 
-        let det = document.createElement("details");
+        details.appendChild(summary);
 
-        det.open = open;
+        attributes.forEach((attribute_name) => {
+            const attribute_value = object_json.attributes[attribute_name];
+            
+            // Skip if attribute doesn't exist or is empty
+            if (!attribute_value) return;
 
+            // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
+            const display_label = labelTransform 
+                ? labelTransform(attribute_name) 
+                : attribute_name;
 
-        let ul = document.createElement("ul");
-        det.appendChild(ul);
-
-
-        attribute_names.forEach((current_attribute_name) => {
-
-            const current_attribute_value = object_json.attributes[current_attribute_name];
+            let div = document.createElement("div");
+            div.className = "info-pane-row";
 
             let label_span = document.createElement("span");
             label_span.className = "info-pane-label";
-            label_span.appendChild(document.createTextNode(current_attribute_name));
-
+            label_span.appendChild(document.createTextNode(display_label));
 
             let value_span = document.createElement("span");
             value_span.className = "info-pane-value";
-            value_span.appendChild(document.createTextNode(current_attribute_value));
+            value_span.appendChild(document.createTextNode(attribute_value));
 
-            let li = document.createElement("li");
+            div.appendChild(label_span);
+            div.appendChild(value_span);
 
-            li.appendChild(label_span);
-            li.appendChild(value_span);
-
-            ul.appendChild(li);
-
+            details.appendChild(div);
         });
 
-
-        let sum = document.createElement("summary");
-        let sum_span = document.createElement("span");
-        sum_span.className = "info-pane-label";
-        sum_span.appendChild(document.createTextNode(title));
-        sum.appendChild(sum_span);
-
-        det.appendChild(sum);
-
-        div.appendChild(det);
-
-        this.pane.appendChild(div);
+        const target = container || this.pane;
+        target.appendChild(details);
     }
 
 
