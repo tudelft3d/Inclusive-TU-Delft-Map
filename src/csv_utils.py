@@ -34,12 +34,45 @@ def csv_format_type(value: str, column_type: str) -> Any:
         )
 
 
-def csv_get_row_value(row: dict[str, str], column: str) -> tuple[str, Any]:
-    value = row[column].strip()
-    if not isinstance(value, str):
-        raise RuntimeError(
-            f"The column '{column}' gave a value of type {type(value)} ({value})."
+def string_to_type(type_string: str):
+    if type_string == "str":
+        real_type = str
+    elif type_string == "float":
+        real_type = float
+    elif type_string == "int":
+        real_type = int
+    elif type_string == "bool":
+        real_type = bool
+    elif type_string == "list":
+        real_type = list
+    else:
+        raise NotImplementedError(
+            f"Support for type '{type_string}' is not implemented yet."
         )
+    return real_type
+
+
+def check_type(value: Any, column_types: list[str]):
+    for column_type in column_types:
+        real_type = string_to_type(column_type)
+        if real_type == list:
+            if not isinstance(value, list):
+                raise RuntimeError(
+                    f"Wrong type: '{type(value)}' instead of '{real_type}'."
+                )
+
+            list_info = column_type[len("list") :]
+            separator = list_info[0]
+            other_type = list_info[1:]
+            if all([check_type(item, [other_type]) for item in value]):
+                return True
+        elif isinstance(value, real_type):
+            return True
+
+    return False
+
+
+def csv_get_row_value(row: dict[str, str], column: str) -> tuple[str, Any]:
     column_split = column.split(" [")
     if len(column_split) != 2:
         raise RuntimeError(
@@ -47,7 +80,19 @@ def csv_get_row_value(row: dict[str, str], column: str) -> tuple[str, Any]:
         )
     column_type = column_split[1][:-1]
     column_name = column_split[0]
-    return column_name, csv_format_type(value=value, column_type=column_type)
+
+    value = row[column]
+    if isinstance(value, str):
+        value = csv_format_type(value=value.strip(), column_type=column_type)
+
+    if check_type(value=value, column_types=[column_type]) or value is None:
+        pass
+    else:
+        raise RuntimeError(
+            f"The column '{column}' gave a value of type {type(value)} ({value})."
+        )
+
+    return column_name, value
 
 
 def csv_read_attributes(
