@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
+import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import layers_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
 import Papa from 'papaparse';
 
 import {
@@ -35,15 +37,15 @@ export class LayerManager {
 
 		this.layer_definition = {};
 
-		for (const [key, value] of Object.entries(layers_json["Layer Definition"])) {
+		for (const [key, value] of Object.entries(layers_definition_json)) {
 
-			if (value["Include"] == "Y") {
+			if (value["Include"] && value["Shown with icon"]) {
 				this.layer_definition[key] = value;
 			}
 
 		}
 
-		this.layer_hierarchy = layers_json["Layer Hierarchy"];
+		this.layer_hierarchy = layers_hierarchy_json;
 
 		// Maybe have these taken from codelist?
 		// Or otherwise pass as argument
@@ -222,7 +224,7 @@ export class LayerManager {
 
 		const needed_layers = Array.from(this.campus_buildings_codes[this.current_building_key].intersection(active_layers_set));
 
-		const paths = needed_layers.map((element) => { return this.layer_definition[element]["path from assets"] });
+		const paths = needed_layers.map((element) => { return this._get_icon_path(element) });
 		const colors = Array(needed_layers.length).fill("#f7c286ff");
 
 		const position = this._convert_cityjson_position(current_building_json.attributes.icon_position);
@@ -300,7 +302,7 @@ export class LayerManager {
 
 			active_parent_unit_codes.forEach((code) => {
 
-				paths.push(this.layer_definition[code]["path from assets"]);
+				paths.push(this._get_icon_path(code));
 				keys.push(code);
 				colors.push("#f7c286ff");
 
@@ -316,6 +318,10 @@ export class LayerManager {
 
 		});
 
+	}
+
+	_get_icon_path(code) {
+		return `../assets/threejs/graphics/icons/thematic-layers/${this.layer_definition[code]["Icon name"]}`
 	}
 
 	// Used when removing a thematic layer
@@ -367,7 +373,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[building_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(building_key, code, path, color);
@@ -384,7 +390,7 @@ export class LayerManager {
 					this._add_icon_set(
 						building_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -419,7 +425,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[current_key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(current_key, code, path, color);
@@ -431,7 +437,7 @@ export class LayerManager {
 					this._add_icon_set(
 						current_key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -451,7 +457,7 @@ export class LayerManager {
 
 				if (this.iconsSceneManager.iconSets[key]) {
 
-					const path = [this.layer_definition[code]["path from assets"]];
+					const path = [this._get_icon_path(code)];
 					const color = ["#f7c286ff"];
 
 					this._add_icon_svg(key, code, path, color);
@@ -463,7 +469,7 @@ export class LayerManager {
 					this._add_icon_set(
 						key,
 						null,
-						[this.layer_definition[code]["path from assets"]],
+						[this._get_icon_path(code)],
 						[code],
 						["#f7c286ff"],
 						position);
@@ -517,8 +523,6 @@ export class LayerManager {
 		} else if (object_json.type == "GenericCityObject") {
 
 			object_threejs_name = null;
-			const icon_position = object_json["attributes"]["icon_position"];
-			icon_position_vector = this._convert_cityjson_position(icon_position);
 
 		} else {
 
@@ -526,8 +530,12 @@ export class LayerManager {
 
 		}
 
+		const icon_position = object_json["attributes"]["icon_position"];
+		icon_position_vector = this._convert_cityjson_position(icon_position);
+
+
 		const onClick = (e) => {
-			if (!object_threejs_name) {
+			if (!object_threejs_name || !this.scene.getObjectByName(object_threejs_name)) {
 				if (!icon_position_vector) {
 					console.error("Either the object or the position of the icon must be given.")
 				}
@@ -543,19 +551,25 @@ export class LayerManager {
 	}
 
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
-
-		const svgs = await Promise.all(
-			paths.map((p) => this.svgLoader.getSvg(p))
-		);
+		// Load SVGs by handling errors
+		const svgPromises = paths.map(p => this.svgLoader.getSvg(p));
+		const settled = await Promise.allSettled(svgPromises);
+		const svgs = settled.map(r => r.value);
 
 		const icons = [];
 
 		for (var i = 0; i < paths.length; i++) {
 			const svg = svgs[i];
+			// Skip if no correct SVG was found
+			if (!svg) {
+				console.error("A SVG icon is missing.")
+			}
+
 			const key = icon_keys[i];
 			const bgColor = bg_colors[i];
 			const icon = new SvgIcon(key, svg, { bgColor: bgColor });
 			icons.push(icon);
+
 		}
 
 		var text_icon;
@@ -769,24 +783,24 @@ export class LayerManager {
 
 		}
 
-		for (const [layer_key, layer_attributes] of Object.entries(this.layer_definition)) {
+		for (const [layer_code, layer_attributes] of Object.entries(this.layer_definition)) {
 
 			var a = document.createElement("a");
 
-			let text = document.createTextNode(layer_attributes["Name (EN) [str]"]);
+			let text = document.createTextNode(layer_attributes["Name (EN)"]);
 
 			let img = document.createElement("img");
 			img.setAttribute('width', '20');
 			img.setAttribute('height', '20');
 			img.setAttribute('align', 'top');
-			img.src = layer_attributes["path from assets"];
+			img.src = this._get_icon_path(layer_code);
 
 			a.appendChild(img);
 			a.appendChild(text);
 
 			a.addEventListener("click", (event) => {
 
-				this._update_active_layers(layer_key);
+				this._update_active_layers(layer_code);
 
 				if (event.srcElement.style.backgroundColor == "green") {
 

@@ -73,7 +73,7 @@ export class IconSet {
     }
 
     hasText() {
-        return (!this.textIcon);
+        return (!!this.textIcon);
     }
 
     addSvgIcon(svgIcon) {
