@@ -195,22 +195,48 @@ export class InfoPane {
         ];
 
         wanted_attributes.forEach((attribute_name) => {
-
             this._add_infoPane_object(object_json, attribute_name);
-
         });
 
-        const open_hours_attributes = [
-            "Opening hours (Monday)",
-            "Opening hours (Tuesday)",
-            "Opening hours (Wednesday)",
-            "Opening hours (Thursday)",
-            "Opening hours (Friday)",
-            "Opening hours (Saturday)",
-            "Opening hours (Sunday)",
-        ];
+        // Opening Hours configuration
+        const opening_hours_config = {
+            title: "Opening Hours",
+            attributes: [
+                "Opening hours (Monday)",
+                "Opening hours (Tuesday)",
+                "Opening hours (Wednesday)",
+                "Opening hours (Thursday)",
+                "Opening hours (Friday)",
+                "Opening hours (Saturday)",
+                "Opening hours (Sunday)",
+            ],
+            open: true,
+            labelTransform: (attr) => {
+                // Extract day name from "Opening hours (Monday)" -> "Monday"
+                const match = attr.match(/\(([^)]+)\)/);
+                return match ? match[1] : attr;
+            }
+        };
 
-        this._add_infoPane_nested_object(object_json, "Opening Hours", open_hours_attributes, true);
+        this._add_infoPane_details_section(object_json, opening_hours_config);
+
+        // Wheelchair Accessibility configuration
+        const wheelchair_config = {
+            title: "Wheelchair Accessibility",
+            attributes: [
+                "Wheelchair accessibility (Parking)",
+                "Wheelchair accessibility (Entrances)",
+                "Wheelchair accessibility (Elevators)",
+            ],
+            open: false,
+            labelTransform: (attr) => {
+                // Extract category from "Wheelchair accessibility (Parking)" -> "Parking"
+                const match = attr.match(/\(([^)]+)\)/);
+                return match ? match[1] : attr;
+            }
+        };
+
+        this._add_infoPane_details_section(object_json, wheelchair_config);
 
         this._add_infoPane_floorplan_button();
 
@@ -265,9 +291,8 @@ export class InfoPane {
 
         const attribute_value = object_json.attributes[attribute_name];
 
-        // Check if it's a phone number or email and make it clickable through the corresponding method
+        // Check if it's a phone number or email and make it clickable
         if (attribute_name === "Phone number") {
-            // a is 'anchor', used for hrefs
             let link = document.createElement("a");
             link.href = `tel:${attribute_value}`;
             link.appendChild(document.createTextNode(attribute_value));
@@ -280,7 +305,7 @@ export class InfoPane {
         } else {
             value_span.appendChild(document.createTextNode(attribute_value));
         }
-    
+
 
         div.appendChild(label_span);
         div.appendChild(value_span);
@@ -290,7 +315,26 @@ export class InfoPane {
     }
 
 
-    _add_infoPane_nested_object(object_json, title, attribute_names, open=false) {
+    /**
+     * Add a collapsible details section with configurable options
+     * @param {Object} object_json - The building JSON data
+     * @param {Object} config - Configuration object
+     * @param {string} config.title - Title of the details element
+     * @param {Array<string>} config.attributes - Array of the underlying attributes
+     * @param {boolean} config.open - Whether the details should be open by default, the default is false
+     * @param {Function} config.labelTransform - Optional function to transform attribute names for display
+     */
+    _add_infoPane_details_section(object_json, config) {
+        const {
+            title,
+            attributes,
+            open = false,
+            labelTransform = null
+        } = config;
+
+        // Check if any of the attributes exist before creating the section, otherwise do not include
+        const hasData = attributes.some(attr => object_json.attributes[attr]);
+        if (!hasData) return;
 
         let details = document.createElement("details");
         details.open = open;
@@ -303,30 +347,32 @@ export class InfoPane {
 
         details.appendChild(summary);
 
-        attribute_names.forEach((current_attribute_name) => {
+        attributes.forEach((attribute_name) => {
+            const attribute_value = object_json.attributes[attribute_name];
+            
+            // Skip if attribute doesn't exist or is empty
+            if (!attribute_value) return;
 
-            const current_attribute_value = object_json.attributes[current_attribute_name];
-
-            // Extract just the day name from "Opening hours (Monday)" -> "Monday"
-            const dayName = current_attribute_name.match(/\(([^)]+)\)/)?.[1] || current_attribute_name;
+            // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
+            const display_label = labelTransform 
+                ? labelTransform(attribute_name) 
+                : attribute_name;
 
             let div = document.createElement("div");
             div.className = "info-pane-row";
 
             let label_span = document.createElement("span");
             label_span.className = "info-pane-label";
-            label_span.appendChild(document.createTextNode(dayName));
+            label_span.appendChild(document.createTextNode(display_label));
 
             let value_span = document.createElement("span");
             value_span.className = "info-pane-value";
-            value_span.appendChild(document.createTextNode(current_attribute_value));
+            value_span.appendChild(document.createTextNode(attribute_value));
 
             div.appendChild(label_span);
-            
             div.appendChild(value_span);
 
             details.appendChild(div);
-
         });
 
         this.pane.appendChild(details);
