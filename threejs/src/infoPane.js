@@ -188,6 +188,11 @@ export class InfoPane {
 
         this._add_infoPane_title(object_json);
 
+        // Create content container
+        let content_div = document.createElement("div");
+        content_div.className = "info-pane-content";
+        this.pane.appendChild(content_div);
+
         const wanted_attributes = [
             "Address",
             "Phone number",
@@ -195,7 +200,7 @@ export class InfoPane {
         ];
 
         wanted_attributes.forEach((attribute_name) => {
-            this._add_infoPane_object(object_json, attribute_name);
+            this._add_infoPane_object(object_json, attribute_name, content_div);
         });
 
         // Opening Hours configuration
@@ -218,7 +223,7 @@ export class InfoPane {
             }
         };
 
-        this._add_infoPane_details_section(object_json, opening_hours_config);
+        this._add_infoPane_details_section(object_json, opening_hours_config, content_div);
 
         // Wheelchair Accessibility configuration
         const wheelchair_config = {
@@ -236,7 +241,7 @@ export class InfoPane {
             }
         };
 
-        this._add_infoPane_details_section(object_json, wheelchair_config);
+        this._add_infoPane_details_section(object_json, wheelchair_config, content_div);
 
         this._add_infoPane_floorplan_button();
 
@@ -275,7 +280,7 @@ export class InfoPane {
 
     }
 
-    _add_infoPane_object(object_json, attribute_name) {
+    _add_infoPane_object(object_json, attribute_name, container = null) {
 
         let div = document.createElement("div");
         div.className = "info-pane-row";
@@ -310,7 +315,8 @@ export class InfoPane {
         div.appendChild(label_span);
         div.appendChild(value_span);
 
-        this.pane.appendChild(div);
+        const target = container || this.pane;
+        target.appendChild(div);
 
     }
 
@@ -323,8 +329,9 @@ export class InfoPane {
      * @param {Array<string>} config.attributes - Array of the underlying attributes
      * @param {boolean} config.open - Whether the details should be open by default, the default is false
      * @param {Function} config.labelTransform - Optional function to transform attribute names for display
+     * @param {HTMLElement} container - Optional container element to append to
      */
-    _add_infoPane_details_section(object_json, config) {
+    _add_infoPane_details_section(object_json, config, container = null) {
         const {
             title,
             attributes,
@@ -375,7 +382,8 @@ export class InfoPane {
             details.appendChild(div);
         });
 
-        this.pane.appendChild(details);
+        const target = container || this.pane;
+        target.appendChild(details);
     }
 
 
