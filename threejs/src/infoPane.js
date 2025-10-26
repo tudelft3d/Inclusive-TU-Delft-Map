@@ -262,8 +262,25 @@ export class InfoPane {
 
         let value_span = document.createElement("span");
         value_span.className = "info-pane-value";
-        value_span.appendChild(document.createTextNode(object_json.attributes[attribute_name]));
 
+        const attribute_value = object_json.attributes[attribute_name];
+
+        // Check if it's a phone number or email and make it clickable through the corresponding method
+        if (attribute_name === "Phone number") {
+            // a is 'anchor', used for hrefs
+            let link = document.createElement("a");
+            link.href = `tel:${attribute_value}`;
+            link.appendChild(document.createTextNode(attribute_value));
+            value_span.appendChild(link);
+        } else if (attribute_name === "Email") {
+            let link = document.createElement("a");
+            link.href = `mailto:${attribute_value}`;
+            link.appendChild(document.createTextNode(attribute_value));
+            value_span.appendChild(link);
+        } else {
+            value_span.appendChild(document.createTextNode(attribute_value));
+        }
+    
 
         div.appendChild(label_span);
         div.appendChild(value_span);
