@@ -35,7 +35,18 @@ export class Searcher {
 
         this.searches = [];
 
-        this.fuseOptions = { keys: ["attributes.space_id", "attributes.key", "attributes.Name (EN)", "attributes.Name (NL)", "attributes.Nicknames"] };
+        this.fuseOptions = {
+            threshold: 0.3,
+            ignoreLocation: true,
+            includeScore: true,
+            includeMatches: true,
+            keys: ["attributes.space_id",
+                "attributes.key",
+                "attributes.Name",
+                "attributes.Name (EN)",
+                "attributes.Name (NL)",
+                "attributes.Nicknames"]
+        };
 
         this.attribute_searcher = new Fuse(this.processed_json, this.fuseOptions);
         this.geometry_searcher = new Fuse();
@@ -58,21 +69,36 @@ export class Searcher {
     // Perhaps make lod extractable from the map
     // Will have to change this if not all searchable objects have a space_id
     _retrieve_threejs_objects(object_list, scene, lod = "infer") {
-
         const threejs_objects = [];
+        const all_objects = [];
+        object_list.forEach(object => {
+            if (object.item.type == "BuildingUnit") {
+                if (object.item.attributes["unit_spaces"].length == 0) {
+                    var parent = this.raw_json["CityObjects"][object.item.parents[0]];
+                    while (parent.type != "Building") {
+                        parent = this.raw_json["CityObjects"][parent.parents[0]];
+                    }
+                    all_objects.push({ item: parent });
+                }
+                else {
+                    let unitRoom = object.item.attributes["unit_spaces"];
+                    for (var i = 0; i < unitRoom.length; i++) {
+                        all_objects.push({ item: this.raw_json["CityObjects"][unitRoom[i]] });
+                    }
+                }
+            } else all_objects.push(object);
+        });
+        // console.log('retrieve_threejs_objects, all_objects: ', all_objects);
+        for (let i = 0; i < all_objects.length; i++) {
 
-        for (let i = 0; i < object_list.length; i++) {
-
-            const current_object = object_list[i];
+            const current_object = all_objects[i];
 
             if (lod == "infer") {
-
                 if (current_object.item.type == "Building") {
                     lod = "-lod_2";
                 } else if (current_object.item.type == "BuildingRoom") {
                     lod = "-lod_0";
                 }
-
             }
 
             const threejs_object_name = current_object.item.attributes["key"].concat(lod);
@@ -80,7 +106,7 @@ export class Searcher {
             threejs_objects.push(scene.getObjectByName(threejs_object_name));
 
         }
-
+        // console.log('all objects: ', threejs_objects);
         return threejs_objects;
     }
 
@@ -88,7 +114,7 @@ export class Searcher {
     _search_pattern(pattern, return_count) {
 
         const all_results = this.attribute_searcher.search(pattern);
-
+        if (all_results.length === 0) return [];
         const sliced_results = all_results.slice(0, return_count);
 
         return sliced_results;
@@ -97,10 +123,10 @@ export class Searcher {
 
 
     search_and_zoom(pattern) {
-
         const result = this._search_pattern(pattern, 1);
+        console.log('pattern: ', pattern);
 
-        const threejs_object = this._retrieve_threejs_objects(result, this.scene)[0];
+        const threejs_object = this._retrieve_threejs_objects(result, this.scene);
 
         this.picker.pickMesh(threejs_object);
     }
@@ -109,9 +135,54 @@ export class Searcher {
     search_n_best_matches(pattern, n) {
 
         const results = this._search_pattern(pattern, n);
-
-        return results;
+        const results_obj = [];
+        for (var i = 0; i < results.length; i++) {
+            const r = results[i];
+            const attr = r.item.attributes;
+            if (!attr.display_name) {
+                attr.display_name = this.results_to_name(results[i]);
+            }
+            results_obj.push(results[i]);
+        };
+        return results_obj;
 
     }
 
+    results_to_name(obj) {
+        const matchItem = obj.item;
+        const attr = matchItem.attributes;
+        let displayName = "";
+        if (obj.matches) {
+            let nicknameMatch = obj.matches.find(m => m.key === "attributes.Name (EN)");
+            if (nicknameMatch) displayName = nicknameMatch.value;
+        }
+        if (!displayName) {
+            if (attr["Name"]) displayName = attr["Name"];
+            else if (attr["Name (EN)"] && attr["Name (EN)"].trim() !== "")
+                displayName = attr["Name (EN)"];
+            else if (attr["Nicknames"] && attr["Nicknames"].length > 0)
+                displayName = attr["Nicknames"][0];
+            else displayName = "No name found";
+        }
+
+        if (matchItem.type === "BuildingRoom" || matchItem.type === "BuildingUnit") {
+            let parent = this.raw_json["CityObjects"][matchItem.parents[0]];
+
+            // Traverse upward until we find the Building
+            while (parent.type !== "Building") {
+                parent = this.raw_json["CityObjects"][parent.parents[0]];
+            }
+
+            if (parent && parent.attributes) {
+                const buildingName =
+                    parent.attributes["Name (EN)"] ||
+                    parent.attributes["Name (NL)"] ||
+                    parent.attributes["Name"] ||
+                    "Unknown Building";
+
+                displayName += ` (${buildingName})`;
+            }
+        }
+        return displayName;
+    }
 }

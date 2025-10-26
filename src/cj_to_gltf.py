@@ -21,28 +21,28 @@ class Cityjson2Gltf(CityjsonLoader):
         scene = trimesh.Scene()
 
         # First insert all the objects without hierarchy
-        for obj_id, obj in tqdm(objects.items(), desc="Inserting the objects"):
+        for obj_key, obj in tqdm(objects.items(), desc="Inserting the objects"):
             meshes_lods = cj_object_to_mesh(
                 obj_dict=obj,
                 vertices=self.vertices,
             )
             # Insert an empty node so children can still to it
-            scene.graph.update(frame_to=obj_id, frame_from=None, matrix=np.eye(4))
+            scene.graph.update(frame_to=obj_key, frame_from=None, matrix=np.eye(4))
             if meshes_lods is not None:
                 for lod, mesh in meshes_lods.items():
                     scene.add_geometry(
                         mesh,
-                        node_name=obj_id + "-lod_" + lod,
-                        parent_node_name=obj_id,
+                        node_name=obj_key + "-lod_" + lod,
+                        parent_node_name=obj_key,
                     )
 
         # Then set up the structure
-        for obj_id, obj in tqdm(objects.items(), desc="Setting up the structure"):
+        for obj_key, obj in tqdm(objects.items(), desc="Setting up the structure"):
             parent = obj.get("parent", None)
             if parent is not None:
                 # Attach child node to its parent in the scene graph
                 scene.graph.update(
-                    frame_to=obj_id,
+                    frame_to=obj_key,
                     frame_from=parent,
                     matrix=np.eye(4),
                 )
@@ -50,7 +50,7 @@ class Cityjson2Gltf(CityjsonLoader):
             for child_id in obj.get("children", []):
                 scene.graph.update(
                     frame_to=child_id,
-                    frame_from=obj_id,
+                    frame_from=obj_key,
                     matrix=np.eye(4),
                 )
 

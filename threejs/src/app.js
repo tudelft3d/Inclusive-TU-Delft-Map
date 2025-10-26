@@ -178,7 +178,8 @@ export class Map {
         this.layerManager = new LayerManager(
             this.scene,
             this.iconsSceneManager,
-            this.svgLoader
+            this.svgLoader,
+            this.cameraManager,
         );
     }
 
@@ -188,7 +189,8 @@ export class Map {
             this.scene,
             this.buildings,
             this.outlineManager,
-            this.layerManager
+            this.layerManager,
+            this.picker
         );
     }
 
@@ -247,7 +249,7 @@ export class Map {
                 clicked_element.nodeName &&
                 clicked_element.nodeName == "CANVAS"
             ) {
-                this.picker.pickPosition(pos);
+                this.picker.pickScreenPosition(pos);
             }
         });
 
@@ -270,7 +272,7 @@ export class Map {
                 clicked_element.nodeName &&
                 clicked_element.nodeName == "CANVAS"
             ) {
-                this.picker.pickPosition(pos);
+                this.picker.pickScreenPosition(pos);
             }
         });
 

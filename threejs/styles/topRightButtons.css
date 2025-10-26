@@ -13,6 +13,24 @@
     transition: background 0.2s ease, transform 0.1s ease;
 }
 
+/* Force consistent sizing for svg/img inside the buttons */
+#basemap-btn img,
+#basemap-btn svg {
+  height: 25px;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+  line-height: 0;
+}
+
+#layers-btn img,
+#layers-btn svg {
+  height: 30px;
+  max-width: 120%;
+  display: block;
+  object-fit: contain;
+  line-height: 0;
+}
 
 #top-right-sidebar-controls {
   position: fixed;
@@ -24,14 +42,12 @@
   z-index: 30;
 }
 
-/* Keep the container positioning for each control so dropdowns can be absolute inside them */
 #basemap-container,
 #layers-container {
   position: relative;
   z-index: 31;
 }
 
-/* Drop-downs open to the left of the button and are vertically centered with the button */
 #basemap-dropdown {
   display: none;
   position: absolute;
@@ -55,28 +71,52 @@
   transform: translateY(-1px);
 }
 
-#layers-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;               /* center vertically relative to the button */
-  right: 85%;            /* place left of the control */
-  transform: translateY(-19%);
-  margin-right: 12px;     /* gap between button and dropdown */
-  background: #f1f1f1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  text-align: left;
-  padding: 8px 0px;
-  border-radius: 5px;
-  min-width: 200px;
-  max-height: 300px;
-  z-index: 999;
-  box-sizing: border-box;
-  overflow-y: auto;
+.satellite-basemap #basemap-btn,
+.satellite-basemap #layers-btn {
+  background: #f3f3f3;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
+/* Make the icons (external SVGs used via <img>) appear black by inverting them.
+   Also support inline SVGs by ensuring they use currentColor / color. */
+.satellite-basemap #basemap-btn img,
+.satellite-basemap #basemap-btn svg,
+.satellite-basemap #layers-btn img,
+.satellite-basemap #layers-btn svg {
+  filter: invert(1);
+  color: #000;
+}
+
+/* subtle hover for the light theme */
+.satellite-basemap #basemap-btn:hover,
+.satellite-basemap #layers-btn:hover {
+  background: #b0b0b0;
+}
+
+#layers-dropdown {
+  display: none;
+  position: fixed;
+  top: var(--layers-top, calc(var(--height, 64px) + 14px)); 
+  right: 69px;               /* distance from right edge */
+  margin-right: 0;
+  background: #f1f1f1;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  text-align: left;
+  padding: 10px 0;
+  border-radius: 6px;
+  min-width: 320px;         
+  max-width: 360px;         
+  max-height: 55vh;         
+  overflow-y: auto;
+  z-index: 10000;
+  box-sizing: border-box;
+  transform: none;          
+}
+
+
 /* Link styles inside the dropdowns */
-#basemap-dropdown a,
-#layers-dropdown a {
+#basemap-dropdown a{
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -86,9 +126,13 @@
   border-radius: 2px;
 }
 
-#basemap-dropdown a:hover,
-#layers-dropdown a:hover {
+#basemap-dropdown a:hover {
   background: #027eab0e;
+}
+
+.satellite-basemap #basemap-dropdown a:hover,
+.satellite-basemap #layers-dropdown a:hover {
+  background: #a8a8a82f;
 }
 
 /* Mobile adjustments for narrow screens */
@@ -134,58 +178,236 @@
     transform: translateY(-10%);
   }
 
+  /* Mobile version of layers dropdown: bottom sheet */
   #layers-dropdown {
-    font-size: 14px;
-    min-width: 170px;
-    padding: 6px 0px;
-    top: 50%;
-    right: 100%;
-    transform: translateY(-33%);
+    display: block;                
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    margin: 0;
+    background: #f1f1f1;
+    border-radius: 0px 0px 0 0;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 68vh;
+    overflow-y: auto;
+    padding: 10px 8px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.14);
+    transform: translateY(100%); /* start hidden offscreen */
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+    opacity: 0;
+    z-index: 1500;
+    box-sizing: border-box;
+  }
+
+  #layers-dropdown.mobile-open {
+    display: block;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  #layers-dropdown .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: #d0d0d0;
+    border-radius: 3px;
+    margin: 6px auto 10px;
+  }
+
+  /* page overlay (dark background) */
+  #layers-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    z-index: 1450;
+  }
+
+  #layers-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* hide other UI while layers sheet active on mobile */
+  body.layers-active-mobile #bottom-right-sidebar-controls,
+  body.layers-active-mobile #bottom-left-sidebar-controls {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+  }
+
+  body.layers-active-mobile #top-right-sidebar-controls {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.layers-active-mobile #layers-btn {
+    z-index: 1510;
+    pointer-events: auto;
+  }
+
+  #layers-dropdown .layer-item input[type="checkbox"],
+  #layers-dropdown .layer-group-controls input.layer-group-checkbox,
+  #layers-dropdown .layer-group-title input.layer-group-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+
+  #layers-dropdown .layer-group-toggle-icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+    object-fit: contain;
+  }
+
+  #layers-dropdown .layer-group-toggle {
+    width: 28px;
+    height: 28px;
+    padding: 2px;
   }
 }
 
-.layer-button-background {
-  padding: 12px 14px;
-  background: #f3f3f3;
-  border-top: 1px solid #ddd;
+/* -------------------------------------------------------------------------------------------- */
+/* Grouped layer dropdown UI */
+.layer-group {
+  padding: 3px 10px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 3px; /* optional small gap to ensure visible separation */
 }
 
-.layer-button {
-  width: 100%;
-  padding: 10px 16px;
-  background: white;
-  color: #444;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+.layer-group-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 2px;
 }
 
-.layer-button:hover {
-  background: #f3f3f3;
+.layer-group-title {
+  font-family: "Open Sans", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  font-weight: 500;
+  color: #000000;
+  font-size: 14px;
+}
+
+.layer-group-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-group-toggle {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  box-shadow: none;
+  border: none;
+  transition: transform 0.12s ease;
+  filter: brightness(0) saturate(100%) invert(31%) sepia(93%) saturate(1240%) hue-rotate(168deg) brightness(89%) contrast(101%);
+}
+
+.layer-group-toggle:hover {
   transform: translateY(-1px);
 }
 
-.layer-button:active {
-  transform: translateY(0);
+/* container for the checklist items (collapsible) */
+.layer-group-items {
+  margin-top: 2px; 
+  padding: 6px 4px;
+  display: none; /* toggled via JS */
+  gap: 9px;
+  flex-direction: column;
 }
 
-.layer-button-row {
+/* each facility row */
+.layer-item {
   display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
-  gap: 10px;
-  font-size: 13px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px; 
+  border-radius: 6px;
+  transition: background 0.12s ease;
 }
 
-.layer-button-row:last-child {
-  border-bottom: none;
+.layer-item:hover {
+  background: #a8a8a82f;
+
+}
+
+/* icon next to label */
+.layer-item img.icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: inline-block;
+  filter: none;
+  margin-left: 6px;
+}
+
+/* checkbox styling baseline */
+.layer-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #027dab;
+}
+
+/* group checkbox (small) */
+.layer-group-controls input.layer-group-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0 6px 0 0;
+  accent-color: #027dab;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.layer-item span {
+  flex: 1;
+  display: inline-block;
+}
+
+.layer-item img.icon {
+  margin-left: 6px;
+}
+
+.layer-select-all {
+  background: transparent;
+  border: none;
+  color: #027dab;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.layer-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+}
+
+.layer-group-title input.layer-group-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: #027dab;
+  cursor: pointer;
+}
+
+.layer-group-title span {
+  flex: 1;
+  display: inline-block;
 }

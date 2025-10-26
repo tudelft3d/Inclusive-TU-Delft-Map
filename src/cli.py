@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Annotated, List, Mapping, Optional
 
 import typer
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from bag_to_cj import Bag2Cityjson
 from cj_attributes import (
@@ -24,12 +25,11 @@ from cj_objects import (
     CityJSONSpace,
 )
 from cj_to_gltf import Cityjson2Gltf
+from codelists import format_codelist
+from gj_to_cj import load_geojson_icons
 from gltf_to_cj import full_building_from_gltf, load_units_from_csv
 
 app = typer.Typer()
-from tqdm.contrib.logging import logging_redirect_tqdm
-
-from gj_to_cj import load_geojson_icons
 
 
 @app.command(
@@ -210,6 +210,14 @@ def load_custom_building(
             exists=True,
         ),
     ],
+    units_gltf_path: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--units_gltf",
+            help="Paths to building units in glTF format.",
+            exists=True,
+        ),
+    ],
     overwrite: Annotated[
         bool,
         typer.Option(
@@ -246,19 +254,19 @@ def load_custom_building(
         ] = []
         if buidlings_path is not None:
             all_attributes.append(
-                BdgAttrReader(csv_path=buidlings_path).get_id_to_attr()
+                BdgAttrReader(csv_path=buidlings_path).get_key_to_attr()
             )
         if parts_path is not None:
             all_attributes.append(
-                BdgPartAttrReader(csv_path=parts_path).get_id_to_attr()
+                BdgPartAttrReader(csv_path=parts_path).get_key_to_attr()
             )
         if storeys_path is not None:
             all_attributes.append(
-                BdgStoreyAttrReader(csv_path=storeys_path).get_id_to_attr()
+                BdgStoreyAttrReader(csv_path=storeys_path).get_key_to_attr()
             )
         if rooms_path is not None:
             all_attributes.append(
-                BdgRoomAttrReader(csv_path=rooms_path).get_id_to_attr()
+                BdgRoomAttrReader(csv_path=rooms_path).get_key_to_attr()
             )
 
         logging.info("Add the attributes to the spaces...")
@@ -292,6 +300,7 @@ def load_custom_building(
             load_units_from_csv(
                 cj_file=cj_file,
                 csv_path=units_path,
+                gltf_path=units_gltf_path,
                 # code_column=units_code_column,
                 # spaces_column=units_spaces_column,
             )
@@ -322,8 +331,9 @@ def load_gj_icons(
             exists=True,
         ),
     ],
+    output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
 ):
-    load_geojson_icons(gj_path=input_gj_path)
+    load_geojson_icons(gj_path=input_gj_path, output_cj_path=output_cj_path)
 
 
 @app.command(
@@ -335,10 +345,10 @@ def subset_cj(
         Path, typer.Argument(help="Input CityJSON file.", exists=True)
     ],
     output_cj_path: Annotated[Path, typer.Argument(help="Output CityJSON path.")],
-    subset: Annotated[
-        List[str],
+    subset_txt_path: Annotated[
+        Path,
         typer.Argument(
-            help="Object ids to keep, separated with spaces.",
+            help="Object ids to keep, separated with new lines.",
         ),
     ],
 ):
@@ -348,10 +358,43 @@ def subset_cj(
         raise ValueError("The output path should end with '.json'")
 
     command = ["cjio", str(input_cj_path.absolute()), "subset"]
-    for obj_id in subset:
-        command.extend(["--id", obj_id])
+    with open(subset_txt_path) as f:
+        for obj_key_line in f.readlines():
+            obj_key = obj_key_line.strip()
+            command.extend(["--id", obj_key])
     command.extend(["save", str(output_cj_path.absolute())])
     subprocess.run(command)
+
+
+@app.command(
+    "format_codelist",
+    help="Format the codelist for the units from a CSV input into a JSON file.",
+)
+def format_codelist_cli(
+    input_csv_path: Annotated[
+        Path, typer.Argument(help="Input CSV file.", exists=True)
+    ],
+    output_json_path: Annotated[Path, typer.Argument(help="Output JSON path.")],
+    overwrite: Annotated[
+        bool,
+        typer.Option(
+            "-o",
+            "--overwrite",
+            help="Overwrite the output file if the file already exists.",
+        ),
+    ] = False,
+):
+    if not input_csv_path.suffix == ".csv":
+        raise ValueError("The input path should end with '.csv'")
+    if not output_json_path.suffix == ".json":
+        raise ValueError("The output path should end with '.json'")
+
+    if output_json_path.exists() and not overwrite:
+        raise ValueError(
+            f"There is already a file at {output_json_path.absolute()}. Set `overwrite` to True to overwrite it."
+        )
+
+    format_codelist(input_csv_path=input_csv_path, output_json_path=output_json_path)
 
 
 def setup_logging(verbose: int):
