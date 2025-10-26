@@ -519,6 +519,7 @@ export class LayerManager {
 	_populate_layer_buttons_alt() {
 
 		var layers_dropdown = document.getElementById("layers-dropdown");
+
 		// layers_dropdown.innerHTML = "";
 
 		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
