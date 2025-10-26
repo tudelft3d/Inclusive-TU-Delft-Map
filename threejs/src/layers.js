@@ -591,146 +591,174 @@ export class LayerManager {
 		}
 
 	}
-
+//ALENA-start
 	_populate_layer_buttons_alt() {
 
-		var layers_dropdown = document.getElementById("layers-dropdown");
-		// layers_dropdown.innerHTML = "";
+        var layers_dropdown = document.getElementById("layers-dropdown");
+        // clear current contents but keep dropdown container
+        layers_dropdown.innerHTML = "";
 
-		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
+        // Helper to build icon img element
+        const makeIconImg = (path) => {
+            const img = document.createElement("img");
+            img.className = "icon";
+            if (path) {
+                img.src = path;
+            } else {
+                img.src = "";
+            }
+            return img;
+        };
 
-			let group_div = document.createElement("div");
-			layers_dropdown.appendChild(group_div);
+        for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
 
-			let group_span_div = document.createElement("div");
-			group_span_div.className = "layer-button-row";
-			group_div.appendChild(group_span_div);
+            // container for group
+            let group_div = document.createElement("div");
+            group_div.className = "layer-group";
+            layers_dropdown.appendChild(group_div);
 
+            // header row: title + small controls
+            let header = document.createElement("div");
+            header.className = "layer-group-header";
+            group_div.appendChild(header);
 
-			let open_span = document.createElement("span");
-			let activate_span = document.createElement("span");
+            // create title container 
+            let title = document.createElement("div");
+            title.className = "layer-group-title";
+            // create and append group checkbox inside the title
+            const sanitizeId = (s) => s.replace(/[^\w\-]/g, "_");
+            let groupCheckbox = document.createElement("input");
+            groupCheckbox.type = "checkbox";
+            groupCheckbox.className = "layer-group-checkbox";
+            groupCheckbox.id = `group_chk_${sanitizeId(group_name)}`;
+            title.appendChild(groupCheckbox);
 
-			group_span_div.appendChild(open_span);
-			group_span_div.appendChild(activate_span);
+            // text node for the group name
+            let titleText = document.createElement("span");
+            titleText.textContent = group_name;
+            title.appendChild(titleText);
 
+            header.appendChild(title);
 
-			let open_button = document.createElement("button");
-			open_button.append(document.createTextNode("+"));
-			open_button.className = "layer-button";
+            // controls 
+            let controls = document.createElement("div");
+            controls.className = "layer-group-controls";
+            header.appendChild(controls);
 
-			
+            // caret / toggle button
+            let toggleBtn = document.createElement("button");
+            toggleBtn.className = "layer-group-toggle";
+            toggleBtn.type = "button";
+            const downIcon = new URL("../assets/threejs/graphics/icons/ui-buttons/carret-down.svg", import.meta.url).href;
+            const upIcon = new URL("../assets/threejs/graphics/icons/ui-buttons/carret-up.svg", import.meta.url).href;
+            const toggleImg = document.createElement("img");
+            toggleImg.className = "layer-group-toggle-icon";
+            toggleImg.src = downIcon;
+            toggleImg.alt = "expand/collapse";
+            toggleBtn.appendChild(toggleImg);
+             controls.appendChild(toggleBtn);
 
-			open_span.appendChild(open_button);
+            // items container (collapsible)
+            let itemsContainer = document.createElement("div");
+            itemsContainer.className = "layer-group-items";
+            group_div.appendChild(itemsContainer);
 
+            // convenience array of codes for this group
+            const codes = Object.values(group_layers);
 
-			let activate_button = document.createElement("button");
-			activate_button.append(document.createTextNode(group_name));
-			activate_button.className = "layer-button";
+            // helper to sync group checkbox state (checked / indeterminate)
+            const updateGroupCheckbox = () => {
+                const activeCount = codes.filter(c => this.active_layers.includes(c)).length;
+                groupCheckbox.checked = activeCount === codes.length && codes.length > 0;
+                groupCheckbox.indeterminate = activeCount > 0 && activeCount < codes.length;
+            };
 
-			activate_span.appendChild(activate_button);
+            // add each layer / facility as a checklist row
+            for (const [layer_name, layer_code] of Object.entries(group_layers)) {
 
+                let itemRow = document.createElement("label");
+                itemRow.className = "layer-item";
+                itemRow.setAttribute("data-code", layer_code);
 
-			let layer_div = document.createElement("div");
-			layer_div.className = "layer-button-background";
-			layer_div.id = group_name + "_div_id"
+                // checkbox
+                let checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = layer_code;
+                checkbox.id = `layer_chk_${layer_code}`;
+                checkbox.checked = this.active_layers.includes(layer_code);
 
-			group_div.appendChild(layer_div);
+                // text 
+                let spanText = document.createElement("span");
+                spanText.textContent = layer_name;
+                spanText.style.flex = "1";
 
-			for (const [layer_name, layer_code] of Object.entries(group_layers)) {
+                // icon 
+                let iconImg = makeIconImg(
+                    (this.layer_definition[layer_code] && this.layer_definition[layer_code]["path from assets"]) || ""
+                );
 
-				let current_layer_button = document.createElement("button");
-				current_layer_button.append(document.createTextNode(layer_name));
-				current_layer_button.className = "layer-button";
+                // wire change event -> update active layers and group checkbox
+                checkbox.addEventListener("change", (ev) => {
+                    this._update_active_layers(layer_code);
+                    // make sure UI matches resulting active_layers
+                    ev.target.checked = this.active_layers.includes(layer_code);
+                    updateGroupCheckbox();
+                });
 
-				current_layer_button.addEventListener('click', () => {
-					this._update_active_layers(layer_code);
-		        });
+                // clicking the label toggles checkbox 
+                itemRow.appendChild(checkbox);
+                itemRow.appendChild(spanText);
+                itemRow.appendChild(iconImg);
 
-		        layer_div.appendChild(current_layer_button);
+                itemsContainer.appendChild(itemRow);
+            }
 
-			}
+            // initialize group checkbox state
+            updateGroupCheckbox();
 
-			open_button.addEventListener('click', (event) => {
+            // Toggle open/close group when clicking header (but ignore clicks on controls area)
+            const toggleGroup = () => {
+                const isOpen = itemsContainer.style.display === "flex";
+                itemsContainer.style.display = isOpen ? "none" : "flex";
+                // swap image
+                toggleImg.src = isOpen ? downIcon : upIcon;
+             };
 
-				let current_group_div = document.getElementById(group_name + "_div_id");
+            header.addEventListener("click", (ev) => {
+                if (controls.contains(ev.target)) return;
+                toggleGroup();
+            });
 
-				current_group_div.style.display = (current_group_div.style.display === '') ? 'none' : '';
-		    });
+            toggleBtn.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                toggleGroup();
+            });
 
-		    activate_button.addEventListener('click', (event) => {
+            // group checkbox behavior: check/uncheck all members
+            groupCheckbox.addEventListener("change", (ev) => {
+                ev.stopPropagation();
+                const shouldActivate = ev.target.checked;
+                codes.forEach(c => {
+                    const alreadyActive = this.active_layers.includes(c);
+                    if (shouldActivate && !alreadyActive) {
+                        this._update_active_layers(c);
+                    } else if (!shouldActivate && alreadyActive) {
+                        this._update_active_layers(c);
+                    }
+                });
+                // refresh child checkboxes to match active_layers
+                itemsContainer.querySelectorAll("input[type=checkbox]").forEach(ch => {
+                    ch.checked = this.active_layers.includes(ch.value);
+                });
+                // no indeterminate after explicit user action
+                groupCheckbox.indeterminate = false;
+                updateGroupCheckbox();
+            });
 
-		    	for (const [layer_name, layer_code] of Object.entries(group_layers)) {
+        }
 
-		    		this._update_active_layers(layer_code);
-
-				}
-
-		    });
-
-
-
-			// let text_span = document.createElement("span");
-			// let icon_span = document.createElement("span");
-
-			// var ul = document.createElement("ul");
-			// ul.className = "layer-button-background";
-
-			// let header_text = document.createTextNode(group_name);
-			// text_span.appendChild(header_text);
-
-			// let img = document.createElement("img");
-			// img.setAttribute('width', '20');
-			// img.setAttribute('height', '20');
-			// img.setAttribute('align', 'top');
-
-			// img.src = "../assets/threejs/graphics/icons/ui-buttons/plus_white.svg";
-			// img.setAttribute('fill', 'black');
-
-			// icon_span.appendChild(img);
-
-			// div.appendChild(icon_span);
-			// div.appendChild(text_span);
-			// div.appendChild(ul);
-
-			// for (const [layer_name, layer_code] of Object.entries(group_layers)) {
-
-			// 	var li = document.createElement("li");
-
-			// 	var a_li = document.createElement("a");
-
-			// 	let button_text = document.createTextNode(layer_name);
-
-			// 	a_li.appendChild(button_text);
-
-			// 	li.appendChild(a_li);
-
-			// 	ul.appendChild(li);
-
-			// 	a_li.addEventListener('click', (event) => {
-
-			// 		console.log(layer_name);
-
-			// 	});
-
-			// }
-
-			// text_span.addEventListener('click', (event) => {
-
-			// 	// console.log(event.srcElement.parentNode.children);
-
-			// 	let current_ul = event.srcElement.parentNode.getElementsByTagName("ul")[0];
-
-			// 	// let current_ul = event.srcElement.nextElementSibling;
-
-			// 	current_ul.style.display = (current_ul.style.display === '') ? 'none' : '';
-
-			// });
-
-			// layers_dropdown.appendChild(div);
-
-		}
-
-	}
+    }
+//ALENA-end
 
 	_populate_layer_buttons() {
 
@@ -873,3 +901,116 @@ export class LayerManager {
 // 	map.picker.highlight(object_names);
 
 // }
+
+
+// Toggle layers dropdown as a mobile bottom sheet - Alena
+(function () {
+  const layersBtn = document.getElementById('layers-btn');
+  const layersDropdown = document.getElementById('layers-dropdown');
+  let overlay = document.getElementById('layers-overlay');
+
+  // create overlay if missing
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'layers-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  // initial styles for overlay so it doesn't intercept taps until it's enabled
+  overlay.style.pointerEvents = 'none';
+  overlay.style.position = overlay.style.position || 'fixed';
+  overlay.style.inset = overlay.style.inset || '0';
+  // z-index: a default here if missing
+  if (!overlay.style.zIndex) overlay.style.zIndex = '999';
+
+  let mobileOpen = false;
+
+  function openMobileLayers() {
+    // set state first
+    mobileOpen = true;
+
+    // enable overlay pointer events *after* state is set so it doesn't catch the same tap
+    overlay.classList.add('visible');
+    overlay.style.pointerEvents = 'auto';
+
+    layersDropdown.classList.add('mobile-open');
+    document.body.classList.add('layers-active-mobile');
+    // prevent background scrolling while open
+    document.body.style.overflow = 'hidden';
+
+    // mark attributes for accessibility 
+    layersBtn?.setAttribute('aria-expanded', 'true');
+    layersDropdown?.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeMobileLayers() {
+    // set state early so handlers see the correct state
+    mobileOpen = false;
+
+    layersDropdown.classList.remove('mobile-open');
+    overlay.classList.remove('visible');
+
+    // disable pointer events so overlay cannot intercept accidental taps
+    overlay.style.pointerEvents = 'none';
+
+    document.body.classList.remove('layers-active-mobile');
+    document.body.style.overflow = '';
+
+    layersBtn?.setAttribute('aria-expanded', 'false');
+    layersDropdown?.setAttribute('aria-hidden', 'true');
+  }
+
+  function toggleMobileLayers() {
+    if (mobileOpen) closeMobileLayers();
+    else openMobileLayers();
+  }
+
+  // check for small screens
+  function isSmallScreen() {
+    return window.matchMedia('(max-width: 620px)').matches;
+  }
+
+  // handle clicks and touch starts on the button 
+  function onButtonActivate(e) {
+    if (!isSmallScreen()) return; // only use mobile behavior on small screens
+    e.stopPropagation();
+    e.preventDefault();
+
+    // toggle using the explicit boolean state
+    toggleMobileLayers();
+  }
+
+  // listen for both click and touchstart to avoid mobile tap delays / race conditions
+  layersBtn?.addEventListener('click', onButtonActivate, { passive: false });
+  layersBtn?.addEventListener('touchstart', onButtonActivate, { passive: false });
+
+  // overlay should only close when the overlay background itself is clicked/touched
+  function onOverlayActivate(e) {
+    // only handle direct clicks/touches on the overlay background 
+    if (e.currentTarget !== e.target) return;
+    // close panel
+    closeMobileLayers();
+  }
+
+  overlay.addEventListener('click', onOverlayActivate);
+  overlay.addEventListener('touchstart', onOverlayActivate, { passive: true });
+
+  // close when pressing Escape
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') {
+      closeMobileLayers();
+    }
+  });
+
+  // Prevent clicks/touches inside dropdown from bubbling out and triggering overlay/document handlers
+  layersDropdown?.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+  });
+  layersDropdown?.addEventListener('touchstart', (ev) => {
+    ev.stopPropagation();
+  }, { passive: true });
+
+  mobileOpen = layersDropdown?.classList.contains('mobile-open') || false;
+  // ensure overlay pointer-events matches the initial state
+  overlay.style.pointerEvents = mobileOpen ? 'auto' : 'none';
+})();
