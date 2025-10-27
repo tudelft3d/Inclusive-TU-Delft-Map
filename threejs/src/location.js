@@ -44,7 +44,7 @@ export class LocationManager {
     }
 
     /* Get user location and zoom to it with continuous tracking */
-    inititialise(zoomIn, onComplete) {
+    initialise(zoomIn, onComplete) {
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser");
             return;
@@ -63,18 +63,24 @@ export class LocationManager {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 this.accuracy = position.coords.accuracy; // in meters
-                // this.accuracy = 100;
 
                 // Convert GPS to local coordinates
                 const local = this.latLonToLocal(lat, lon);
                 this.position = new Vector3(local.x, -0.9, local.z);
                 // this.position = new Vector3(85193, -0.9, -446857);
 
+                if (!this._inBoundaries()) {
+                    if (!this.initialised) {
+                        alert("Position not shown because it is outside of the boundaries of the map.");
+                    }
+                    this.stopLocationTracking(); // Stop immediately
+                    return; // Don't create or update anything
+                }
+
                 if (!this.initialised) {
                     this.createMarker();
                 }
 
-                // Update or create marker at the user's location
                 this.updateMarker();
 
                 if (!this.initialised) {

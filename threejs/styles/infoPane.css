@@ -1,36 +1,25 @@
-#info-pane {
-  position: absolute;
-  top: 15px;
-  left: 10px;
-  min-width: 180px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  border-radius: 6px;
-  pointer-events: none;
-  font-size: 14px;
-  line-height: 1.4;
-  opacity: 0;
-  transition: opacity .2s ease;
-}
-
 /* Info Pane Base Styles */
 #info-pane {
   position: fixed;
-  top: 140px;
-  left: 20px;
+  top: calc(var(--height, 64px) + 14px);
+  left: 14px;
   background: white;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  
   max-width: 425px;
   min-width: 425px;
+  padding: 8px 12px;
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 10000;
   font-family: Sans-Serif;
+  font-size: 14px;
+  line-height: 1.4;
   overflow: hidden;
   pointer-events: auto;
 }
+
 
 /* Header */
 .info-pane-header {
