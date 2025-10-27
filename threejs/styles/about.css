@@ -1,6 +1,6 @@
 :root{
-  --bg: #e9e9e9;
-  --card-bg: #f1f1f1;
+  --page-bg: #f1f1f1; 
+  --card-bg: #fdfdfdcf;
   --muted: #4a4e55;
   --border: #d7d7d7;
   --accent: #00a6d6;
@@ -11,6 +11,12 @@
   --font-sans: 'Open Sans', system-ui, -apple-system, Arial;
 }
 
+html,body { height:100%; }
+body{
+  margin:0;
+  font-family: var(--font-sans);
+  background: var(--page-bg) !important;
+}
 .container{
   max-width: var(--max-width);
   margin:0 auto;

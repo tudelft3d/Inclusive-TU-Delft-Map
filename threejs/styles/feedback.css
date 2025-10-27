@@ -1,5 +1,5 @@
 :root{
-  --bg: #e9e9e9;
+  --feedback-page-bg: #f1f1f1;
   /* --card-bg: #fafafa94; */
   --card-bg: #f1f1f1;
   --muted: #4a4e55;
@@ -18,7 +18,8 @@ html,body { height:100%; }
 body{
   margin:0;
   font-family: var(--font-sans);
-  background: var(--bg);
+  /* ensure variable is used and provide a fallback; make it win over header.css */
+  background: var(--feedback-page-bg, #f1f1f1) !important;
   color: #000000;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
@@ -26,12 +27,13 @@ body{
 
 /* Main / card */
 main{ 
-  padding-top: 30px;
-  padding: 35px 20px 96px; 
+  padding-top: 0px;
+  padding: 60px 20px 96px; 
   display:flex; 
   justify-content:center; 
 }
 .feedback-card{
+  padding: 60px 0 0 0;
   width:100%;
   max-width: var(--card-w);
   margin: 0 auto;
@@ -47,7 +49,7 @@ main{
 /* Title & lead */
 #feedback_title{
   margin: 0;
-  font-size: 24px;
+  font-size: 25px;
   text-align:center;
   font-weight:600;
   letter-spacing: -0.2px;
@@ -183,6 +185,9 @@ select.field-input{
 
 /* Small screens - tried mobile version */
 @media (max-width:620px){
+  .feedback-card{ 
+    width:100%; 
+    padding:10px 0 0 0; }
   .card-inner{ padding:40px; }
   main{ 
     padding-left: 12px;
