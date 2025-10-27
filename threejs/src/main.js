@@ -60,37 +60,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2D/3D view toggle button
     const viewToggleBtn = document.getElementById('view-toggle-btn');
-
-    function updateViewToggleUI() {
+    function updateViewToggleUI(overrideIsOrtho) {
         if (!viewToggleBtn) return;
-        const isOrtho = map.cameraManager.usesOrthographicCamera();
-        // when in 3D show "2D"
+        const cm = map.cameraManager;
+
+        let isOrtho;
+        if (typeof overrideIsOrtho === 'boolean') {
+            isOrtho = overrideIsOrtho;
+        } else {
+            isOrtho = !!(cm && typeof cm.usesOrthographicCamera === 'function' && cm.usesOrthographicCamera());
+        }
+
         const label = isOrtho ? '3D' : '2D';
         viewToggleBtn.textContent = label;
         viewToggleBtn.setAttribute('aria-pressed', (!isOrtho).toString());
         viewToggleBtn.title = `${label} view`;
-        // change appearance when the button shows "2D"
         viewToggleBtn.classList.toggle('shows-2d', label === '2D');
+    }
+
+    // New: toggle helper updates the UI, triggers the camera toggle,
+    // and re-syncs after the animation completes (fallback timeout).
+    function toggleViewAndUpdateButton(e) {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        const cm = map.cameraManager;
+        const currentlyOrtho = !!(cm && typeof cm.usesOrthographicCamera === 'function' && cm.usesOrthographicCamera());
+        const predictedIsOrtho = !currentlyOrtho;
+
+        // update UI so button doesn't lag
+        updateViewToggleUI(predictedIsOrtho);
+
+        // trigger the camera transition
+        if (cm && typeof cm.toggleOrthographic === 'function') {
+            cm.toggleOrthographic();
+        } else {
+            console.warn('cameraManager.toggleOrthographic is not available');
+        }
+
+        // ensure final sync after transition (animation in camera.js uses ~1000ms)
+        setTimeout(() => updateViewToggleUI(), 1100);
     }
 
     if (viewToggleBtn) {
         updateViewToggleUI();
 
-        viewToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            map.cameraManager.toggleOrthographic();
-            // update UI after camera change (with slight delay to allow for camera update)
-            setTimeout(updateViewToggleUI, 80);
-        });
-
-        // keep UI in sync with external camera changes
-        map.cameraManager.addEventListenerControls('change', updateViewToggleUI);
-
-        const mq = window.matchMedia('(max-width:620px)');
-        mq.addEventListener?.('change', updateViewToggleUI);
-        window.addEventListener('resize', updateViewToggleUI);
-    }
+        viewToggleBtn.addEventListener('click', toggleViewAndUpdateButton);
+ 
+         // keep UI in sync with external camera changes
+         map.cameraManager.addEventListenerControls('change', () => updateViewToggleUI());
+ 
+         const mq = window.matchMedia('(max-width:620px)');
+         mq.addEventListener?.('change', updateViewToggleUI);
+         window.addEventListener('resize', updateViewToggleUI);
+     }
 
     // Basemap dropdown wiring
     const basemapBtn = document.getElementById('basemap-btn');
