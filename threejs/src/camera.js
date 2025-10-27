@@ -346,7 +346,8 @@ export class CamerasControls {
             }
 
             // Animate the transition
-            this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
+            const duration = this.controls._spherical.phi * 500 + 200;
+            this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, duration, onComplete);
 
             // Where we end up with the orthographic camera
             const newTarget = this.controls.target.clone();

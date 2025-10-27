@@ -14,6 +14,7 @@ from cj_objects import (
     OutdoorUnit,
     OutdoorUnitContainer,
 )
+from csv_utils import csv_get_row_value
 
 
 def load_geojson_icons(gj_path: Path, output_cj_path: Path):
@@ -38,7 +39,7 @@ def load_geojson_icons(gj_path: Path, output_cj_path: Path):
     for feature in gj_data.get("features", []):
         # Extract the code
         attributes = feature["properties"]
-        code_column = "code"
+        code_column = "Type Code [str]"
         if code_column not in attributes:
             raise RuntimeError(
                 "At least one feature is missing the attribute 'code_column'"
@@ -65,11 +66,17 @@ def load_geojson_icons(gj_path: Path, output_cj_path: Path):
             icon_coordinates.append(0)
         icon_position = IconPosition.from_list(icon_coordinates)
 
+        attributes = {}
+        for key, value in feature["properties"].items():
+            if key.endswith("]"):
+                col_name, col_value = csv_get_row_value(row={key: value}, column=key)
+                attributes[col_name] = col_value
+
         # Create the outdoor unit
         unit = OutdoorUnit(
             cj_key=unit_id,
             unit_code=unit_code,
-            attributes={},
+            attributes=attributes,
             icon_position=icon_position,
         )
         all_units[unit_code].append(unit)
