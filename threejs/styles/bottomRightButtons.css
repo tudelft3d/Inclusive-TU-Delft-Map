@@ -175,7 +175,7 @@
 
 /* view-toggle specific */
 .satellite-basemap #view-toggle-btn {
-  background: #dddddd;
+  background: #f3f3f3;
   color: #000;
 }
 
@@ -214,7 +214,7 @@
   align-items: center;
   justify-content: center;
   color: var(--brb-btn-color);
-  background: #4694b1;
+  background: var(--brb-btn-bg);
   border: none;
   border-radius: var(--brb-btn-radius);
   cursor: pointer;
@@ -227,7 +227,6 @@
   padding: 0 6px;
 }
 
-/* when the button shows "2D" change color */
 #view-toggle-btn.shows-2d {
   background: var(--brb-btn-bg);
 }
