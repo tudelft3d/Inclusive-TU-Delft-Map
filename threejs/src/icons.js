@@ -67,9 +67,20 @@ export class IconSet {
 
         // Make the actual three.js object
         this.wrapperObject = new CSS2DObject(this.wrapper);
-        this.wrapper.addEventListener("click", (e) => {
+        this.pointerMoved = false;
+        this.wrapper.addEventListener("pointerdown", (e) => {
+            this.pointerMoved = false;
+        });
+        this.wrapper.addEventListener("pointermove", (e) => {
+            this.pointerMoved = true;
+        });
+        this.wrapper.addEventListener("pointerup", (e) => {
+            if (this.pointerMoved) { return }
             onClick(e);
         });
+
+        // this.wrapper.addEventListener("click", (e) => {
+        // });
     }
 
     hasText() {
@@ -210,7 +221,7 @@ export class IconsSceneManager {
     /**
      * Add an icon to the scene with an identifier.
      *
-     * @param {IconSet} icon
+     * @param {IconSet} iconSet
      */
     addIconSet(iconSet) {
         const key = iconSet.key;
@@ -219,6 +230,7 @@ export class IconsSceneManager {
                 `There is already an IconSet with this key ('${key}')`
             );
         }
+        // iconSet.wrapper.
         this.iconSets[key] = iconSet;
         this.scene.add(iconSet.wrapperObject);
     }
