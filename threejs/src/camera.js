@@ -212,6 +212,21 @@ export class CamerasControls {
         return distance;
     }
 
+    /**
+     * Switch using camera int
+     */
+    switchToInt(cameraInt) {
+        if (cameraInt == MAP_CAMERA) {
+            this.switchToMap();
+        } else if (cameraInt == ORBIT_CAMERA) {
+            this.switchToOrbit();
+        } else if (cameraInt == ORTHOGRAPHIC_CAMERA) {
+            this.switchToOrthographic();
+        } else {
+            console.error("This value does not correspond to a camera:", cameraInt);
+        }
+    }
+
     /** 
      * Swith to map view
      */
@@ -305,7 +320,7 @@ export class CamerasControls {
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
 
     /** Switch to orthographic view */
-    switchToOrthographic() {
+    switchToOrthographic(onAnimationComplete = () => { }) {
         console.log("Switching to orthographic");
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
             // Compute the animation for the current camera
@@ -327,10 +342,12 @@ export class CamerasControls {
                 initControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
                 initControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
                 this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
+                onAnimationComplete();
             }
 
             // Animate the transition
-            this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
+            const duration = this.controls._spherical.phi * 500;
+            this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, duration, onComplete);
 
             // Where we end up with the orthographic camera
             const newTarget = this.controls.target.clone();
@@ -369,6 +386,7 @@ export class CamerasControls {
             this.switchToOrthographic();
             this.updateCompassRotation();
         } else {
+            this.switchToMap();
             if (this.previousCameraInt == MAP_CAMERA) { this.switchToMap(); }
             else { this.switchToOrbit(); }
             this.updateCompassRotation();
@@ -476,14 +494,18 @@ export class CamerasControls {
 
         const finalPosition = finalTarget.clone().addScaledVector(initDirection, distance);
 
-        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
+        // Compute the duration of the animation
+        const cameraAnimationDistance = initPosition.distanceTo(finalPosition);
+        const duration = 300 + 30 * Math.sqrt(cameraAnimationDistance);
+
+        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, duration, onComplete);
     }
 
     _zoomToObjectPerspective(object, onComplete = () => { }) {
-        if (!object) {
-            this.switchToMap();
-            return;
-        }
+        // if (!object) {
+        //     this.switchToMap();
+        //     return;
+        // }
 
         this.switchToOrbit();
 
@@ -505,6 +527,10 @@ export class CamerasControls {
         const initTargetToPosition = initPosition.clone().sub(initTarget);
         const finalTarget = newTarget;
         const finalPosition = finalTarget.clone().add(initTargetToPosition);
+        console.log("initTarget", initTarget);
+        console.log("initPosition", initPosition);
+        console.log("finalTarget", finalTarget);
+        console.log("finalPosition", finalPosition);
 
         return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 500, onComplete);
     }
@@ -514,9 +540,20 @@ export class CamerasControls {
             return;
         }
 
-        // Bounding sphere
-        const sphere = new THREE.Sphere();
-        new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        var sphere = new THREE.Sphere();
+        if (Array.isArray(object)) {
+            const group = new THREE.Group();
+            object.forEach((obj) => {
+                group.add(obj.clone());
+            });
+            group.rotateX(-Math.PI / 2);
+            const bbox = new THREE.Box3().setFromObject(group);
+            bbox.getBoundingSphere(sphere);
+            group.clear();
+        } else {
+            // Bounding sphere
+            new THREE.Box3().setFromObject(object).getBoundingSphere(sphere);
+        }
 
         // Zoom to the position
         return this._zoomOrthographic(sphere.center, null, onComplete);

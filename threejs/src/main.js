@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     (item.dataset.satellite === 'true') ||
                     (layer && layer.toString().toLowerCase().includes('satellite')) ||
                     (url && url.toString().toLowerCase().includes('satellite')) ||
-                    (layer && layer.toString().toLowerCase().includes('ortho')) || 
+                    (layer && layer.toString().toLowerCase().includes('ortho')) ||
                     (url && url.toString().toLowerCase().includes('ortho'))
                 );
                 document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bvBtn = document.getElementById("bv-btn");
     if (bvBtn) {
         bvBtn.addEventListener("click", () => {
-            map.buildingView.initiate_buildingView();
+            map.buildingView.initialiseBuildingView();
         });
     }
 
