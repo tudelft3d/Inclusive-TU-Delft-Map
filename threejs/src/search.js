@@ -128,7 +128,7 @@ export class Searcher {
 
         const threejs_objects = this._retrieve_threejs_objects(result, this.scene);
 
-        this.picker.pickMeshes(threejs_objects);
+        this.picker.pickMesh(result[0].item["attributes"]["key"]);
     }
 
 

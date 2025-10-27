@@ -546,7 +546,7 @@ export class LayerManager {
 				this.picker.pickIcon(cj_key, icon_position_vector, 50);
 			}
 			else {
-				this.picker.pickMeshes([this.scene.getObjectByName(object_threejs_name)]);
+				this.picker.pickMesh(object_threejs_name);
 			}
 		};
 

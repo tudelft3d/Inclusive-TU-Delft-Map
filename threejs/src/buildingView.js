@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { CamerasControls } from "./camera";
 import { Scene } from "three";
 import { OutlineManager } from "./outlines";
-
+import { CjHelper } from "./cj_gltf";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
 const NOT_INITIALISED = 0;
@@ -29,6 +29,9 @@ export class BuildingView {
         // this.buildings = buildings;
         this.outlineManager = outlineManager;
         this.layerManager = layerManager;
+
+        this.cjHelper = new CjHelper(this.scene);
+
         // this.picker = picker;
 
         // this.initially3D;
@@ -58,32 +61,6 @@ export class BuildingView {
 
     _updateStatus(newStatus) {
         this._status = newStatus;
-    }
-
-    /**
-     * Transform a key (either geometry or CityJSON key) into the corresponding CityJSON key.
-     * 
-     * @param {string} key 
-     * @returns 
-     */
-    _keyToObjectKey(key) {
-        return key.split("-").slice(0, 3).join("-");
-    }
-
-    _keyToMeshKey(key) {
-        const objectKey = key.split("-").slice(0, 3).join("-");
-        const json = cityjson["CityObjects"][objectKey];
-        if (json["type"] == "Building") {
-            return objectKey + "-lod_2";
-        } else {
-            return objectKey + "-lod_0";
-        }
-    }
-
-    _isObjectKey(key) {
-        const keyInScene = !!this.scene.getObjectByName(key);
-        const keyInJson = (key in cityjson.CityObjects);
-        return keyInScene && keyInJson;
     }
 
     // /**
@@ -180,21 +157,23 @@ export class BuildingView {
         }
 
         this.buildingObjectKey = buildingObjectKey;
-        this.buildingMeshKey = this._keyToMeshKey(this.buildingObjectKey);
+        this.buildingMeshKey = this.cjHelper.keyToMeshKey(this.buildingObjectKey);
         this.buildingObject = this.scene.getObjectByName(this.buildingObjectKey);
     }
 
     setStorey(storeyCode) {
         console.log("### setStorey")
-        this.storeyCode = storeyCode;
-    }
-
-    updateStorey(storeyCode) {
-        console.log("### updateStorey")
         if (this.storeyCode == storeyCode) { return }
         this.storeyCode = storeyCode;
-        this._updateView();
+        if (this._isActivated()) { this._updateView(); }
     }
+
+    // updateStorey(storeyCode) {
+    //     console.log("### updateStorey")
+    //     if (this.storeyCode == storeyCode) { return }
+    //     this.storeyCode = storeyCode;
+    //     this._updateView();
+    // }
 
     _updateView() {
         console.log("### _updateView")
@@ -259,7 +238,7 @@ export class BuildingView {
         //     onAnimationComplete = () => { this.cameraManager.switchToOrthographic(); }
         // }
         // onAnimationComplete();
-        // this.picker.pickMeshes([this.buildingThreejs], onAnimationComplete);
+        // this.picker.pickMesh(this.buildingThreejs, onAnimationComplete);
 
         // var storey_dropdown = document.getElementById("bv-dropdown");
         // storey_dropdown.innerHTML = "";
@@ -268,8 +247,13 @@ export class BuildingView {
         this.layerManager.switch_to_campus_view();
 
         // Update the outlines
-        const allBuildings = this._getAllBuildings();
-        this._applyOutlines(allBuildings, 'lod_2', 'default');
+        const allBuildingsObjectKeys = this.cjHelper.getAllBuildingsObjectKeys();
+        console.log(allBuildingsObjectKeys);
+        const allBuildingsMeshKeys = allBuildingsObjectKeys.map((objectKey) => {
+            return this.cjHelper.keyToMeshKey(objectKey);
+        });
+        this.outlineManager.setOutline(allBuildingsMeshKeys, 'lod_2', 'default');
+        // this._applyOutlines(allBuildingsMeshes, 'lod_2', 'default');
 
         this._updateStatus(INITIALISED);
     }
@@ -384,7 +368,7 @@ export class BuildingView {
     //         onAnimationComplete = () => { this.cameraManager.switchToOrthographic(); }
     //     }
     //     onAnimationComplete();
-    //     // this.picker.pickMeshes([this.buildingThreejs], onAnimationComplete);
+    //     // this.picker.pickMesh(this.buildingThreejs, onAnimationComplete);
 
     //     // Update the layers
     //     var storey_dropdown = document.getElementById("bv-dropdown");
@@ -409,7 +393,7 @@ export class BuildingView {
         // Get the keys corresponding to the objects
         let keys = [];
         threejsObjects.forEach((currentObject) => {
-            keys.push(this._keyToMeshKey(currentObject.name));
+            keys.push(this.cjHelper.keyToMeshKey(currentObject.name));
         });
         // Modify the outline
         this.outlineManager.setOutline(keys, lod, style);
@@ -662,7 +646,7 @@ export class BuildingView {
             var a = document.createElement("a");
             a.appendChild(document.createTextNode(storeyCode));
             a.addEventListener("click", (event) => {
-                this.updateStorey(storeyCode);
+                this.setStorey(storeyCode);
 
                 // Close the dropdown after selecting a storey
                 const bvDropdown = document.getElementById("bv-dropdown");
@@ -704,27 +688,5 @@ export class BuildingView {
     //     console.log(`✅ Hidden all buildings except: ${this.buildingKey}`);
     // }
 
-    _getAllBuildings() {
-        // Find the world group that contains all buildings
-        const worldGroup = this.scene.getObjectByName('world');
-
-        if (!worldGroup) {
-            console.log('World group not found');
-            return;
-        }
-
-        console.log(`Showing all ${worldGroup.children.length} buildings`);
-        // this._applyOutlines(worldGroup.children, 'lod_2', 'default');
-
-        // // Make all buildings visible again
-        // worldGroup.children.forEach((building) => {
-        //     building.visible = true;
-        //     // console.log(`Shown: ${building.name}`);
-        // });
-
-        // console.log(`All buildings are now visible`);
-
-        return worldGroup.children;
-    }
 
 }
