@@ -12,7 +12,7 @@ export class BuildingColorManager {
 		// TODO make this work properly @ LARS
 
 		setTimeout(() => {
-  			this._random_color();
+			this._random_color();
 		}, 300);
 
 	}
@@ -30,24 +30,24 @@ export class BuildingColorManager {
 			var constant_name;
 
 			switch (color_class) {
-			  case "Primary":
-			  	constant_name = PRIMARY_COLOR_3;
-			  	break;
-			  case "Secondary":
-			  	constant_name = SECONDARY_COLOR_3;
-			  	break;
-			  case "Tertiary":
-			  	constant_name = TERTIARY_COLOR_3;
-			  	break;
-			  case "Quaternary":
-			  	constant_name = QUATERNARY_COLOR_3;
-			  	break;
-			  case "Quinary":
-			  	constant_name = QUINARY_COLOR_3;
-			  	break;
-			  default:
-			    console.log("invalid color code for", building_key, "defaulting to Quinary color");
-			    constant_name = QUINARY_COLOR_3;
+				case "Primary":
+					constant_name = PRIMARY_COLOR_3;
+					break;
+				case "Secondary":
+					constant_name = SECONDARY_COLOR_3;
+					break;
+				case "Tertiary":
+					constant_name = TERTIARY_COLOR_3;
+					break;
+				case "Quaternary":
+					constant_name = QUATERNARY_COLOR_3;
+					break;
+				case "Quinary":
+					constant_name = QUINARY_COLOR_3;
+					break;
+				default:
+					console.log("invalid color code for", building_key, "defaulting to Quinary color");
+					constant_name = QUINARY_COLOR_3;
 			}
 
 			let mesh_key = building_key + "-lod_2";
@@ -55,7 +55,7 @@ export class BuildingColorManager {
 			let mesh = this.scene.getObjectByName(mesh_key);
 
 			if (!mesh) {
-				console.log("no mesh found for:", building_key);
+				// console.log("no mesh found for:", building_key);
 				continue;
 			}
 

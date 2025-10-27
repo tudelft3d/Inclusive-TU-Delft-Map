@@ -48,74 +48,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const zi = document.getElementById('zoom-in-btn');
     const zo = document.getElementById('zoom-out-btn');
     if (zi) zi.addEventListener('click', (event) => {
-        event.stopPropagation();
-        event.preventDefault();
+        // event.stopPropagation();
+        // event.preventDefault();
         map.cameraManager.zoomIn();
     });
     if (zo) zo.addEventListener('click', (event) => {
-        event.stopPropagation();
-        event.preventDefault();
+        // event.stopPropagation();
+        // event.preventDefault();
         map.cameraManager.zoomOut();
     });
 
     // 2D/3D view toggle button
     const viewToggleBtn = document.getElementById('view-toggle-btn');
-    function updateViewToggleUI(overrideIsOrtho) {
-        if (!viewToggleBtn) return;
-        const cm = map.cameraManager;
-
-        let isOrtho;
-        if (typeof overrideIsOrtho === 'boolean') {
-            isOrtho = overrideIsOrtho;
-        } else {
-            isOrtho = !!(cm && typeof cm.usesOrthographicCamera === 'function' && cm.usesOrthographicCamera());
-        }
-
-        const label = isOrtho ? '3D' : '2D';
-        viewToggleBtn.textContent = label;
-        viewToggleBtn.setAttribute('aria-pressed', (!isOrtho).toString());
-        viewToggleBtn.title = `${label} view`;
-        viewToggleBtn.classList.toggle('shows-2d', label === '2D');
-    }
-
-    // New: toggle helper updates the UI, triggers the camera toggle,
-    // and re-syncs after the animation completes (fallback timeout).
-    function toggleViewAndUpdateButton(e) {
-        if (e) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-
-        const cm = map.cameraManager;
-        const currentlyOrtho = !!(cm && typeof cm.usesOrthographicCamera === 'function' && cm.usesOrthographicCamera());
-        const predictedIsOrtho = !currentlyOrtho;
-
-        // update UI so button doesn't lag
-        updateViewToggleUI(predictedIsOrtho);
-
-        // trigger the camera transition
-        if (cm && typeof cm.toggleOrthographic === 'function') {
-            cm.toggleOrthographic();
-        } else {
-            console.warn('cameraManager.toggleOrthographic is not available');
-        }
-
-        // ensure final sync after transition (animation in camera.js uses ~1000ms)
-        setTimeout(() => updateViewToggleUI(), 1100);
-    }
-
     if (viewToggleBtn) {
+        function updateViewToggleUI() {
+            if (!viewToggleBtn) return;
+
+            const cameraManager = map.cameraManager;
+            const isOrtho = cameraManager.usesOrthographicCamera();
+            const label = isOrtho ? '3D' : '2D';
+            viewToggleBtn.textContent = label;
+            viewToggleBtn.setAttribute('aria-pressed', (!isOrtho).toString());
+            viewToggleBtn.title = `${label} view`;
+            viewToggleBtn.classList.toggle('shows-2d', label === '2D');
+        }
+
+        function toggleView(e) {
+            const picker = map.picker;
+            if (!picker) return;
+            picker.switch2D3D();
+        }
+
         updateViewToggleUI();
 
-        viewToggleBtn.addEventListener('click', toggleViewAndUpdateButton);
- 
-         // keep UI in sync with external camera changes
-         map.cameraManager.addEventListenerControls('change', () => updateViewToggleUI());
- 
-         const mq = window.matchMedia('(max-width:620px)');
-         mq.addEventListener?.('change', updateViewToggleUI);
-         window.addEventListener('resize', updateViewToggleUI);
-     }
+        viewToggleBtn.addEventListener('click', e => { toggleView(e) });
+        const cameraManager = map.cameraManager;
+        cameraManager.createEventCameraSwitch("cameraswitch", viewToggleBtn);
+        viewToggleBtn.addEventListener("cameraswitch", e => updateViewToggleUI());
+    }
 
     // Basemap dropdown wiring
     const basemapBtn = document.getElementById('basemap-btn');
@@ -162,35 +132,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Apply satellite class on initial load:
-//         (function applyInitialBasemapClass() {
-//             const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
-//             if (!selected) return;
-//             const url = selected.dataset.url;
-//             const layer = selected.dataset.layer;
-//             const isSatellite = (
-//                 (selected.dataset.satellite === 'true') ||
-//                 (layer && layer.toString().toLowerCase().includes('satellite')) ||
-//                 (url && url.toString().toLowerCase().includes('satellite')) ||
-//                 (layer && layer.toString().toLowerCase().includes('ortho')) ||
-//                 (url && url.toString().toLowerCase().includes('ortho'))
-//             );
-//             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-//         })();
+        //         (function applyInitialBasemapClass() {
+        //             const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
+        //             if (!selected) return;
+        //             const url = selected.dataset.url;
+        //             const layer = selected.dataset.layer;
+        //             const isSatellite = (
+        //                 (selected.dataset.satellite === 'true') ||
+        //                 (layer && layer.toString().toLowerCase().includes('satellite')) ||
+        //                 (url && url.toString().toLowerCase().includes('satellite')) ||
+        //                 (layer && layer.toString().toLowerCase().includes('ortho')) ||
+        //                 (url && url.toString().toLowerCase().includes('ortho'))
+        //             );
+        //             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        //         })();
 
         (function applyInitialBasemapClass() {
-            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]');
-            if (!selected) return;
-            const url = selected.dataset.url;
-            const layer = selected.dataset.layer;
-            const isSatellite = (
-                (selected.dataset.satellite === 'true') ||
-                (layer && layer.toString().toLowerCase().includes('satellite')) ||
-                (url && url.toString().toLowerCase().includes('satellite')) ||
-                (layer && layer.toString().toLowerCase().includes('ortho')) ||
-                (url && url.toString().toLowerCase().includes('ortho'))
-            );
-            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-        })();
+            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]');
+            if (!selected) return;
+            const url = selected.dataset.url;
+            const layer = selected.dataset.layer;
+            const isSatellite = (
+                (selected.dataset.satellite === 'true') ||
+                (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                (url && url.toString().toLowerCase().includes('satellite')) ||
+                (layer && layer.toString().toLowerCase().includes('ortho')) ||
+                (url && url.toString().toLowerCase().includes('ortho'))
+            );
+            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        })();
 
     }
 

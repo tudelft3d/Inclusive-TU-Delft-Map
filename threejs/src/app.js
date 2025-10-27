@@ -189,10 +189,8 @@ export class Map {
         this.buildingView = new BuildingView(
             this.cameraManager,
             this.scene,
-            this.buildings,
             this.outlineManager,
             this.layerManager,
-            this.picker
         );
     }
 
