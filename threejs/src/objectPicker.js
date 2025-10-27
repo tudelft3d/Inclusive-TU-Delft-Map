@@ -176,35 +176,68 @@ export class ObjectPicker {
             } else if (jsonType == "BuildingRoom") {
                 console.log("Picking a BuildingRoom")
                 const buildingObjectKey = this._findParentBuildingObjectKey(objectKey);
+                const buildingMeshKey = this.buildingView._keyToMeshKey(buildingObjectKey);
+                const buildingMesh = this.scene.getObjectByName(buildingMeshKey);
                 const storeyCode = this._findRoomStoreyCode(objectKey);
+                console.log("storeyCode", storeyCode)
                 if (this.buildingView._isNotInitialised()) {
                     console.log("BuildingView was not initialised")
                     this.buildingView.initialise(buildingObjectKey, storeyCode);
                     this.buildingView.activate();
                     this.buildingViewActivationCamera = this.cameraManager.cameraInt;
-                    this.cameraManager.zoomToObject(mesh, onAnimationComplete);
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(mesh, onAnimationComplete)
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    }
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
                 } else if (this.buildingView._isInitialisedNotActivated()) {
                     console.log("BuildingView was not activated")
                     if (buildingObjectKey == this.buildingView.buildingObjectKey) {
                         this.buildingView.setStorey(storeyCode);
                         this.buildingView.activate();
                         this.buildingViewActivationCamera = this.cameraManager.cameraInt;
-                        this.cameraManager.zoomToObject(mesh, onAnimationComplete);
+                        const onComplete = () => {
+                            const onComplete2 = () => {
+                                this.cameraManager.zoomToObject(mesh, onAnimationComplete)
+                            };
+                            this.cameraManager.switchToOrthographic(onComplete2);
+                        }
+                        this.cameraManager.zoomToObject(buildingMesh, onComplete);
                     } else {
                         this.buildingView.initialise(buildingObjectKey, storeyCode);
                         this.buildingView.activate();
                         this.buildingViewActivationCamera = this.cameraManager.cameraInt;
-                        this.cameraManager.zoomToObject(mesh, onAnimationComplete);
+                        const onComplete = () => {
+                            const onComplete2 = () => {
+                                this.cameraManager.zoomToObject(mesh, onAnimationComplete)
+                            };
+                            this.cameraManager.switchToOrthographic(onComplete2);
+                        }
+                        this.cameraManager.zoomToObject(buildingMesh, onComplete);
                     }
                 } else if (this.buildingView._isActivated()) {
                     console.log("BuildingView was activated")
                     if (buildingObjectKey == this.buildingView.buildingObjectKey) {
                         this.buildingView.updateStorey(storeyCode);
-                        this.cameraManager.zoomToObject(mesh, onAnimationComplete);
+                        const onComplete = () => {
+                            const onComplete2 = () => {
+                                this.cameraManager.zoomToObject(mesh, onAnimationComplete)
+                            };
+                            this.cameraManager.switchToOrthographic(onComplete2);
+                        }
+                        this.cameraManager.zoomToObject(buildingMesh, onComplete);
                     } else {
                         this.buildingView.deactivate();
                         this.buildingView.initialise(objectKey, storeyCode);
-                        this.cameraManager.zoomToObject(mesh, onAnimationComplete);
+                        const onComplete = () => {
+                            const onComplete2 = () => {
+                                this.cameraManager.zoomToObject(mesh, onAnimationComplete)
+                            };
+                            this.cameraManager.switchToOrthographic(onComplete2);
+                        }
+                        this.cameraManager.zoomToObject(buildingMesh, onComplete);
                     }
                 }
 
@@ -305,6 +338,7 @@ export class ObjectPicker {
         // Reset the building view
         if (this.buildingView._isActivated()) {
             this.buildingView.deactivate();
+            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
             this.buildingViewActivationCamera = null;
         }
         if (this.buildingView._isInitialisedNotActivated()) {
@@ -325,9 +359,14 @@ export class ObjectPicker {
         } else if (this.buildingView._isInitialisedNotActivated()) {
             this.buildingView.activate();
             this.buildingViewActivationCamera = this.cameraManager.cameraInt;
-            this.cameraManager.switchToOrthographic();
+            const onComplete = () => {
+                this.cameraManager.switchToOrthographic();
+            }
+            const buildingMesh = this.scene.getObjectByName(this.buildingView.buildingMeshKey);
+            this.cameraManager.zoomToObject(buildingMesh, onComplete);
         } else if (this.buildingView._isActivated()) {
             this.buildingView.deactivate();
+            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
             this.buildingViewActivationCamera = null;
             this.cameraManager.switchToOrbit();
         } else {

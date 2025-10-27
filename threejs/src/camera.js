@@ -212,6 +212,21 @@ export class CamerasControls {
         return distance;
     }
 
+    /**
+     * Switch using camera int
+     */
+    switchToInt(cameraInt) {
+        if (cameraInt == MAP_CAMERA) {
+            this.switchToMap();
+        } else if (cameraInt == ORBIT_CAMERA) {
+            this.switchToOrbit();
+        } else if (cameraInt == ORTHOGRAPHIC_CAMERA) {
+            this.switchToOrthographic();
+        } else {
+            console.error("This value does not correspond to a camera:", cameraInt);
+        }
+    }
+
     /** 
      * Swith to map view
      */

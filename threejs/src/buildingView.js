@@ -448,7 +448,7 @@ export class BuildingView {
         const buildingParts = buildingJson["children"].filter((element) => {
             return cityjson.CityObjects[element]["type"] == "BuildingPart"
         });
-        console.log("buildingParts", buildingParts)
+        // console.log("buildingParts", buildingParts)
 
         // Extract the storeys in each building part
         let storeyObjectKeys = [];
@@ -456,7 +456,7 @@ export class BuildingView {
             const buildingPartJson = cityjson.CityObjects[partObjectKey];
             storeyObjectKeys = storeyObjectKeys.concat(buildingPartJson["children"]);
         });
-        console.log("storeyObjectKeys", storeyObjectKeys)
+        // console.log("storeyObjectKeys", storeyObjectKeys)
 
         // Group them per storey
         let sortedStoreyObjectKeys = {}
@@ -468,7 +468,7 @@ export class BuildingView {
                 sortedStoreyObjectKeys[storeyCode] = [storeyObjectKey];
             }
         });
-        console.log("sortedStoreyObjectKeys", sortedStoreyObjectKeys)
+        // console.log("sortedStoreyObjectKeys", sortedStoreyObjectKeys)
 
         return sortedStoreyObjectKeys;
     }
