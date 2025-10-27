@@ -126,9 +126,9 @@ export class Searcher {
         const result = this._search_pattern(pattern, 1);
         console.log('pattern: ', pattern);
 
-        const threejs_object = this._retrieve_threejs_objects(result, this.scene);
+        const threejs_objects = this._retrieve_threejs_objects(result, this.scene);
 
-        this.picker.pickMesh(threejs_object);
+        this.picker.pickMeshes(threejs_objects);
     }
 
 

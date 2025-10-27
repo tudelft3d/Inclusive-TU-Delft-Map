@@ -352,50 +352,6 @@ export class Map {
         );
     }
 
-    // async loadIcon() {
-    //     const paths = [
-    //         "assets/threejs/graphics/icons/thematic-layers/education.svg",
-    //         "assets/threejs/graphics/icons/thematic-layers/cafeteria.svg",
-    //         "assets/threejs/graphics/icons/thematic-layers/library.svg",
-    //     ];
-    //     const keys = ["home", "cafe", "library"];
-    //     const bgColors = ["#f7c286ff", "#f786f3ff", "#86f790ff"];
-    //     var position = new THREE.Vector3(85193, 33, -446857);
-
-    //     // Kick off all fetches at once
-    //     const svgs = await Promise.all(
-    //         paths.map((p) => this.svgLoader.getSvg(p))
-    //     );
-
-    //     // Make the icons
-    //     const icons = [];
-    //     for (var i = 0; i < paths.length; i++) {
-    //         const svg = svgs[i];
-    //         const key = keys[i];
-    //         const bgColor = bgColors[i];
-    //         const icon = new SvgIcon(key, svg, { bgColor: bgColor });
-    //         icons.push(icon);
-    //     }
-
-    //     // Add the text
-    //     const text = new TextIcon("Bouwkunde");
-
-    //     // Click event listener
-    //     const onClick = (e) => {
-    //         const building = this.scene.getObjectByName(
-    //             "Building_08-Building-08-lod_2"
-    //         );
-    //         this.picker.pickMesh(building);
-    //         console.log(`Clicked on a icon!`);
-    //     };
-
-    //     // Put everything together
-    //     const iconSet = new IconSet("BK", icons, text, position, onClick);
-
-    //     // Add it to the scene
-    //     this.iconsSceneManager.addIconSet(iconSet);
-    // }
-
     render(time) {
         setTimeout(() => {
             requestAnimationFrame(this.render);

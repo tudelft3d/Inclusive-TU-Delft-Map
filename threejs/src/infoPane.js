@@ -5,9 +5,9 @@ import layers_definition_json from "../assets/threejs/buildings/thematic_codelis
  * InfoPane class - handles all info pane UI logic
  */
 export class InfoPane {
-    constructor(paneElement, buildingView = null) {
+    constructor(paneElement, picker = null) {
         this.pane = paneElement;
-        this.buildingView = buildingView;
+        this.picker = picker;
     }
 
     /**
@@ -158,7 +158,7 @@ export class InfoPane {
         html += `</div>`;
 
         // Add floor plan button if buildingView is available
-        if (this.buildingView) {
+        if (this.picker) {
             html += `
                 <div class="info-pane-footer">
                     <button class="info-pane-floorplan-btn" id="info-pane-floorplan-btn">
@@ -273,7 +273,7 @@ export class InfoPane {
     }
 
 
-    _add_infoPane_nested_object(object_json, title, attribute_names, open=false) {
+    _add_infoPane_nested_object(object_json, title, attribute_names, open = false) {
 
         let div = document.createElement("div");
 
@@ -341,8 +341,8 @@ export class InfoPane {
         button.append(document.createTextNode("View Floorplan"));
 
         button.addEventListener('click', () => {
-            if (this.buildingView) {
-                this.buildingView.initiate_buildingView();
+            if (this.picker) {
+                this.picker.switchBuildingView();
             }
         });
 
@@ -437,9 +437,9 @@ export class InfoPane {
         }
 
         const floorplanBtn = this.pane.querySelector('#info-pane-floorplan-btn');
-        if (floorplanBtn && this.buildingView) {
+        if (floorplanBtn && this.picker) {
             floorplanBtn.addEventListener('click', () => {
-                this.buildingView.initiate_buildingView();
+                this.buildingView.switchBuildingView();
             });
         }
     }

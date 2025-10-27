@@ -305,7 +305,7 @@ export class CamerasControls {
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
 
     /** Switch to orthographic view */
-    switchToOrthographic() {
+    switchToOrthographic(onAnimationComplete = () => { }) {
         console.log("Switching to orthographic");
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
             // Compute the animation for the current camera
@@ -327,6 +327,7 @@ export class CamerasControls {
                 initControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
                 initControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
                 this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
+                onAnimationComplete();
             }
 
             // Animate the transition
@@ -476,14 +477,20 @@ export class CamerasControls {
 
         const finalPosition = finalTarget.clone().addScaledVector(initDirection, distance);
 
-        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, 1000, onComplete);
+        // Compute the duration of the animation
+        const cameraAnimationDistance = initPosition.distanceTo(finalPosition);
+        console.log("Distance: ", cameraAnimationDistance);
+        const duration = 300 + 30 * Math.sqrt(cameraAnimationDistance);
+        console.log("Total time: ", duration)
+
+        return this._createAnimation(initPosition, initTarget, finalPosition, finalTarget, duration, onComplete);
     }
 
     _zoomToObjectPerspective(object, onComplete = () => { }) {
-        if (!object) {
-            this.switchToMap();
-            return;
-        }
+        // if (!object) {
+        //     this.switchToMap();
+        //     return;
+        // }
 
         this.switchToOrbit();
 
