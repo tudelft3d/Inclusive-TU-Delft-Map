@@ -17,6 +17,7 @@ import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
 import { LayerManager } from "./layers";
+import { BuildingColorManager } from "./buildingColorManager";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
 import { Highlighter } from "./highlighter";
@@ -85,6 +86,7 @@ export class Map {
         this._initBuildingView();
         this._initPicker();
         this._initSearcher();
+        this._initBuildingColorManager();
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -216,6 +218,12 @@ export class Map {
         const search_delay = 250;
         const search_result_count = 5;
         initSearchBar(this.searcher, search_delay, search_result_count);
+    }
+
+    _initBuildingColorManager() {
+        this.buildingColorManager = new BuildingColorManager(
+            this.scene
+        );
     }
 
     _attachEvents() {

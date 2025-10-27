@@ -1,6 +1,7 @@
-/* Define colors, spacing and font used in the header */
 :root {
   --bg: #f1f1f1;
+  --header-bg: #f1f1f1;
+  --header-border: rgba(0,0,0,0.06); 
   --border: #e8e8e8;
   --text: #000000;
   --muted: #353535;
@@ -24,7 +25,7 @@ body {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--bg);
+  background: transparent; 
   color: #000000;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -42,12 +43,22 @@ body.menu-open {
 
 /* Top site header container*/
 .site-header {
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  position: sticky !important;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  position: fixed !important;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
   width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure page content is pushed below the fixed header on desktop */
+main,
+.site-main,
+.main-content {
+  padding-top: calc(var(--height) + 5px);
   box-sizing: border-box;
 }
 
