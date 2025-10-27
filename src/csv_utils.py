@@ -43,7 +43,7 @@ def string_to_type(type_string: str):
         real_type = int
     elif type_string == "bool":
         real_type = bool
-    elif type_string == "list":
+    elif type_string.startswith("list"):
         real_type = list
     else:
         raise NotImplementedError(
