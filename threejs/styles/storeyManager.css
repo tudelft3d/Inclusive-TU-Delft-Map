@@ -1,0 +1,42 @@
+#storey-manager {
+  position: absolute;
+/*  top: calc(var(--height, 64px) + 14px);
+  left: 14px;*/
+
+  bottom: 50px;
+  /*left: width/2;*/
+
+  /*transform: translateY(-50%);*/
+
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  
+  max-width: 425px;
+  min-width: 425px;
+  padding: 8px 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10000;
+  font-family: Sans-Serif;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  pointer-events: auto;
+
+  flex-direction: column;
+}
+
+.storey-manager-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #00A6D6;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storey-manager-dropdown-element {
+  padding: 5px 5px;
+}

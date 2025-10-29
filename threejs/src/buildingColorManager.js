@@ -12,12 +12,12 @@ export class BuildingColorManager {
 		// TODO make this work properly @ LARS
 
 		setTimeout(() => {
-			this._random_color();
+			this._assign_colors();
 		}, 300);
 
 	}
 
-	_random_color() {
+	_assign_colors() {
 
 		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
 

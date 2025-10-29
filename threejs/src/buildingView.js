@@ -5,6 +5,7 @@ import { OutlineManager } from "./outlines";
 import { CjHelper } from "./cjHelper";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 import { LayerManager } from "./layers";
+import { StoreyManager } from "./storeyManager"
 
 const NOT_INITIALISED = 0;
 const INITIALISED = 1;
@@ -25,6 +26,8 @@ export class BuildingView {
         this.scene = scene;
         this.outlineManager = outlineManager;
         this.layerManager = layerManager;
+
+        this.storeyManager = new StoreyManager(this);
 
         this.cjHelper = new CjHelper(this.scene);
 
@@ -132,6 +135,11 @@ export class BuildingView {
         // Populate the buttons to switch between storeys
         this._populateStoreyButtons();
 
+
+        const available_storeys = Object.keys(this._getStoreyObjectKeys());
+
+        this.storeyManager.activate(this.buildingObjectKey, this.storeyCode, available_storeys);
+
         this._updateView();
 
         this._updateStatus(ACTIVATED);
@@ -161,6 +169,8 @@ export class BuildingView {
             "default"
         );
         // this._applyOutlines(allBuildingsMeshes, 'lod_2', 'default');
+
+        this.storeyManager.deactivate();
 
         this._updateStatus(INITIALISED);
     }
