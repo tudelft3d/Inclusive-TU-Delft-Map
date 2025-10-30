@@ -28,11 +28,6 @@ export class InfoPane {
             if (!this.pane.contains(e.target)) return;
             if (this.movedDuringPointer) return;
         });
-
-        this.mainContainer.addEventListener("scroll", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            e.target.setPointerCapture(e.pointerId);
-        });
     }
 
     /**
