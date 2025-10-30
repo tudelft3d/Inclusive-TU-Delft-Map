@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any
@@ -19,7 +18,8 @@ from cj_attributes import (
     BdgStoreyAttr,
     BdgUnitAttr,
 )
-from cj_geometry import CityJSONGeometries, Geometry, IconPosition
+from cj_geometry import CityJSONGeometries, Geometry
+from icon_positions import IconPosition
 
 
 class CityJSONFile:
