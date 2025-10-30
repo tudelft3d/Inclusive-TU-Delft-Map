@@ -1,4 +1,5 @@
 import logging
+from typing import Self
 
 import numpy as np
 import trimesh
@@ -49,3 +50,32 @@ def icon_position_from_mesh(
     )
 
     return np.array([chosen_xy[0], chosen_xy[1], chosen_z])
+
+
+class IconPosition:
+
+    def __init__(self, x: float, y: float, z: float) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+
+    @classmethod
+    def from_list(cls, xyz: list[float]) -> Self:
+        if len(xyz) != 3:
+            raise ValueError(
+                f"IconPosition.from_list requires a input of length 3, not '{xyz}'"
+            )
+        return cls(x=xyz[0], y=xyz[1], z=xyz[2])
+
+    @classmethod
+    def from_mesh(cls, mesh: trimesh.Trimesh, z_offset: float) -> Self:
+        if not isinstance(mesh, trimesh.Trimesh):
+            raise TypeError(
+                f"IconPosition.from_geometry expects a `MultiSurface` instance, not `{type(geom)}`."
+            )
+
+        pos_array = icon_position_from_mesh(mesh=mesh, z_offset=z_offset)
+        return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])
+
+    def to_list(self) -> list[float]:
+        return [self.x, self.y, self.z]

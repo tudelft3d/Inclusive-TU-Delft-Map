@@ -74,7 +74,7 @@ export class CamerasControls {
     _initControls(target) {
         this.mapControls = new MapControls(this.mapCamera, this.container);
         this.mapControls.target.copy(target);
-        this.mapControls.maxPolarAngle = 0.49 * Math.PI;
+        this.mapControls.maxPolarAngle = 0.5 * Math.PI;
         this.mapControls.update();
 
         this.orbitControls = new OrbitControls(
@@ -87,7 +87,7 @@ export class CamerasControls {
             RIGHT: THREE.MOUSE.ROTATE,
         };
         this.orbitControls.target.copy(target);
-        this.orbitControls.maxPolarAngle = 0.49 * Math.PI;
+        this.orbitControls.maxPolarAngle = 0.5 * Math.PI;
         this.orbitControls.enablePan = false;
         this.orbitControls.update();
 
