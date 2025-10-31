@@ -150,8 +150,6 @@
 /* invert external SVG images to appear black; also set inline SVG color */
 .satellite-basemap #reset-btn img,
 .satellite-basemap #reset-btn svg,
-.satellite-basemap #compass-btn img,
-.satellite-basemap #compass-btn svg,
 .satellite-basemap #location-btn img,
 .satellite-basemap #location-btn svg,
 .satellite-basemap #zoom-btn img,
@@ -284,6 +282,7 @@
     transform: translateY(12%);
   } */
 }
+
 
 
 

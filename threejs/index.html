@@ -20,6 +20,8 @@
 
     <script type="module" src="./src/header.js" defer></script>
     <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/compassSwap.js" defer></script>
+    <script type="module" src="./src/legend.js" defer></script>
     <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous"></script>
 </head>
 
@@ -48,20 +50,66 @@
             <button id="basemap-btn" data-tooltip="Change base map"><img
                     src="assets/threejs/graphics/icons/ui-buttons/basemap_white.svg" /></button>
             <div id="basemap-dropdown">
-                <a href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
-                    data-layer="Actueel_orthoHR" data-satellite="true">Satellite Imagery</a>
-                <a href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0"
-                    data-layer="standaard">Topographic Map</a>
-                <a href="#" data-url="https://service.pdok.nl/lv/bgt/wmts/v1_0" data-layer="achtergrondvisualisatie">BGT
-                    Colour</a>
-                <a href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0" data-layer="grijs">BGT
-                    Grayscale</a>
+                <a class="basemap-item" href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
+                    data-layer="Actueel_orthoHR" data-satellite="true">
+                    <span class="basemap-swatch">
+                        <img src="assets/threejs/graphics/icons/ui-buttons/satelite_icon.svg" alt="Satellite thumbnail" />
+                    </span>
+                    <span class="basemap-label">Satellite Imagery</span>
+                </a>
+                <a class="basemap-item" href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0"
+                    data-layer="standaard">
+                    <span class="basemap-swatch">
+                        <img src="assets/threejs/graphics/icons/ui-buttons/colour_icon.svg" alt="Topographic thumbnail" />
+                    </span>
+                    <span class="basemap-label">Topographic Map</span>
+                </a>
+                <!-- <a class="basemap-item" href="#" data-url="https://service.pdok.nl/lv/bgt/wmts/v1_0" data-layer="achtergrondvisualisatie">
+                    <span class="basemap-swatch"><img src="assets/threejs/graphics/icons/ui-buttons/bgt_thumb.svg" alt="BGT thumbnail" /></span>
+                    <span class="basemap-label">BGT Colour</span>
+                </a> -->
+                <a class="basemap-item" href="#" data-url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0" data-layer="grijs">
+                    <span class="basemap-swatch">
+                        <img src="assets/threejs/graphics/icons/ui-buttons/grayscale_icon.svg" alt="Grayscale thumbnail" />
+                    </span>
+                    <span class="basemap-label">Grayscale</span>
+                </a>
             </div>
         </div>
 
         <div id="layers-container">
             <button id="layers-btn" data-tooltip="Select layers"><img
                     src="assets/threejs/graphics/icons/ui-buttons/layers_white.svg" /></button>
+        </div>
+
+        <div id="legend-container">
+            <button id="legend-btn" data-tooltip="Legend" aria-controls="legend-dropdown" aria-expanded="false" title="Legend">
+                <img src="assets/threejs/graphics/icons/ui-buttons/question_mark.svg" alt="Legend" />
+            </button>
+            <div id="legend-dropdown" role="menu" aria-hidden="true">
+                <ul class="legend-list" role="list">
+                    <li class="legend-item" role="menuitem">
+                        <span class="legend-swatch" style="background:#660E60"></span>
+                        <span class="legend-label">Main faculty buildings</span>
+                    </li>
+                    <li class="legend-item" role="menuitem">
+                        <span class="legend-swatch" style="background:#893F71"></span>
+                        <span class="legend-label">Supporting educational buildings</span>
+                    </li>
+                    <li class="legend-item" role="menuitem">
+                        <span class="legend-swatch" style="background:#AB6092"></span>
+                        <span class="legend-label">TU Delft-operated non-educational buildings</span>
+                    </li>
+                    <li class="legend-item" role="menuitem">
+                        <span class="legend-swatch" style="background:#CF9BBD"></span>
+                        <span class="legend-label">Buildings by closely related external institutions</span>
+                    </li>
+                    <li class="legend-item" role="menuitem">
+                        <span class="legend-swatch" style="background:#CFBEC9"></span>
+                        <span class="legend-label">Buildings not related to TU Delft</span>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <!-- <div id="accessibility-container">

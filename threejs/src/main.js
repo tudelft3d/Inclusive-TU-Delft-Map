@@ -146,22 +146,34 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
         })();
+    }
 
-//         (function applyInitialBasemapClass() {
-//             const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]');
-//             if (!selected) return;
-//             const url = selected.dataset.url;
-//             const layer = selected.dataset.layer;
-//             const isSatellite = (
-//                 (selected.dataset.satellite === 'true') ||
-//                 (layer && layer.toString().toLowerCase().includes('satellite')) ||
-//                 (url && url.toString().toLowerCase().includes('satellite')) ||
-//                 (layer && layer.toString().toLowerCase().includes('ortho')) ||
-//                 (url && url.toString().toLowerCase().includes('ortho'))
-//             );
-//             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-//         })();
+    // Legend dropdown wiring (matches other top-right controls)
+    const legendBtn = document.getElementById('legend-btn');
+    const legendDropdown = document.getElementById('legend-dropdown');
+    if (legendBtn && legendDropdown) {
+        legendBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // close other top-right dropdowns before toggling this one
+            const other = document.getElementById('basemap-dropdown');
+            const layers = document.getElementById('layers-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== legendDropdown) other.style.display = 'none';
+            if (layers && layers !== legendDropdown) layers.style.display = 'none';
+            if (accessibility && accessibility !== legendDropdown) accessibility.style.display = 'none';
 
+            const open = legendDropdown.style.display === 'block';
+            legendDropdown.style.display = open ? 'none' : 'block';
+            legendBtn.setAttribute('aria-expanded', (!open).toString());
+            legendDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
+        });
+
+        // clicking elsewhere closes the legend
+        document.addEventListener('click', () => {
+            legendDropdown.style.display = 'none';
+            legendBtn.setAttribute('aria-expanded', 'false');
+            legendDropdown.setAttribute('aria-hidden', 'true');
+        });
     }
 
     // Layers dropdown wiring
