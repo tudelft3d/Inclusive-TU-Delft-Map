@@ -25,6 +25,7 @@ import { PICKED_COLOR } from "./constants";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 import { LocationManager, LocationSceneManager } from "./location";
 import { BASEMAP_BOUNDARIES } from "./basemap";
+import { CjHelper } from "./cjHelper";
 
 export class Map {
     /**
