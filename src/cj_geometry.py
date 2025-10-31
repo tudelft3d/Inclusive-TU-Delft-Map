@@ -5,9 +5,6 @@ import numpy as np
 from numpy.typing import NDArray
 from trimesh import Trimesh
 
-from geometry_utils import flatten_trimesh
-from icon_positions import icon_position_from_mesh
-
 
 def _remap_boundaries(
     boundaries: list[Any], offset: int, mapping: NDArray[np.signedinteger]
@@ -53,14 +50,14 @@ class Geometry(ABC):
         raise NotImplementedError()
 
 
-class MultiPoint(Geometry):
+# class MultiPoint(Geometry):
 
-    def __init__(
-        self, lod: int, vertices: NDArray[np.float64], boundaries: list[Any]
-    ) -> None:
-        super().__init__(
-            type_str="MultiPoint", lod=lod, vertices=vertices, boundaries=boundaries
-        )
+#     def __init__(
+#         self, lod: int, vertices: NDArray[np.float64], boundaries: list[Any]
+#     ) -> None:
+#         super().__init__(
+#             type_str="MultiPoint", lod=lod, vertices=vertices, boundaries=boundaries
+#         )
 
 
 class MultiSurface(Geometry):
@@ -166,32 +163,3 @@ class CityJSONGeometries:
             new_boundaries.append(remapped)
 
         return unique_vertices, new_boundaries
-
-
-class IconPosition:
-
-    def __init__(self, x: float, y: float, z: float) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-
-    @classmethod
-    def from_list(cls, xyz: list[float]) -> Self:
-        if len(xyz) != 3:
-            raise ValueError(
-                f"IconPosition.from_list requires a input of length 3, not '{xyz}'"
-            )
-        return cls(x=xyz[0], y=xyz[1], z=xyz[2])
-
-    @classmethod
-    def from_mesh(cls, mesh: Trimesh, z_offset: float) -> Self:
-        if not isinstance(mesh, Trimesh):
-            raise TypeError(
-                f"IconPosition.from_geometry expects a `MultiSurface` instance, not `{type(geom)}`."
-            )
-
-        pos_array = icon_position_from_mesh(mesh=mesh, z_offset=z_offset)
-        return cls(x=pos_array[0], y=pos_array[1], z=pos_array[2])
-
-    def to_list(self) -> list[float]:
-        return [self.x, self.y, self.z]

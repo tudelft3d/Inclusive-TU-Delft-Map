@@ -14,7 +14,7 @@ from cj_attributes import (
     BdgUnitAttr,
     BdgUnitAttrReader,
 )
-from cj_geometry import Geometry, IconPosition, MultiSurface
+from cj_geometry import Geometry, MultiSurface
 from cj_objects import (
     Building,
     BuildingPart,
@@ -30,6 +30,7 @@ from cj_objects import (
     CityJSONSpaceSubclass,
 )
 from geometry_utils import flatten_trimesh, merge_trimeshes, orient_polygons_z_up
+from icon_positions import IconPosition
 
 
 def _get_scene_geometry_from_id(scene: trimesh.Scene, cj_key: str) -> trimesh.Trimesh:

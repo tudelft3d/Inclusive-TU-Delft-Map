@@ -1,24 +1,21 @@
-
-import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
+import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 
 export class CjHelper {
-
     constructor(scene) {
         this.scene = scene;
     }
 
     /**
      * Transform a key (either geometry or CityJSON key) into the corresponding CityJSON key.
-     * 
-     * @param {string} key 
-     * @returns 
+     *
+     * @param {string} key
+     * @returns
      */
     keyToObjectKey(key) {
         return key.split("-").slice(0, 3).join("-");
     }
 
     keyToMeshKey(key) {
-        console.log("key", key);
         const objectKey = this.keyToObjectKey(key);
         const objectType = this.getType(key);
         var meshKey;
@@ -27,18 +24,22 @@ export class CjHelper {
         } else if (objectType == "BuildingRoom") {
             meshKey = objectKey + "-lod_0";
         } else {
-            console.error("Only Building and BuildingRoom objects have a mesh.")
+            console.error(
+                "Only Building and BuildingRoom objects have a mesh."
+            );
         }
 
         if (!this.checkMeshKeyExists(meshKey)) {
-            console.error("The mesh key obtained doesn't correspond to an object in the scene.")
+            console.error(
+                "The mesh key obtained doesn't correspond to an object in the scene."
+            );
         }
         return meshKey;
     }
 
     isObjectKey(key) {
         const keyInScene = !!this.scene.getObjectByName(key);
-        const keyInJson = (key in cityjson.CityObjects);
+        const keyInJson = key in cityjson.CityObjects;
         return keyInScene && keyInJson;
     }
 
@@ -49,8 +50,8 @@ export class CjHelper {
 
     /**
      * Finds the key of the Building that is the parent of this object.
-     * 
-     * @param {string} key 
+     *
+     * @param {string} key
      * @returns The CityJSON key of the parent building.
      */
     findParentBuildingObjectKey(key) {
@@ -66,14 +67,16 @@ export class CjHelper {
     getRoomStoreyCode(key) {
         const roomType = this.getType(key);
         if (roomType != "BuildingRoom") {
-            console.error("This function expects a BuildingRoom as an input.")
+            console.error("This function expects a BuildingRoom as an input.");
             return;
         }
         const roomAttributes = this.getAttributes(key);
         const spaceId = roomAttributes["space_id"];
         const allCodes = spaceId.split(".");
         if (allCodes.length != 4) {
-            console.error("A BuildingRoom is expected to have 4 numbers in its space ID.")
+            console.error(
+                "A BuildingRoom is expected to have 4 numbers in its space ID."
+            );
             return;
         }
         return allCodes[2];
@@ -102,13 +105,15 @@ export class CjHelper {
     getUnitSpaces(key) {
         const type = this.getType(key);
         if (type != "BuildingUnit") {
-            console.error("The given object is not a unit.")
+            console.error("The given object is not a unit.");
             return [];
         }
         const attributes = this.getAttributes(key);
         const unitSpacesAttribute = "unit_spaces";
         if (!(unitSpacesAttribute in attributes)) {
-            console.error(`The given unit does not have an attribute called ${unitSpacesAttribute}.`)
+            console.error(
+                `The given unit does not have an attribute called ${unitSpacesAttribute}.`
+            );
             return [];
         }
         return attributes[unitSpacesAttribute];
@@ -116,7 +121,9 @@ export class CjHelper {
 
     getAllBuildingsObjectKeys() {
         const allBuildings = [];
-        for (const [objectKey, object] of Object.entries(cityjson.CityObjects)) {
+        for (const [objectKey, object] of Object.entries(
+            cityjson.CityObjects
+        )) {
             const objectType = this.getType(objectKey);
             if (objectType == "Building") {
                 allBuildings.push(objectKey);

@@ -539,15 +539,17 @@ export class LayerManager {
 
 
 		const onClick = (e) => {
-			if (!object_threejs_name || !this.scene.getObjectByName(object_threejs_name)) {
-				if (!icon_position_vector) {
-					console.error("Either the object or the position of the icon must be given.")
-				}
-				this.picker.pickIcon(cj_key, icon_position_vector, 50);
-			}
-			else {
-				this.picker.pickMesh(object_threejs_name);
-			}
+			// if (!object_threejs_name || !this.scene.getObjectByName(object_threejs_name)) {
+			// 	if (!icon_position_vector) {
+			// 		console.error("Either the object or the position of the icon must be given.")
+			// 	}
+			// 	this.picker.pickIcon(cj_key, icon_position_vector, 50);
+			// }
+			// else {
+			// 	this.picker.pickMesh(cj_key);
+			// }
+			console.log(cj_key);
+			this.picker.pickMesh(cj_key);
 		};
 
 		return onClick;
@@ -582,13 +584,13 @@ export class LayerManager {
 		} else {
 			// Get the object from the CityJSON
 			const cityObject = cityjson.CityObjects[icon_set_key];
-			
+
 			// Only add building name if of type "Building", and its' "ShortName (EN)" is not empty. Otherwise only show number
 			let fullText = icon_set_text;
 			if (cityObject?.type === "Building" && cityObject?.attributes?.["ShortName (EN)"]) {
 				fullText = `${icon_set_text} | ${cityObject.attributes["ShortName (EN)"]}`;
 			}
-			
+
 			text_icon = new TextIcon(fullText);
 		}
 

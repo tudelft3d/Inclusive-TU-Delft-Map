@@ -33,45 +33,45 @@ def _plane_abcd_from_point_normal(
     return tuple(np.hstack((normal, d)))
 
 
-def normal_from_points_old(
-    points: NDArray[np.float64],
-) -> tuple[NDArray[np.float64], bool]:
-    """
-    Compute the normal of the plane defined by a set of points with PCA.
+# def normal_from_points_old(
+#     points: NDArray[np.float64],
+# ) -> tuple[NDArray[np.float64], bool]:
+#     """
+#     Compute the normal of the plane defined by a set of points with PCA.
 
-    Parameters
-    ----------
-    points : NDArray[np.float64]
-        Set of 3D points (n, 3).
+#     Parameters
+#     ----------
+#     points : NDArray[np.float64]
+#         Set of 3D points (n, 3).
 
-    Returns
-    -------
-    tuple[NDArray[np.float64], bool]
-        - Normal vector (3,).
-        - Whether the normal is valid (False if the points were collinear for example).
+#     Returns
+#     -------
+#     tuple[NDArray[np.float64], bool]
+#         - Normal vector (3,).
+#         - Whether the normal is valid (False if the points were collinear for example).
 
-    Raises
-    ------
-    RuntimeError
-        If the input points are not 3D.
-    """
-    if points.shape[1] != 3:
-        raise RuntimeError("3D points are expected.")
+#     Raises
+#     ------
+#     RuntimeError
+#         If the input points are not 3D.
+#     """
+#     if points.shape[1] != 3:
+#         raise RuntimeError("3D points are expected.")
 
-    # Compute normal as average of normals
-    normal = np.zeros((3,), dtype=np.float64)
-    n_points = points.shape[0]
-    for i in range(n_points):
-        v1 = points[(i + 1) % n_points] - points[i % n_points]
-        v2 = points[(i + 2) % n_points] - points[(i + 1) % n_points]
-        # Calculate the normal vector to the plane
-        normal += np.cross(v1, v2)
+#     # Compute normal as average of normals
+#     normal = np.zeros((3,), dtype=np.float64)
+#     n_points = points.shape[0]
+#     for i in range(n_points):
+#         v1 = points[(i + 1) % n_points] - points[i % n_points]
+#         v2 = points[(i + 2) % n_points] - points[(i + 1) % n_points]
+#         # Calculate the normal vector to the plane
+#         normal += np.cross(v1, v2)
 
-    if np.all(np.isclose(normal, np.zeros_like(normal))):
-        return normal, False
-    else:
-        normal /= np.linalg.norm(normal)
-        return normal, True
+#     if np.all(np.isclose(normal, np.zeros_like(normal))):
+#         return normal, False
+#     else:
+#         normal /= np.linalg.norm(normal)
+#         return normal, True
 
 
 def normal_from_points(

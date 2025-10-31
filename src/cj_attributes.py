@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import logging
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Generic, Type, TypeVar, cast
 
-from cj_geometry import IconPosition
 from csv_utils import csv_read_attributes
+from icon_positions import IconPosition
 
 KEY_COLUMN = "Key [str]"
 SPACE_ID_COLUMN = "CREFM ID [str]"

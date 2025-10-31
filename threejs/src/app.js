@@ -25,6 +25,7 @@ import { PICKED_COLOR } from "./constants";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 import { LocationManager, LocationSceneManager } from "./location";
 import { BASEMAP_BOUNDARIES } from "./basemap";
+import { CjHelper } from "./cjHelper";
 
 export class Map {
     /**
@@ -40,8 +41,8 @@ export class Map {
         this.preloadingStarted = false; // Flag to ensure preloading starts only once
 
         // Cameras and controls
-        const cameraPosition = new THREE.Vector3(85715, 1100, -445780);
-        const cameraLookAt = new THREE.Vector3(85743, 30, -445791);
+        const cameraPosition = new THREE.Vector3(85070, 942, -445825);
+        const cameraLookAt = new THREE.Vector3(85478, 0, -446006);
         this.cameraManager = new CamerasControls(
             this.mainContainer,
             cameraPosition,
@@ -51,6 +52,7 @@ export class Map {
         this.tweens = new Array();
 
         this._initScenes();
+        this.cjHelper = new CjHelper(this.scene);
         this._initLights();
         this.setBasemap();
         this._initRenderers();
@@ -189,10 +191,8 @@ export class Map {
         this.buildingView = new BuildingView(
             this.cameraManager,
             this.scene,
-            this.buildings,
             this.outlineManager,
             this.layerManager,
-            this.picker
         );
     }
 

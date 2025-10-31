@@ -6,7 +6,6 @@ from typing import Any
 
 import numpy as np
 
-from cj_geometry import IconPosition
 from cj_objects import (
     CityJSONFile,
     CityJSONObject,
@@ -15,6 +14,7 @@ from cj_objects import (
     OutdoorUnitContainer,
 )
 from csv_utils import csv_get_row_value
+from icon_positions import IconPosition
 
 
 def load_geojson_icons(gj_path: Path, output_cj_path: Path):
