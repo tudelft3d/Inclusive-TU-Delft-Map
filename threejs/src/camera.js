@@ -11,7 +11,7 @@ const MAP_CAMERA = 0;
 const ORBIT_CAMERA = 1;
 const ORTHOGRAPHIC_CAMERA = 2;
 
-const fov = 75;
+const fov = 55;
 const near = 0.1;
 const far = 100000;
 const frustumSize = 1;
