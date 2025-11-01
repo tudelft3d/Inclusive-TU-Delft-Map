@@ -165,7 +165,7 @@ export class LayerManager {
     _unhide_mesh_parents_recursive(threejsObject) {
         threejsObject.children.forEach((currentChild) => {
             if (currentChild.isMesh && currentChild.name.toLowerCase().includes("unit")) {
-                currentChild.visible = true;
+                currentChild.visible = false;
             } else if (currentChild.children && currentChild.name.toLowerCase().includes("unit")) {
                 currentChild.visible = true;
                 this._unhide_mesh_parents_recursive(currentChild);
@@ -370,7 +370,7 @@ export class LayerManager {
 			if (layer_code in this.building_BuildingUnitContainers[this.active_building_key]) {
 
 				if (this._is_geometry_layer(layer_code)) {
-					this._add_single_interior_geometry_layer(layer_code);
+					this._toggle_single_interior_geometry_layer(layer_code, true);
 				} else {
 					this._add_single_interior_icon_layer(layer_code);
 				}
@@ -396,13 +396,14 @@ export class LayerManager {
 				if (full_storey_code.split(".")[2] == this.active_storey_code) {
 
 					const icon_path = [this._get_icon_path(layer_code)];
+					const icon_key = [layer_code];
 					const icon_color = [this._get_icon_color(layer_code)];
 
 					const position = this._convert_cityjson_position(current_unit_object.attributes["icon_position"]);
 
 					const icon_set_key = this.active_building_key + "-" + current_unit_key;
 
-					this._add_icon_set(icon_set_key, null, icon_path, layer_code, icon_color, position)
+					this._add_icon_set(icon_set_key, null, icon_path, icon_key, icon_color, position)
 
 				}
 			}
@@ -410,17 +411,57 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} layer_code: layer code of the layer for which geometry needs to be enabled inside
-     * the active building.
+     * @param {string} layer_code: Toggle the visiblity of a single geometry layer inside a building
      * 
      */
-	_add_single_interior_geometry_layer(layer_code) {
+	_toggle_single_interior_geometry_layer(layer_code, visibility) {
 
-		const layer_unit_container_key = this.building_BuildingUnitContainers[this.active_building_key][layer_code];
+		const unit_container_key = this.building_BuildingUnitContainers[this.active_building_key][layer_code];
 
-		const layer_unit_container_object = cityjson.CityObjects[layer_unit_container_key];
+		const unit_container_object = cityjson.CityObjects[unit_container_key];
 
-		console.log()
+		for (const unit_key of unit_container_object.children) {
+
+			const unit_object = cityjson.CityObjects[unit_key];
+
+			for (const full_storey_code of unit_object.attributes.unit_storeys) {
+
+				if (full_storey_code.split(".")[2] == this.active_storey_code) {
+
+					const unit_mesh_key = unit_key + "-lod_0";
+
+					const threejs_object = this.scene.getObjectByName(unit_mesh_key);
+
+					threejs_object.visible = visibility;
+
+					break;
+
+				}
+			}
+		}
+	}
+
+	/**
+     * @param {string} layer_code: Toggle the visiblity of a single geometry layer that is outdoors on campus
+     * 
+     */
+	_toggle_single_outdoor_geometry_layer(layer_code, visibility) {
+
+		const unit_container_key = this.campus_OutdoorUnitContainers[layer_code];
+
+		const unit_container_object = cityjson.CityObjects[unit_container_key];
+
+		for (const unit_key of unit_container_object.children) {
+
+			const unit_object = cityjson.CityObjects[unit_key];
+
+			const unit_mesh_key = unit_key + "-lod_0";
+
+			const threejs_object = this.scene.getObjectByName(unit_mesh_key);
+
+			threejs_object.visible = visibility;
+
+		}
 	}
 
 	/**
@@ -448,11 +489,11 @@ export class LayerManager {
 			}
 		}
 
-		this._active_geometry_layers().forEach((geometry_layer_code) => {
-
-			// TODO: REMOVE ACTIVE GEOMETRY
-
-		});
+		for (const layer_code of this.active_layers) {
+			if(layer_code in this.building_BuildingUnitContainers[this.active_building_key] && this._is_geometry_layer(layer_code)) {
+				this._toggle_single_interior_geometry_layer(layer_code, false);
+			}
+		}
 
 		if (clear_active_values) {
 
@@ -551,10 +592,8 @@ export class LayerManager {
      */
 	_add_geometry_layer(layer_code) {
 
-		// TODO
-
 		if (layer_code in this.campus_OutdoorUnitContainers) {
-
+			this._add_single_outdoor_geometry_layer(layer_code);
 		}
 
 		if (this.active_building_key == null) {
@@ -565,7 +604,7 @@ export class LayerManager {
 			return;
 		}
 
-		this._add_single_interior_geometry_layer(layer_code);
+		this._toggle_single_interior_geometry_layer(layer_code, true);
 
 	}
 
@@ -587,7 +626,6 @@ export class LayerManager {
 	 * @param {string} layer_code: The layer code of the icon layer that needs to be hidden.
      */
 	_remove_icon_layer(layer_code) {
-
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
 			if (layer_code in icon_set_object.svgIcons) {
 				if (Object.keys(icon_set_object.svgIcons).length > 1 || icon_set_object.hasText()) {
@@ -603,6 +641,21 @@ export class LayerManager {
 	 * @param {string} layer_code: The layer code of the geometry layer that needs to be hidden.
      */
 	_remove_geometry_layer(layer_code) {
+
+		if (layer_code in this.campus_OutdoorUnitContainers) {
+			this._toggle_single_outdoor_geometry_layer(layer_code, false);
+		}
+
+		if (this.active_building_key == null) {
+			return;
+		}
+
+		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_key])){
+			return;
+		}
+
+		this._toggle_single_interior_geometry_layer(layer_code, false);
+
 	}
 
 	/**
