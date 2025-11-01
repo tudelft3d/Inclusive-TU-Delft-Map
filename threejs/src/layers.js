@@ -12,6 +12,7 @@ import {
 	SvgIcon,
 	SvgLoader,
 } from "./icons";
+import { CjHelper } from './cjHelper';
 
 /*
 NOTES:
@@ -34,6 +35,7 @@ export class LayerManager {
 		this.iconsSceneManager = iconsSceneManager;
 		this.svgLoader = svgLoader;
 		this.cameraManager = cameraManager;
+		this.cjHelper = new CjHelper(this.scene);
 
 		this.layer_definition = {};
 
@@ -632,13 +634,22 @@ export class LayerManager {
 
 	//ALENA-start
 	_populate_layer_buttons() {
-
+		const allUnitsObjectKeys = this.cjHelper.getAllUnitsObjectKeys();
+		const allUsedCodes = new Set(
+			allUnitsObjectKeys.map(objectKey => {
+				const attributes = this.cjHelper.getAttributes(objectKey);
+				if (Object.keys(attributes).includes("code")) {
+					return attributes["code"];
+				}
+			})
+		)
+		console.log("allUsedCodes", allUsedCodes);
 
 		var layers_dropdown = document.getElementById("layers-dropdown");
 		// clear current contents but keep dropdown container
 		layers_dropdown.innerHTML = "";
 
-		for (const [group_name, group_layers] of Object.entries(this.layer_hierarchy)) {
+		for (const [groupName, groupLayers] of Object.entries(this.layer_hierarchy)) {
 
 			// container for group
 			let group_div = document.createElement("div");
@@ -658,12 +669,12 @@ export class LayerManager {
 			let groupCheckbox = document.createElement("input");
 			groupCheckbox.type = "checkbox";
 			groupCheckbox.className = "layer-group-checkbox";
-			groupCheckbox.id = `group_chk_${sanitizeId(group_name)}`;
+			groupCheckbox.id = `group_chk_${sanitizeId(groupName)}`;
 			title.appendChild(groupCheckbox);
 
 			// text node for the group name
 			let titleText = document.createElement("span");
-			titleText.textContent = group_name;
+			titleText.textContent = groupName;
 			title.appendChild(titleText);
 
 			header.appendChild(title);
@@ -691,8 +702,13 @@ export class LayerManager {
 			itemsContainer.className = "layer-group-items";
 			group_div.appendChild(itemsContainer);
 
+			// Filter out the layers that have no associated object
+			const filteredGroupLayers = Object.fromEntries(
+				Object.entries(groupLayers).filter(([name, code]) => allUsedCodes.has(code))
+			);
+
 			// convenience array of codes for this group
-			const codes = Object.values(group_layers);
+			const codes = Object.values(filteredGroupLayers);
 
 			// helper to sync group checkbox state (checked / indeterminate)
 			const updateGroupCheckbox = () => {
@@ -702,8 +718,7 @@ export class LayerManager {
 			};
 
 			// add each layer / facility as a checklist row
-			for (const [layer_name, layer_code] of Object.entries(group_layers)) {
-
+			for (const [layer_name, layer_code] of Object.entries(filteredGroupLayers)) {
 				if (typeof layer_code === 'string' || layer_code instanceof String) {
 
 					this._add_single_layer(layer_name, layer_code, itemsContainer, updateGroupCheckbox);

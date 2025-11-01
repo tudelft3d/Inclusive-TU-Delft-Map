@@ -92,6 +92,15 @@ export class CjHelper {
         return json["type"];
     }
 
+    getChildrenObjectKeys(key) {
+        const json = this.getJson(key);
+        if (Object.keys(json).includes("children")) {
+            return json["children"];
+        } else {
+            return [];
+        }
+    }
+
     getAttributes(key) {
         const json = this.getJson(key);
         return json["attributes"];
@@ -119,16 +128,48 @@ export class CjHelper {
         return attributes[unitSpacesAttribute];
     }
 
-    getAllBuildingsObjectKeys() {
-        const allBuildings = [];
+    getSpaceId(key) {
+        const attributes = this.getAttributes(key);
+        return attributes["space_id"];
+    }
+
+    /**
+     * Get the object keys of all the objects of one of the given types.
+     * 
+     * @param {string[]} objectTypes 
+     * @returns 
+     */
+    _getAllObjectKeysFilter(objectTypes) {
+        const allObjectKeys = [];
         for (const [objectKey, object] of Object.entries(
             cityjson.CityObjects
         )) {
             const objectType = this.getType(objectKey);
-            if (objectType == "Building") {
-                allBuildings.push(objectKey);
+            if (objectTypes.includes(objectType)) {
+                allObjectKeys.push(objectKey);
             }
         }
-        return allBuildings;
+        return allObjectKeys;
+    }
+
+    getAllBuildingsObjectKeys() {
+        return this._getAllObjectKeysFilter(["Building"]);
+    }
+
+    getAllUnitsObjectKeys() {
+        return this._getAllObjectKeysFilter(["BuildingUnit", "GenericCityObject"]);
+    }
+
+    buildingHasFloorPlan(key) {
+        // Check if the object is a building
+        const objectType = this.getType(key);
+        if (objectType != "Building") {
+            console.error("The queried object is not a building.");
+            return;
+        }
+
+        const childrenKeys = this.getChildrenObjectKeys(key);
+        const buildingParts = childrenKeys.filter(childKey => this.getType(childKey) == "BuildingPart");
+        return buildingParts.length > 0;
     }
 }

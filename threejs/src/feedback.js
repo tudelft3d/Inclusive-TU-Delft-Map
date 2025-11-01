@@ -1,3 +1,13 @@
+const CONFIG = {
+  endpoint: '/api/feedback',
+  successHideDelay: 6000
+};
+
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   /* DOM references */
   const refs = {
@@ -10,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMsg: document.getElementById('error_message')
   };
 
+  // Get the URL parameters
+  const loc = getQueryParam('location');
+  console.log("loc", loc);
+  if (loc) refs.location.value = decodeURIComponent(loc);
 
-  const CONFIG = {
-    endpoint: '/api/feedback',
-    successHideDelay: 6000
-  };
 
   const ui = {
     /* Enable/disable the submit button and toggle aria‑busy */
@@ -113,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* Form submit handler */
-  
   async function handleSubmit(event) {
     event?.preventDefault();          // stop native navigation
     ui.clearAll();

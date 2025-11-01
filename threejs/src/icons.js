@@ -14,11 +14,12 @@ export class IconSet {
      * @param {TextIcon | null} textIcon
      * @param {THREE.Vector3} worldPos
      * @param {*} onClick
+     * @param {number} appearanceThreshold
      */
-    constructor(key, svgIcons, textIcon, worldPos, onClick) {
+    constructor(key, svgIcons, textIcon, worldPos, onClick, appearanceThreshold = Infinity) {
         this.key = key;
         this.basePos = worldPos;
-        // this.onClick = onClick;
+        this.appearanceThreshold = appearanceThreshold;
 
         this.svgIcons = {};
         svgIcons.map((svgIcon) => {
@@ -150,8 +151,6 @@ export class IconSet {
      * @param {CamerasControls} cameraManager
      */
     setSizeFromCameraManager(cameraManager) {
-        const thresholdDistance = 1000;
-
         // Compute the distance from the camera to the object position
         var distance;
         if (cameraManager.usesMapCamera() || cameraManager.usesOrbitCamera()) {
@@ -167,10 +166,11 @@ export class IconSet {
 
         // Compute the scale based on the distance
         var scale;
-        if (distance < thresholdDistance) {
+        if (distance < this.appearanceThreshold) {
             scale = 1;
         } else {
-            scale = (1 * thresholdDistance) / distance;
+            // scale = (1 * thresholdDistance) / distance;
+            scale = 0;
         }
         this._setScale(scale);
     }
