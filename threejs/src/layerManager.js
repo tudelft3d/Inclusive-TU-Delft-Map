@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import layer_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 import layer_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
+import { CjHelper } from './cjHelper';
 
 import {
 	// layerset,
@@ -22,6 +23,7 @@ export class LayerManager {
 
 		this.layer_hierarchy = layer_hierarchy_json;
 		this.layer_definition = {};
+		this.cjHelper = new CjHelper(this.scene);
 
 		// for (const [key, value] of Object.entries(layer_definition_json)) {
 		// 	if (value["Include"] && value["Shown with icon"]) {
@@ -38,7 +40,7 @@ export class LayerManager {
 		this.active_layers = [];
 		this.importance_baseline = "Tertiary";
 
-		this.active_building_key = null;
+		this.active_building_object_key = null;
 		this.active_storey_code = null;
 
 		this.building_BuildingUnitContainers = this._extract_building_buildingUnitContainers();
@@ -53,26 +55,26 @@ export class LayerManager {
 	}
 
 	/**
-     * Extracts all the buildingUnitContainers for each building on the campus from the cityjson.
-     * 
-     * This function assumes that buildings have a child of type BuildingUnitObject.
-     * If not, the building will be skipped and never be assigned icons.
-     * 
-     * The end result is:
-     * 
-     * {
-     	* building_1: {
-     		* code1: b1_code1_key,
-     		* code2: b1_code2_key
-     	* },
-     	* building_2: {
-     		* code1: b2_code1_key,
-     		* code2: b2_code2_key
-     	* }
-     * }
-     *
-     * @returns A dictionary mapping building keys to a dictionary mapping layer codes to buildingUnitContainer keys.
-     */
+	 * Extracts all the buildingUnitContainers for each building on the campus from the cityjson.
+	 * 
+	 * This function assumes that buildings have a child of type BuildingUnitObject.
+	 * If not, the building will be skipped and never be assigned icons.
+	 * 
+	 * The end result is:
+	 * 
+	 * {
+		  * building_1: {
+				* code1: b1_code1_key,
+				* code2: b1_code2_key
+		  * },
+		  * building_2: {
+				* code1: b2_code1_key,
+				* code2: b2_code2_key
+		  * }
+	 * }
+	 *
+	 * @returns A dictionary mapping building keys to a dictionary mapping layer codes to buildingUnitContainer keys.
+	 */
 	_extract_building_buildingUnitContainers() {
 
 		const building_buildingUnitContainers = {};
@@ -113,19 +115,19 @@ export class LayerManager {
 	}
 
 	/**
-     * Extracts all the OutdoorUnitContainers from the cityjson
-     * 
-     * This function assumes that the cityjson file has one object called Outdoor-CityObjectGroup-OutdoorObject.
-     *
-     * The end result is:
-     * 
-     * {
-     	* code1: unit1_key,
-     	* code2: unit2_key
-     * }
-     * 
-     * @returns An object where layer codes map to their respective OutdoorUnitContainer.
-     */
+	 * Extracts all the OutdoorUnitContainers from the cityjson
+	 * 
+	 * This function assumes that the cityjson file has one object called Outdoor-CityObjectGroup-OutdoorObject.
+	 *
+	 * The end result is:
+	 * 
+	 * {
+		  * code1: unit1_key,
+		  * code2: unit2_key
+	 * }
+	 * 
+	 * @returns An object where layer codes map to their respective OutdoorUnitContainer.
+	 */
 	_extract_outdoor_unit_containers() {
 
 		const campus_OutdoorUnitContainers = {};
@@ -144,9 +146,9 @@ export class LayerManager {
 	}
 
 	/**
-     * By default (?) the parents of the geometry layer geometry objects are hidden.
-     * These need to be made visible, so that the mesh children can be toggled.
-     */
+	 * By default (?) the parents of the geometry layer geometry objects are hidden.
+	 * These need to be made visible, so that the mesh children can be toggled.
+	 */
 	_unhide_mesh_parents() {
 
 		const threejs_world_object = this.scene.getObjectByName("world");
@@ -164,30 +166,30 @@ export class LayerManager {
 	}
 
 	/**
-     * Unhide all the parents of unit meshes and hide the meshes themselves
-     *
-     * @param {THREE.Object3D} threejsObject
-     */
-    _unhide_mesh_parents_recursive(threejsObject) {
-        threejsObject.children.forEach((currentChild) => {
-            if (currentChild.isMesh && currentChild.name.toLowerCase().includes("unit")) {
-                currentChild.visible = false;
-            } else if (currentChild.children && currentChild.name.toLowerCase().includes("unit")) {
-                currentChild.visible = true;
-                this._unhide_mesh_parents_recursive(currentChild);
-            } else {
-            	return;
-            }
-        });
-    }
+	 * Unhide all the parents of unit meshes and hide the meshes themselves
+	 *
+	 * @param {THREE.Object3D} threejsObject
+	 */
+	_unhide_mesh_parents_recursive(threejsObject) {
+		threejsObject.children.forEach((currentChild) => {
+			if (currentChild.isMesh && currentChild.name.toLowerCase().includes("unit")) {
+				currentChild.visible = false;
+			} else if (currentChild.children && currentChild.name.toLowerCase().includes("unit")) {
+				currentChild.visible = true;
+				this._unhide_mesh_parents_recursive(currentChild);
+			} else {
+				return;
+			}
+		});
+	}
 
 	/**
-     * @param {string} new_importance_value: The new importance value.
-     * 
-     * This function updates the importance value, and then iterates over the buildings
-     * to update their labels (if necessary).
-     * 
-     */
+	 * @param {string} new_importance_value: The new importance value.
+	 * 
+	 * This function updates the importance value, and then iterates over the buildings
+	 * to update their labels (if necessary).
+	 * 
+	 */
 	update_importance_baseline(new_importance_value) {
 
 		const old_importance_value = this.baseline_importance;
@@ -210,16 +212,16 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} importance_value: One of the five importance values
-     * @param {string} importance_baseline_value: One of the five importance values that the other input is compared against
-     * 
-     * This function returns whether or not a specific importance value is enough when compared to the current baseline.
-     * This function can be used to determine if an iconset needs to include a label
-     * 
-     * True is returned if incoming is equally or more important than baseline.
-     * False is returned if incoming is less important than baseline.
-     * 
-     */
+	 * @param {string} importance_value: One of the five importance values
+	 * @param {string} importance_baseline_value: One of the five importance values that the other input is compared against
+	 * 
+	 * This function returns whether or not a specific importance value is enough when compared to the current baseline.
+	 * This function can be used to determine if an iconset needs to include a label
+	 * 
+	 * True is returned if incoming is equally or more important than baseline.
+	 * False is returned if incoming is less important than baseline.
+	 * 
+	 */
 	_is_importance_sufficient(incoming_importance_value, baseline_importance_value) {
 
 		const importance_scale = ["Primary", "Secondary", "Tertiary", "Quaternary", "Quinary"];
@@ -247,8 +249,8 @@ export class LayerManager {
 	}
 
 	/**
-     * This function adds the initial labels and icons for the buildings and outdoor objects on campus
-     */
+	 * This function adds the initial labels and icons for the buildings and outdoor objects on campus
+	 */
 	_add_initial_iconsets() {
 
 		for (const [building_key, layer_code_unit_key_dict] of Object.entries(this.building_BuildingUnitContainers)) {
@@ -266,12 +268,12 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} building_key: cityjson key for a building object that needs to be given a label and icons
-     * 
-     * This function adds a label and icon to a single building.
-     * This function is called initially for each building when the map is loaded to give them their starting labels,
-     * and later on when leaving buildingView so that the removed label and icons can be restored.
-     */
+	 * @param {string} building_key: cityjson key for a building object that needs to be given a label and icons
+	 * 
+	 * This function adds a label and icon to a single building.
+	 * This function is called initially for each building when the map is loaded to give them their starting labels,
+	 * and later on when leaving buildingView so that the removed label and icons can be restored.
+	 */
 	_add_single_building_iconset(building_key) {
 
 		const building_object = cityjson.CityObjects[building_key];
@@ -286,7 +288,7 @@ export class LayerManager {
 			}
 		} else {
 			building_label = null;
-		}		
+		}
 
 		let icon_paths = [];
 		let icon_keys = [];
@@ -315,15 +317,15 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} unit_key: cityjson key for an outdoor unit object that needs to be given an iconset
-     * 
-     * This function adds an iconset to a single outdoor unit.
-     * This function is called on map startup to create the initial outdoor iconsets.
-     */
+	 * @param {string} unit_key: cityjson key for an outdoor unit object that needs to be given an iconset
+	 * 
+	 * This function adds an iconset to a single outdoor unit.
+	 * This function is called on map startup to create the initial outdoor iconsets.
+	 */
 	_add_single_outdoor_iconset(layer_code) {
 
 		const unit_container_key = this.campus_OutdoorUnitContainers[layer_code];
-		
+
 		const unit_container_object = cityjson.CityObjects[unit_container_key];
 
 		for (const current_unit_key of unit_container_object.children) {
@@ -342,44 +344,44 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} iconset_ket: iconset key for the iconset that needs to be removed.
-     */
+	 * @param {string} iconset_ket: iconset key for the iconset that needs to be removed.
+	 */
 	_remove_single_iconset(iconset_key) {
 		this.iconsSceneManager.removeIconSet(icon_set_key);
 	}
 
 	/**
-     * @param {string} building_key: cityjson key for a building object
-     * @param {string} storey_code: identifier of one of the storeys in the building indicated by the building_key 
-     * 
-     * This function is called either when:
-     * 1. Building view is activated
-     * 2. The active storey in building view is changed
-     * 
-     * This function will first remove all icons associated with the building key,
-     * and then create all icons that are both currently active and present
-     * within the building.
-     * 
-     * First removing the icons serves a dual purpose of clearing the building label and building icons
-     * that may be active, as well as clearing any icons that are active on the storey that is being left.
-     * 
-     */
+	 * @param {string} building_key: cityjson key for a building object
+	 * @param {string} storey_code: identifier of one of the storeys in the building indicated by the building_key 
+	 * 
+	 * This function is called either when:
+	 * 1. Building view is activated
+	 * 2. The active storey in building view is changed
+	 * 
+	 * This function will first remove all icons associated with the building key,
+	 * and then create all icons that are both currently active and present
+	 * within the building.
+	 * 
+	 * First removing the icons serves a dual purpose of clearing the building label and building icons
+	 * that may be active, as well as clearing any icons that are active on the storey that is being left.
+	 * 
+	 */
 	add_interior_building_layers(building_key, storey_code) {
 
-		this.active_building_key = building_key;
+		this.active_building_object_key = this.cjHelper.keyToObjectKey(building_key);
 		this.active_storey_code = storey_code;
 
 		this.remove_interior_building_layers(false);
 
 		for (const layer_code of this.active_layers) {
 
-			if (layer_code in this.building_BuildingUnitContainers[this.active_building_key]) {
+			if (layer_code in this.building_BuildingUnitContainers[this.active_building_object_key]) {
 
 				if (this._is_geometry_layer(layer_code)) {
 					this._toggle_single_interior_geometry_layer(layer_code, true);
 				}
 
-				if (this._is_icon_layer(layer_code)){
+				if (this._is_icon_layer(layer_code)) {
 					this._add_single_interior_icon_layer(layer_code);
 				}
 			}
@@ -387,13 +389,13 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} layer_code: layer code of the layer for which iconsets need to be added inside
-     * the active building.
-     * 
-     */
+	 * @param {string} layer_code: layer code of the layer for which iconsets need to be added inside
+	 * the active building.
+	 * 
+	 */
 	_add_single_interior_icon_layer(layer_code) {
 
-		const layer_BuildingUnitContainer_key = this.building_BuildingUnitContainers[this.active_building_key][layer_code];
+		const layer_BuildingUnitContainer_key = this.building_BuildingUnitContainers[this.active_building_object_key][layer_code];
 
 		for (const current_unit_key of cityjson.CityObjects[layer_BuildingUnitContainer_key].children) {
 
@@ -409,7 +411,7 @@ export class LayerManager {
 
 					const position = this._convert_cityjson_position(current_unit_object.attributes["icon_position"]);
 
-					const icon_set_key = this.active_building_key + "-" + current_unit_key;
+					const icon_set_key = current_unit_key;
 
 					this._add_icon_set(icon_set_key, null, icon_path, icon_key, icon_color, position)
 
@@ -419,12 +421,12 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} layer_code: Toggle the visiblity of a single geometry layer inside a building
-     * 
-     */
+	 * @param {string} layer_code: Toggle the visiblity of a single geometry layer inside a building
+	 * 
+	 */
 	_toggle_single_interior_geometry_layer(layer_code, visibility) {
 
-		const unit_container_key = this.building_BuildingUnitContainers[this.active_building_key][layer_code];
+		const unit_container_key = this.building_BuildingUnitContainers[this.active_building_object_key][layer_code];
 
 		const unit_container_object = cityjson.CityObjects[unit_container_key];
 
@@ -450,9 +452,9 @@ export class LayerManager {
 	}
 
 	/**
-     * @param {string} layer_code: Toggle the visiblity of a single geometry layer that is outdoors on campus
-     * 
-     */
+	 * @param {string} layer_code: Toggle the visiblity of a single geometry layer that is outdoors on campus
+	 * 
+	 */
 	_toggle_single_outdoor_geometry_layer(layer_code, visibility) {
 
 		const unit_container_key = this.campus_OutdoorUnitContainers[layer_code];
@@ -484,30 +486,31 @@ export class LayerManager {
 	 * If clear_active_values is true the active building key and active storey code will be cleared,
 	 * and the label of the active building will be restored.
 	 *  
-     */
+	 */
 	remove_interior_building_layers(clear_active_values = true) {
 
-		if (this.active_building_key in this.iconsSceneManager.iconSets) {
-			this.iconsSceneManager.removeIconSet(this.active_building_key);
+		if (this.active_building_object_key in this.iconsSceneManager.iconSets) {
+			this.iconsSceneManager.removeIconSet(this.active_building_object_key);
 		}
 
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
-			if (icon_set_key.includes(this.active_building_key)) {
+			const building_object_key = this.cjHelper.findParentBuildingObjectKey(icon_set_key);
+			if (building_object_key == this.active_building_object_key) {
 				this.iconsSceneManager.removeIconSet(icon_set_key);
 			}
 		}
 
 		for (const layer_code of this.active_layers) {
-			if(layer_code in this.building_BuildingUnitContainers[this.active_building_key] && this._is_geometry_layer(layer_code)) {
+			if (layer_code in this.building_BuildingUnitContainers[this.active_building_object_key] && this._is_geometry_layer(layer_code)) {
 				this._toggle_single_interior_geometry_layer(layer_code, false);
 			}
 		}
 
 		if (clear_active_values) {
 
-			this._add_single_building_iconset(this.active_building_key);
+			this._add_single_building_iconset(this.active_building_object_key);
 
-			this.active_building_key = null;
+			this.active_building_object_key = null;
 			this.active_storey_code = null;
 
 		}
@@ -516,7 +519,7 @@ export class LayerManager {
 
 	/**
 	 * @param {string} layer_code: The layer code of the layer that needs to be added. 
-     */
+	 */
 	_add_layer(layer_code) {
 		if (this._is_geometry_layer(layer_code)) {
 			this._add_geometry_layer(layer_code);
@@ -535,16 +538,16 @@ export class LayerManager {
 	 * 1. Iterate over the extracted layer_code: unit_key dictionary, skip if the building key is currently active.
 	 * 2. If the given layer_code is in the building, add its icon.
 	 * 3. For the current building key, iterate over the units of the layer code type, and add icons if they match the current storey.	 * 
-     */
+	 */
 	_add_icon_layer(layer_code) {
 
 		/**
 		 * This section handles adding icons to buildings that aren't currently active.
-	     */
+		 */
 
 		for (const [building_key, layer_code_unit_key_dict] of Object.entries(this.building_BuildingUnitContainers)) {
 
-			if (building_key == this.active_building_key) {
+			if (building_key == this.active_building_object_key) {
 				continue;
 			}
 
@@ -563,7 +566,7 @@ export class LayerManager {
 
 		/**
 		 * This section handles adding icons to outdoor objects.
-	     */
+		 */
 
 		if (layer_code in this.campus_OutdoorUnitContainers) {
 
@@ -584,13 +587,13 @@ export class LayerManager {
 		 * Icons can also not be consolidated, as clicking an icon opens the infopane on a specific unit,
 		 * which would cause one of the units to never get selected.
 		 * 
-	     */
+		 */
 
-		if (this.active_building_key == null) {
+		if (this.active_building_object_key == null) {
 			return;
 		}
 
-		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_key])){
+		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_object_key])) {
 			return;
 		}
 
@@ -599,18 +602,18 @@ export class LayerManager {
 
 	/**
 	 * @param {string} layer_code: The layer code of the geometry layer that needs to be added.
-     */
+	 */
 	_add_geometry_layer(layer_code) {
 
 		if (layer_code in this.campus_OutdoorUnitContainers) {
 			this._add_single_outdoor_geometry_layer(layer_code);
 		}
 
-		if (this.active_building_key == null) {
+		if (this.active_building_object_key == null) {
 			return;
 		}
 
-		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_key])){
+		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_object_key])) {
 			return;
 		}
 
@@ -623,7 +626,7 @@ export class LayerManager {
 	 * 
 	 * This function removes ALL instances of a layer: building, interior, outdoor.
 	 * 
-     */
+	 */
 	_remove_layer(layer_code) {
 		if (this._is_geometry_layer(layer_code)) {
 			this._remove_geometry_layer(layer_code);
@@ -636,7 +639,7 @@ export class LayerManager {
 
 	/**
 	 * @param {string} layer_code: The layer code of the icon layer that needs to be hidden.
-     */
+	 */
 	_remove_icon_layer(layer_code) {
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
 			if (layer_code in icon_set_object.svgIcons) {
@@ -651,18 +654,18 @@ export class LayerManager {
 
 	/**
 	 * @param {string} layer_code: The layer code of the geometry layer that needs to be hidden.
-     */
+	 */
 	_remove_geometry_layer(layer_code) {
 
 		if (layer_code in this.campus_OutdoorUnitContainers) {
 			this._toggle_single_outdoor_geometry_layer(layer_code, false);
 		}
 
-		if (this.active_building_key == null) {
+		if (this.active_building_object_key == null) {
 			return;
 		}
 
-		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_key])){
+		if (!(layer_code in this.building_BuildingUnitContainers[this.active_building_object_key])) {
 			return;
 		}
 
@@ -673,7 +676,7 @@ export class LayerManager {
 	/**
 	 * @param {string} layer_code: The layer code of the icon for which a path is needed.
 	 * @return {string}: The path to the icon of the layer code.
-     */
+	 */
 	_get_icon_path(layer_code) {
 		return `../assets/threejs/graphics/icons/thematic-layers/${this.layer_definition[layer_code]["Icon name"]}`
 	}
@@ -681,7 +684,7 @@ export class LayerManager {
 	/**
 	 * @param {string} layer_code: The layer code of the icon for which a color is needed.
 	 * @return {string}: The hexcode for the color associated with the layer code.
-     */
+	 */
 	_get_icon_color(layer_code) {
 
 		// ENABLE THIS ONCE COLOR IS ADDED TO THEMATIC-CODELIST-DEFINITION
@@ -698,7 +701,7 @@ export class LayerManager {
 	 * @param {string} icon_color: background color that the icon needs to have.
 	 * 
 	 * Adds a new icon to an existing icon_set
-     */
+	 */
 	async _add_icon_svg(icon_set_key, icon_key, icon_path, icon_color) {
 
 		const svg = await Promise.all(
@@ -721,7 +724,7 @@ export class LayerManager {
 	 * @param {THREE.Vector3} position: threejs position for the icon
 	 * 
 	 * Adds a new icon set object to the iconSceneManager
-     */
+	 */
 	async _add_icon_set(icon_set_key, icon_set_text, paths, icon_keys, bg_colors, position) {
 
 		const svgPromises = paths.map(p => this.svgLoader.getSvg(p));
@@ -766,7 +769,7 @@ export class LayerManager {
 	 * 
 	 * @return {THREE.Vector3}: A threejs vector3 with the coordinates from the icon position.
 	 * 
-     */
+	 */
 	_convert_cityjson_position(position_object) {
 
 		const position = new THREE.Vector3(
@@ -783,7 +786,7 @@ export class LayerManager {
 	 * 
 	 * @return {function}: The function that needs to be executed when the icon is clicked.
 	 * 
-     */
+	 */
 	_generate_icon_onclick(object_key) {
 
 		const onClick = (event) => {
@@ -799,12 +802,12 @@ export class LayerManager {
 	 * Updates the currently active layers.
 	 * Layers that are not present in the active layers array are added, those that are present are removed.
 	 * Automatically adds or removes the layer in question.
-     */
+	 */
 	_update_active_layers(layer_code) {
 
 		/**
 		 * If the layer IS NOT active: activate it
-	     */
+		 */
 		if (!(this._is_layer_active(layer_code))) {
 
 			this.active_layers.push(layer_code);
@@ -817,9 +820,9 @@ export class LayerManager {
 				}
 			}
 
-		/**
-		 * If the layer IS active: deactivate it
-	     */
+			/**
+			 * If the layer IS active: deactivate it
+			 */
 		} else {
 			this.active_layers.splice(this.active_layers.indexOf(layer_code), 1);
 			this._remove_layer(layer_code);
@@ -851,10 +854,10 @@ export class LayerManager {
 	}
 
 	/**
-     * Each layer code that is returned is both currently active and is a geometry layer.
-     * 
-     * @returns An array of active geometry layer layer_codes.
-     */
+	 * Each layer code that is returned is both currently active and is a geometry layer.
+	 * 
+	 * @returns An array of active geometry layer layer_codes.
+	 */
 	_active_geometry_layers() {
 
 		let active_geometry_layers = [];
@@ -873,10 +876,10 @@ export class LayerManager {
 	/**
 	 * @param {string} layer_code: The layer code to check.
 	 * 
-     * Returns true or false depending on if the layer is a geometry one or not.
-     * 
-     * @returns A boolean describing if the layer in question is a geometry one.
-     */
+	 * Returns true or false depending on if the layer is a geometry one or not.
+	 * 
+	 * @returns A boolean describing if the layer in question is a geometry one.
+	 */
 	_is_geometry_layer(layer_code) {
 		return this.layer_definition[layer_code]["Geometry"];
 	}

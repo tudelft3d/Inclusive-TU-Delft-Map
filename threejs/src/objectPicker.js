@@ -121,6 +121,7 @@ export class ObjectPicker {
      * @param {*} onAnimationComplete
      */
     pickMesh(pickedKey, onAnimationComplete = () => { }) {
+        console.log("pickedKey", pickedKey);
         const pickedObjectKey = this.cjHelper.keyToObjectKey(pickedKey);
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
 
@@ -275,6 +276,7 @@ export class ObjectPicker {
             // Get the spaces of the units
             const unitSpacesObjectKeys =
                 this.cjHelper.getUnitSpaces(pickedObjectKey);
+            console.log(unitSpacesObjectKeys);
             if (unitSpacesObjectKeys.length == 0) {
                 console.error("A unit with 0 space is not supported yet.");
                 return;
@@ -420,19 +422,37 @@ export class ObjectPicker {
 
         // Reset the building view
         if (this.buildingView._isActivated()) {
-            this.buildingView.deactivate();
-            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            // this.buildingView.deactivate();
+            // this.cameraManager.switchToInt(this.buildingViewActivationCamera);
         }
         if (this.buildingView._isInitialisedNotActivated()) {
             this.buildingView.uninitialise();
+            this.infoPane.hide();
         }
 
         if (this.cameraManager.usesOrbitCamera()) {
             this.cameraManager.switchToMap();
         }
+    }
 
-        // Hide the info pane
-        this.infoPane.hide();
+    closeInfoPane() {
+        // Unhighlight
+        this.pickHighlighter.unhighlight();
+
+        // Reset the building view
+        if (this.buildingView._isActivated()) {
+            this.buildingView.deactivate();
+            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            this.infoPane.hide();
+        }
+        if (this.buildingView._isInitialisedNotActivated()) {
+            this.buildingView.uninitialise();
+            this.infoPane.hide();
+        }
+
+        if (this.cameraManager.usesOrbitCamera()) {
+            this.cameraManager.switchToMap();
+        }
     }
 
     switchBuildingView() {

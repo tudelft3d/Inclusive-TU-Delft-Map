@@ -26,10 +26,9 @@ export class BuildingView {
         this.scene = scene;
         this.outlineManager = outlineManager;
         this.layerManager = layerManager;
-
-        this.storeyManager = new StoreyManager(this);
-
         this.cjHelper = new CjHelper(this.scene);
+
+        this.storeyManager = new StoreyManager(this, this.cjHelper);
 
         this._status = NOT_INITIALISED;
     }
@@ -132,7 +131,7 @@ export class BuildingView {
         this._populateStoreyButtons();
 
 
-        const available_storeys = Object.keys(this._getStoreyObjectKeys());
+        const available_storeys = this._getStoreyObjectKeys();
 
         this.storeyManager.activate(this.buildingObjectKey, this.storeyCode, available_storeys);
 

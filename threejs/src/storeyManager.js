@@ -1,14 +1,21 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
+import { BuildingView } from "./buildingView";
+import { CjHelper } from "./cjHelper";
 
 export class StoreyManager {
-    constructor(buildingView) {
+
+    /**
+     * 
+     * @param {BuildingView} buildingView 
+     * @param {CjHelper} cjHelper 
+     */
+    constructor(buildingView, cjHelper) {
+        this.buildingView = buildingView;
+        this.cjHelper = cjHelper;
 
         this.pane = document.getElementById("storey-manager");
 
-        this.buildingView = buildingView;
-
         this._add_event_listeners();
-
     }
 
     _add_event_listeners() {
@@ -29,13 +36,44 @@ export class StoreyManager {
         });
     }
 
-    activate(building_object_key, storey_code, available_storeys) {
+    _extract_unique_storey_attr(storeys_attributes, attribute_name) {
+        const values = storeys_attributes.map((attrs) => { return attrs[attribute_name] });
+        const uniqueValues = new Set(values);
+        if (uniqueValues.size > 1) {
+            console.error("There are more than one value for this attribute for the storey:", attribute_name);
+        }
+        return uniqueValues.values().next().value;
+    }
 
-        this.current_storey = storey_code;
-        this.available_storeys = available_storeys;
+    activate(building_object_key, storey_code, available_storeys) {
+        this.current_storey_code = storey_code;
+
+        this.available_storeys = {};
+        const levels = [];
+        for (const [storey_code, storey_object_keys] of Object.entries(available_storeys)) {
+            console.log("storey_object_keys", storey_object_keys);
+            const storeys_attributes = storey_object_keys.map((key) => { return this.cjHelper.getAttributes(key) });
+
+            // Extract the attributes
+            const name = this._extract_unique_storey_attr(storeys_attributes, "Name (EN)");
+            const displayedPrefix = this._extract_unique_storey_attr(storeys_attributes, "Storey Prefix");
+            const level = this._extract_unique_storey_attr(storeys_attributes, "storey_level");
+
+            this.available_storeys[storey_code] = { name, displayedPrefix, level };
+            levels.push(level);
+        }
+
+        // Order the storeys
+        levels.sort();
+        this.order_to_storey_code = Array(Object.keys(this.available_storeys).length);
+        for (const [storey_code, storey_data] of Object.entries(this.available_storeys)) {
+            const level = storey_data.level;
+            const order = levels.indexOf(level)
+            this.available_storeys[storey_code].order = order;
+            this.order_to_storey_code[order] = storey_code
+        }
 
         this._create_storey_manager(building_object_key);
-
     }
 
     deactivate() {
@@ -66,20 +104,20 @@ export class StoreyManager {
         this.pane.appendChild(controls_div);
 
 
-        let exit_span = document.createElement("span");
-        controls_div.appendChild(exit_span);
+        // let exit_span = document.createElement("span");
+        // controls_div.appendChild(exit_span);
 
-        let exit_button = document.createElement("button");
-        exit_button.append(document.createTextNode("Exit"));
+        // let exit_button = document.createElement("button");
+        // exit_button.append(document.createTextNode("Exit"));
 
-        exit_button.addEventListener("click", (event) => {
+        // exit_button.addEventListener("click", (event) => {
 
-            this.buildingView.deactivate();
-            this.deactivate();
+        //     this.buildingView.deactivate();
+        //     this.deactivate();
 
-        });
+        // });
 
-        exit_span.appendChild(exit_button);
+        // exit_span.appendChild(exit_button);
 
 
         let drop_down_span = document.createElement("span");
@@ -124,35 +162,25 @@ export class StoreyManager {
     }
 
     _go_up_one_storey() {
-
-        const current_index = this.available_storeys.indexOf(this.current_storey);
-
-        if (current_index + 1 == this.available_storeys.length) {
-            return;
+        const current_order = this.available_storeys[this.current_storey_code].order;
+        var next_order = current_order + 1;
+        if (next_order > this.order_to_storey_code.length - 1) {
+            next_order = current_order;
         }
+        this.current_storey_code = this.order_to_storey_code[next_order];
 
-        const new_storey = this.available_storeys[current_index + 1];
-
-        this.current_storey = new_storey;
-
-        this.buildingView.setStorey(new_storey);
-
+        this.buildingView.setStorey(this.current_storey_code);
     }
 
     _go_down_one_storey() {
-
-        const current_index = this.available_storeys.indexOf(this.current_storey);
-
-        if (current_index - 1 <= 1) {
-            return;
+        const current_order = this.available_storeys[this.current_storey_code].order;
+        var next_order = current_order - 1;
+        if (next_order < 0) {
+            next_order = current_order;
         }
+        this.current_storey_code = this.order_to_storey_code[next_order];
 
-        const new_storey = this.available_storeys[current_index - 1];
-
-        this.current_storey = new_storey;
-
-        this.buildingView.setStorey(new_storey);
-
+        this.buildingView.setStorey(this.current_storey_code);
     }
 
     _populate_storey_dropdown() {
@@ -164,19 +192,21 @@ export class StoreyManager {
             return;
         }
 
-        this.available_storeys.forEach((current_storey_code) => {
+        this.order_to_storey_code.forEach((storey_code) => {
+            const storey_info = this.available_storeys[storey_code];
+            const storey_name = storey_info.name + ` (${storey_info.displayedPrefix})`;
 
             let button_div = document.createElement("div");
             button_div.className = "storey-manager-dropdown-element";
             div.appendChild(button_div);
 
             let code_button = document.createElement("button");
-            code_button.appendChild(document.createTextNode("Go to: " + current_storey_code));
+            code_button.appendChild(document.createTextNode(storey_name));
             button_div.appendChild(code_button);
 
             code_button.addEventListener("click", (event) => {
 
-                this.buildingView.setStorey(current_storey_code);
+                this.buildingView.setStorey(storey_code);
 
             });
 
