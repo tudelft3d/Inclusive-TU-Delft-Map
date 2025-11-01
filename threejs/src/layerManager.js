@@ -23,8 +23,14 @@ export class LayerManager {
 		this.layer_hierarchy = layer_hierarchy_json;
 		this.layer_definition = {};
 
+		// for (const [key, value] of Object.entries(layer_definition_json)) {
+		// 	if (value["Include"] && value["Shown with icon"]) {
+		// 		this.layer_definition[key] = value;
+		// 	}
+		// }
+
 		for (const [key, value] of Object.entries(layer_definition_json)) {
-			if (value["Include"] && value["Shown with icon"]) {
+			if (value["Include"]) {
 				this.layer_definition[key] = value;
 			}
 		}
@@ -191,8 +197,8 @@ export class LayerManager {
 
 			const building_object = cityjson.CityObjects[building_key];
 
-			const old_comparison = this._is_importance_sufficient(building_object.attributes["Color_class"], old_importance_value);
-			const new_comparison = this._is_importance_sufficient(building_object.attributes["Color_class"], new_importance_value);
+			const old_comparison = this._is_importance_sufficient(building_object.attributes["Importance"], old_importance_value);
+			const new_comparison = this._is_importance_sufficient(building_object.attributes["Importance"], new_importance_value);
 
 			if (old_comparison == new_comparison) {
 				continue;
@@ -272,7 +278,7 @@ export class LayerManager {
 
 		let building_label;
 
-		if (this._is_importance_sufficient(building_object.attributes["Color_class"], this.importance_baseline)) {
+		if (this._is_importance_sufficient(building_object.attributes["Importance"], this.importance_baseline)) {
 			if (building_object.type == "Building" && building_object.attributes["ShortName (EN)"]) {
 				building_label = `${building_object.attributes["space_id"]} | ${building_object.attributes["ShortName (EN)"]}`;
 			} else {
@@ -288,7 +294,7 @@ export class LayerManager {
 
 		for (const layer_code of this.active_layers) {
 
-			if (layer_code in this.building_BuildingUnitContainers[building_key]) {
+			if (layer_code in this.building_BuildingUnitContainers[building_key] && this._is_icon_layer(layer_code)) {
 
 				icon_paths.push(this._get_icon_path(layer_code));
 				icon_keys.push(layer_code);
@@ -371,7 +377,9 @@ export class LayerManager {
 
 				if (this._is_geometry_layer(layer_code)) {
 					this._toggle_single_interior_geometry_layer(layer_code, true);
-				} else {
+				}
+
+				if (this._is_icon_layer(layer_code)){
 					this._add_single_interior_icon_layer(layer_code);
 				}
 			}
@@ -512,7 +520,9 @@ export class LayerManager {
 	_add_layer(layer_code) {
 		if (this._is_geometry_layer(layer_code)) {
 			this._add_geometry_layer(layer_code);
-		} else {
+		}
+
+		if (this._is_icon_layer(layer_code)) {
 			this._add_icon_layer(layer_code);
 		}
 	}
@@ -617,7 +627,9 @@ export class LayerManager {
 	_remove_layer(layer_code) {
 		if (this._is_geometry_layer(layer_code)) {
 			this._remove_geometry_layer(layer_code);
-		} else {
+		}
+
+		if (this._is_icon_layer(layer_code)) {
 			this._remove_icon_layer(layer_code);
 		}
 	}
@@ -790,15 +802,51 @@ export class LayerManager {
      */
 	_update_active_layers(layer_code) {
 
-		const index = this.active_layers.indexOf(layer_code);
+		/**
+		 * If the layer IS NOT active: activate it
+	     */
+		if (!(this._is_layer_active(layer_code))) {
 
-		if (index == -1) {
 			this.active_layers.push(layer_code);
 			this._add_layer(layer_code);
 
+			for (const implied_layer_code of this.layer_definition[layer_code]["Implies"]) {
+
+				if (!(this._is_layer_active(implied_layer_code))) {
+					this._update_active_layers(implied_layer_code);
+				}
+			}
+
+		/**
+		 * If the layer IS active: deactivate it
+	     */
 		} else {
-			this.active_layers.splice(index, 1);
+			this.active_layers.splice(this.active_layers.indexOf(layer_code), 1);
 			this._remove_layer(layer_code);
+
+			for (const implied_layer_code of this.layer_definition[layer_code]["Implies"]) {
+
+				let found = false;
+
+				for (const implied_by_layer_code of this.layer_definition[implied_layer_code]["Implied by"]) {
+					if (this._is_layer_active(implied_by_layer_code)) {
+						found = true;
+						break;
+					}
+				}
+
+				if (!found) {
+					this._update_active_layers(implied_layer_code);
+				}
+			}
+		}
+	}
+
+	_is_layer_active(layer_code) {
+		if (this.active_layers.indexOf(layer_code) == -1) {
+			return false;
+		} else {
+			return true;
 		}
 	}
 
@@ -831,6 +879,10 @@ export class LayerManager {
      */
 	_is_geometry_layer(layer_code) {
 		return this.layer_definition[layer_code]["Geometry"];
+	}
+
+	_is_icon_layer(layer_code) {
+		return !!this.layer_definition[layer_code]["Icon name"];
 	}
 
 	_populate_layer_buttons() {
