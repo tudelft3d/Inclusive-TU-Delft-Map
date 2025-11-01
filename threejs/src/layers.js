@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
 import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 import layers_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
-import Papa from 'papaparse';
 
 import {
 	IconSet,
@@ -28,12 +26,11 @@ MENTION:
 
 export class LayerManager {
 
-	constructor(scene, iconsSceneManager, svgLoader, cameraManager) {
+	constructor(scene, iconsSceneManager, svgLoader) {
 
 		this.scene = scene;
 		this.iconsSceneManager = iconsSceneManager;
 		this.svgLoader = svgLoader;
-		this.cameraManager = cameraManager;
 
 		this.layer_definition = {};
 

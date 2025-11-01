@@ -16,7 +16,7 @@ import {
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
-import { LayerManager } from "./layers";
+import { LayerManager } from "./layerManager";
 import { BuildingColorManager } from "./buildingColorManager";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
@@ -184,7 +184,6 @@ export class Map {
             this.scene,
             this.iconsSceneManager,
             this.svgLoader,
-            this.cameraManager,
         );
     }
 
@@ -325,8 +324,6 @@ export class Map {
                     //     console.log(obj);
                     // }
                 });
-                console.log(objs);
-
 
                 // const box = new THREE.Box3().setFromObject(objs);
                 // const center = box.getCenter(new THREE.Vector3());

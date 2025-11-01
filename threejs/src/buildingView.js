@@ -100,11 +100,7 @@ export class BuildingView {
             this._unhideMeshChildren(roomObject, false);
         });
 
-        // Set the icons properly
-        this.layerManager.switch_to_building_view(
-            this.buildingObjectKey,
-            roomsObjectKeys
-        );
+        this.layerManager.add_interior_building_layers(this.buildingObjectKey, this.storeyCode);
 
         this._applyOutlines(roomsObjects, "lod_0", "default");
     }
@@ -155,7 +151,7 @@ export class BuildingView {
         this._unhideMeshChildren(this.buildingObject, false);
 
         // Set the icons properly
-        this.layerManager.switch_to_campus_view();
+        this.layerManager.remove_interior_building_layers();
 
         // Update the outlines
         const allBuildingsObjectKeys =

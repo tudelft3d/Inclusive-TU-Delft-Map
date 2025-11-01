@@ -46,7 +46,7 @@ export class BuildingColorManager {
 					constant_name = QUINARY_COLOR_3;
 					break;
 				default:
-					console.log("invalid color code for", building_key, "defaulting to Quinary color");
+					console.log("invalid importance code for", building_key, "defaulting to Quinary importance");
 					constant_name = QUINARY_COLOR_3;
 			}
 

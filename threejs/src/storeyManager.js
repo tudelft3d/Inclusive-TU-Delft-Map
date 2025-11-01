@@ -49,8 +49,6 @@ export class StoreyManager {
 
     _create_storey_manager(buildingObjectKey) {
 
-        console.log(this.pane);
-
         this.pane.innerHTML = "";
 
         this.pane.style.opacity = '1';
