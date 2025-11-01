@@ -209,12 +209,6 @@ export class IconsSceneManager {
         this.mainContainer.addEventListener("pointerup", (e) => {
             if (!this.iconContainer.contains(e.target)) return;
             if (this.movedDuringPointer) return;
-
-            // var el = e.target;
-            // while (el.parentElement != this.iconContainer) {
-            //     el = el.parentElement;
-            // }
-            // el.dispatchEvent(new Event("click"));
         });
     }
 

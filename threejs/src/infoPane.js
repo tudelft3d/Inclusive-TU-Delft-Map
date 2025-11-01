@@ -166,10 +166,29 @@ export class InfoPane {
         this.pane = paneElement;
         this.picker = picker;
         this.cjHelper = cjHelper;
+        this.key;
 
         this._loadInfoPaneHierarchy();
 
-        this.key;
+        this._addEventListeners();
+    }
+
+    _addEventListeners() {
+        this.mainContainer = document.getElementById("scene-container");
+        this.movedDuringPointer = false;
+        this.mainContainer.addEventListener("pointerdown", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = false;
+            e.target.setPointerCapture(e.pointerId);
+        });
+        this.mainContainer.addEventListener("pointermove", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = true;
+        });
+        this.mainContainer.addEventListener("pointerup", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            if (this.movedDuringPointer) return;
+        });
     }
 
     _loadInfoPaneHierarchy() {
@@ -418,9 +437,6 @@ export class InfoPane {
 
         // Add the extra buttons
         this._addInfoPaneExtraButtons(title);
-
-        this._attachEventListeners();
-
     }
 
 
@@ -566,10 +582,16 @@ export class InfoPane {
         button_icon.className = "fa-solid fa-layer-group";
 
         button.appendChild(button_icon);
-        button.append(document.createTextNode("View Floorplan"));
+        button.appendChild(document.createTextNode("View Floorplan"));
 
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (event) => {
+
+            console.log("pressed button");
+
             if (this.picker) {
+
+                console.log("Button clicked");
+
                 this.picker.switchBuildingView();
             }
         });
@@ -632,40 +654,5 @@ export class InfoPane {
         //     this.pane.innerHTML = '';
         //     this.pane.style.display = 'none';
         // }, 3000);
-    }
-
-    /**
-     * Attach event listeners to pane elements
-     */
-    _attachEventListeners() {
-        // Necessary to make the events happen
-        this.mainContainer = document.getElementById("scene-container");
-        this.movedDuringPointer = false;
-        this.mainContainer.addEventListener("pointerdown", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            this.movedDuringPointer = false;
-            e.target.setPointerCapture(e.pointerId);
-        });
-        this.mainContainer.addEventListener("pointermove", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            this.movedDuringPointer = true;
-        });
-        this.mainContainer.addEventListener("pointerup", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            if (this.movedDuringPointer) return;
-        });
-
-        // Close the pane
-        const closeBtn = this.pane.querySelector('.info-pane-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hide());
-        }
-
-        const floorplanBtn = this.pane.querySelector('#info-pane-floorplan-btn');
-        if (floorplanBtn && this.picker) {
-            floorplanBtn.addEventListener('click', () => {
-                this.buildingView.switchBuildingView();
-            });
-        }
     }
 }

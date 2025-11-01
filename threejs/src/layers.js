@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import layers_json from "../assets/threejs/buildings/thematic_codelist.json" assert {type: "json"};
 import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 import layers_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
-import Papa from 'papaparse';
 
 import {
 	IconSet,
@@ -29,7 +27,7 @@ MENTION:
 
 export class LayerManager {
 
-	constructor(scene, iconsSceneManager, svgLoader, cameraManager) {
+	constructor(scene, iconsSceneManager, svgLoader) {
 
 		this.scene = scene;
 		this.iconsSceneManager = iconsSceneManager;
@@ -64,6 +62,7 @@ export class LayerManager {
 		this.current_building_key;
 
 		this.current_storey_room_keys;
+		this.current_storey_unit_keys;
 
 		this.building_view_active = false;
 
@@ -174,7 +173,7 @@ export class LayerManager {
 	// Called from the buildingView function whenever the storey is changed.
 	enable_storey_icons(storey_room_keys) {
 
-		if (this.current_storey_room_keys) {
+		if (this.current_storey_unit_keys) {
 
 			this._remove_storey_icon_sets();
 
@@ -218,6 +217,7 @@ export class LayerManager {
 	switch_to_campus_view() {
 		if (!this.current_building_key) {
 			this.current_storey_room_keys = undefined;
+			this.current_storey_unit_keys = undefined;
 			this.building_view_active = false;
 			return;
 		}
@@ -250,6 +250,7 @@ export class LayerManager {
 		this._remove_storey_icon_sets();
 
 		this.current_storey_room_keys = undefined;
+		this.current_storey_unit_keys = undefined;
 
 		this.building_view_active = false;
 
@@ -258,21 +259,20 @@ export class LayerManager {
 	// Used when changing from one storey to another
 	// or when switching to campus view
 	_remove_storey_icon_sets() {
-
-		this.current_storey_room_keys.forEach((current_key) => {
-
+		console.log("_remove_storey_icon_sets", this.current_storey_unit_keys);
+		this.current_storey_unit_keys.forEach((current_key) => {
 			if (current_key in this.iconsSceneManager.iconSets) {
-
 				this.iconsSceneManager.removeIconSet(current_key);
-
 			}
-
 		});
-
 	}
 
 	// Used when changing from one storey to another
 	_add_storey_icon_sets() {
+		console.log("_add_storey_icon_sets");
+		console.log("this.active_layers", this.active_layers);
+
+		const potential_units_to_display = {};
 
 		this.current_storey_room_keys.forEach((current_key) => {
 
@@ -284,46 +284,80 @@ export class LayerManager {
 				return;
 			}
 
-			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
-
-				return cityjson.CityObjects[element].attributes.code;
-
+			current_room_parent_unit_key_array.forEach((unit_key) => {
+				if (!(unit_key in potential_units_to_display)) {
+					const unit = cityjson.CityObjects[unit_key];
+					potential_units_to_display[unit_key] = unit;
+				}
 			});
 
-			const active_parent_unit_codes = parent_unit_codes.filter((element) => {
+			// const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
 
-				return this.active_layers.includes(element);
+			// 	return cityjson.CityObjects[element].attributes.code;
 
-			});
+			// });
 
-			if (active_parent_unit_codes.length == 0) {
-				return;
-			}
+			// const active_parent_unit_codes = parent_unit_codes.filter((element) => {
 
-			const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+			// 	return this.active_layers.includes(element);
 
-			let paths = [];
-			let keys = [];
-			let colors = [];
+			// });
 
-			active_parent_unit_codes.forEach((code) => {
+			// if (active_parent_unit_codes.length == 0) {
+			// 	return;
+			// }
 
-				paths.push(this._get_icon_path(code));
-				keys.push(code);
-				colors.push("#f7c286ff");
+			// const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
 
-			})
+			// let paths = [];
+			// let keys = [];
+			// let colors = [];
 
-			this._add_icon_set(
-				current_key,
-				null,
-				paths,
-				keys,
-				colors,
-				position);
+			// active_parent_unit_codes.forEach((code) => {
+
+			// 	paths.push(this._get_icon_path(code));
+			// 	keys.push(code);
+			// 	colors.push("#f7c286ff");
+
+			// })
+
+			// this._add_icon_set(
+			// 	current_key,
+			// 	null,
+			// 	paths,
+			// 	keys,
+			// 	colors,
+			// 	position);
 
 		});
 
+		console.log(potential_units_to_display);
+		this.current_storey_unit_keys = [];
+
+		for (const unit_key of Object.keys(potential_units_to_display)) {
+			const unit = potential_units_to_display[unit_key];
+
+			const unit_code = unit.attributes.code;
+			if (!this.active_layers.includes(unit_code)) { return }
+
+			this.current_storey_unit_keys.push(unit_key);
+
+			const position = this._convert_cityjson_position(unit.attributes.icon_position);
+
+			const path = this._get_icon_path(unit_code);
+			const color = "#f7c286ff";
+			this._add_icon_set(
+				unit_key,
+				null,
+				[path],
+				[unit_code],
+				[color],
+				position
+			);
+
+		}
+
+		console.log("this.current_storey_unit_keys", this.current_storey_unit_keys);
 	}
 
 	_get_icon_path(code) {
@@ -332,6 +366,7 @@ export class LayerManager {
 
 	// Used when removing a thematic layer
 	_remove_icon(code) {
+		console.log("_remove_icon");
 
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
 
@@ -386,7 +421,7 @@ export class LayerManager {
 
 				} else {
 
-					console.log(building_json.attributes["space_id"]);
+					// console.log(building_json.attributes["space_id"]);
 					if (!building_json.attributes["space_id"]) {
 						continue
 					}
@@ -410,49 +445,92 @@ export class LayerManager {
 	}
 
 	_add_icon_rooms(code) {
+		console.log("_add_icon_rooms", code);
+
+		// this.current_storey_room_keys.forEach((current_key) => {
+
+		// 	const current_room_json = cityjson.CityObjects[current_key];
+
+		// 	const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
+
+		// 	if (current_room_parent_unit_key_array.length == 0) {
+		// 		return;
+		// 	}
+
+		// 	const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
+
+		// 		return cityjson.CityObjects[element].attributes.code;
+
+		// 	});
+
+		// 	if (parent_unit_codes.includes(code)) {
+
+		// 		if (this.iconsSceneManager.iconSets[current_key]) {
+
+		// 			const path = [this._get_icon_path(code)];
+		// 			const color = ["#f7c286ff"];
+
+		// 			this._add_icon_svg(current_key, code, path, color);
+
+		// 		} else {
+
+		// 			const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
+
+		// 			this._add_icon_set(
+		// 				current_key,
+		// 				null,
+		// 				[this._get_icon_path(code)],
+		// 				[code],
+		// 				["#f7c286ff"],
+		// 				position);
+
+		// 		}
+
+		// 	}
+
+		// });
+
+		const units_to_display = {};
+		this.current_storey_unit_keys = [];
 
 		this.current_storey_room_keys.forEach((current_key) => {
 
 			const current_room_json = cityjson.CityObjects[current_key];
-
 			const current_room_parent_unit_key_array = current_room_json.attributes["parent_units"];
-
 			if (current_room_parent_unit_key_array.length == 0) {
 				return;
 			}
 
-			const parent_unit_codes = current_room_parent_unit_key_array.map((element) => {
-
-				return cityjson.CityObjects[element].attributes.code;
-
-			});
-
-			if (parent_unit_codes.includes(code)) {
-
-				if (this.iconsSceneManager.iconSets[current_key]) {
-
-					const path = [this._get_icon_path(code)];
-					const color = ["#f7c286ff"];
-
-					this._add_icon_svg(current_key, code, path, color);
-
-				} else {
-
-					const position = this._convert_cityjson_position(current_room_json.attributes.icon_position);
-
-					this._add_icon_set(
-						current_key,
-						null,
-						[this._get_icon_path(code)],
-						[code],
-						["#f7c286ff"],
-						position);
-
+			current_room_parent_unit_key_array.forEach((unit_key) => {
+				if (!(unit_key in units_to_display)) {
+					const unit = cityjson.CityObjects[unit_key];
+					const unit_code = unit.attributes.code;
+					if (unit_code == code) {
+						units_to_display[unit_key] = unit;
+						this.current_storey_unit_keys.push(unit_key);
+					}
 				}
-
-			}
-
+			});
 		});
+
+		for (const unit_key of Object.keys(units_to_display)) {
+			const unit = units_to_display[unit_key];
+
+			const position = this._convert_cityjson_position(unit.attributes.icon_position);
+
+			const path = this._get_icon_path(code);
+			const color = "#f7c286ff";
+			this._add_icon_set(
+				unit_key,
+				null,
+				[path],
+				[code],
+				[color],
+				position
+			);
+
+		}
+
 
 	}
 
@@ -512,32 +590,37 @@ export class LayerManager {
 
 	_generate_icon_onclick(cj_key) {
 
-		const object_json = cityjson.CityObjects[cj_key];
+		// const object_json = cityjson.CityObjects[cj_key];
 
-		let object_threejs_name;
-		let icon_position_vector;
+		// let object_threejs_name;
+		// // let icon_position_vector;
 
-		if (object_json.type == "Building") {
+		// if (object_json.type == "Building") {
 
-			object_threejs_name = cj_key + "-lod_2";
-			icon_position_vector = null;
+		// 	object_threejs_name = cj_key + "-lod_2";
+		// 	// icon_position_vector = null;
 
-		} else if (object_json.type == "BuildingRoom") {
+		// } else if (object_json.type == "BuildingRoom") {
 
-			object_threejs_name = cj_key + "-lod_0";
+		// 	object_threejs_name = cj_key + "-lod_0";
 
-		} else if (object_json.type == "GenericCityObject") {
+		// } else if (object_json.type == "GenericCityObject") {
 
-			object_threejs_name = null;
+		// 	object_threejs_name = null;
 
-		} else {
+		// } else if (object_json.type == "BuildingUnit") {
 
-			console.error("UNRECOGNIZED OBJECT type:", cj_key);
+		// 	object_threejs_name = null;
+		// 	// icon_position_vector = null;
 
-		}
+		// } else {
 
-		const icon_position = object_json["attributes"]["icon_position"];
-		icon_position_vector = this._convert_cityjson_position(icon_position);
+		// 	console.error("UNRECOGNIZED OBJECT type:", cj_key);
+
+		// }
+
+		// const icon_position = object_json["attributes"]["icon_position"];
+		// icon_position_vector = this._convert_cityjson_position(icon_position);
 
 
 		const onClick = (e) => {
@@ -550,7 +633,6 @@ export class LayerManager {
 			// else {
 			// 	this.picker.pickMesh(cj_key);
 			// }
-			console.log(cj_key);
 			this.picker.pickMesh(cj_key);
 		};
 

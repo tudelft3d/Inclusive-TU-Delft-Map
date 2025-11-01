@@ -16,7 +16,7 @@ import {
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
-import { LayerManager } from "./layers";
+import { LayerManager } from "./layerManager";
 import { BuildingColorManager } from "./buildingColorManager";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
@@ -41,8 +41,10 @@ export class Map {
         this.preloadingStarted = false; // Flag to ensure preloading starts only once
 
         // Cameras and controls
+
         const cameraPosition = new THREE.Vector3(85070, 942, -445825);
         const cameraLookAt = new THREE.Vector3(85478, 0, -446006);
+
         this.cameraManager = new CamerasControls(
             this.mainContainer,
             cameraPosition,
@@ -51,6 +53,7 @@ export class Map {
 
         this.tweens = new Array();
 
+        this.cjHelper = new CjHelper();
         this._initScenes();
         this.cjHelper = new CjHelper(this.scene);
         this._initLights();
@@ -169,6 +172,7 @@ export class Map {
 
         // CSS2D renderer for icons and text
         this.css2dRenderer = new CSS2DRenderer();
+        this.css2dRenderer.autoClearDepth = false;
         this.css2dContainer = this.css2dRenderer.domElement;
         this.css2dContainer.style.position = "absolute";
         this.css2dContainer.style.top = "0";
@@ -183,7 +187,6 @@ export class Map {
             this.scene,
             this.iconsSceneManager,
             this.svgLoader,
-            this.cameraManager,
         );
     }
 
@@ -302,6 +305,7 @@ export class Map {
     }
 
     loadGLTF(path) {
+        // const allBuildingsObjectKeys = this.cjHelper.getAllBuildingsObjectKeys();
         const loader = new GLTFLoader();
         loader.load(
             path,
@@ -312,24 +316,28 @@ export class Map {
                     color: BUILDINGS_COLOR,
                     flatShading: true,
                 });
-                objs.traverse((o) => {
-                    if (o.isMesh) {
-                        // o.geometry.computeVertexNormals();
-                        o.material = newMaterial;
-                        // console.log(o);
+                objs.traverse((obj) => {
+                    if (obj.isMesh) {
+                        obj.material = newMaterial;
                     }
+                    // if (allBuildingsObjectKeys.includes(obj.name)) {
+                    //     const bbox = new THREE.Box3().setFromObject(obj);
+                    //     const minZ = bbox.min.z;
+                    //     obj.translateZ(-minZ);
+                    //     console.log(obj);
+                    // }
                 });
 
-                const box = new THREE.Box3().setFromObject(objs);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                // console.log(center);
+                // const box = new THREE.Box3().setFromObject(objs);
+                // const center = box.getCenter(new THREE.Vector3());
+                // const size = box.getSize(new THREE.Vector3());
+                // // console.log(center);
 
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const fov = this.cameraManager.camera.fov * (Math.PI / 180);
-                let cameraZ = maxDim / (2 * Math.tan(fov / 2));
+                // const maxDim = Math.max(size.x, size.y, size.z);
+                // const fov = this.cameraManager.camera.fov * (Math.PI / 180);
+                // let cameraZ = maxDim / (2 * Math.tan(fov / 2));
 
-                cameraZ *= 1.5; // add margin
+                // cameraZ *= 1.5; // add margin
 
                 // console.log("gltf", gltf);
 
@@ -365,7 +373,6 @@ export class Map {
             requestAnimationFrame(this.render);
         }, 1000 / 144);
 
-        // this.hasMouseMovedInFrame = false;
         this.cameraManager.tweens.forEach((tween) => tween.update(time));
         this.outlineManager.render(time, this.cameraManager);
         this.iconsSceneManager.render(time, this.cameraManager);
