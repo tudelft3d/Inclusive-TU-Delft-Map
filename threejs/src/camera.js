@@ -19,13 +19,11 @@ const frustumSize = 1;
 const MIN_AZIMUTH_ANGLE = -Infinity;
 const MAX_AZIMUTH_ANGLE = Infinity;
 
-function frustrumHeight(camera, distance) {
+function frustrumHeightWidth(camera, distance) {
     const field_of_view = (camera.fov * Math.PI) / 180;
-    return Math.tan(field_of_view / 2) * distance * 2;
-}
-
-function frustrumWidth(camera, distance) {
-    return frustrumHeight(camera, distance) * camera.aspect;
+    const frustrumHeight = Math.tan(field_of_view / 2) * distance * 2;
+    const frustrumWidth = frustrumHeight * camera.aspect;
+    return [frustrumHeight, frustrumWidth];
 }
 
 export class CamerasControls {
@@ -146,10 +144,10 @@ export class CamerasControls {
         }
 
         this.cameraSwitchEvents.forEach((info) => {
-            const { type: type, element: element } = info
+            const { type: type, element: element } = info;
             const event = new CustomEvent(type);
             element.dispatchEvent(event);
-        })
+        });
     }
 
     usesMapCamera() {
@@ -183,7 +181,7 @@ export class CamerasControls {
     }
 
     createEventCameraSwitch(type, element) {
-        this.cameraSwitchEvents.push(({ type, element }));
+        this.cameraSwitchEvents.push({ type, element });
     }
 
     // Method to set the compass element
@@ -220,13 +218,8 @@ export class CamerasControls {
         this.orbitCamera.updateProjectionMatrix();
 
         this.orthographicCamera.aspect = aspect;
-
-        this.orthographicCamera.position.copy(this.controls.target);
-        this.orthographicCamera.position.y = 1000;
-
-        const distance = this.camera.position.distanceTo(this.controls.target);
-        const halfHeight = frustrumHeight(this.mapCamera, distance) / 2;
-        const halfWidth = frustrumWidth(this.mapCamera, distance) / 2;
+        const halfHeight = this.orthographicCamera.top;
+        const halfWidth = halfHeight * aspect;
 
         this.orthographicCamera.top = halfHeight;
         this.orthographicCamera.bottom = -halfHeight;
@@ -405,8 +398,9 @@ export class CamerasControls {
             this.orthographicControls.target.copy(newTarget);
 
             // Compute the new orthographic camera settings
-            const halfHeight = frustrumHeight(this.camera, distance) / 2;
-            const halfWidth = frustrumWidth(this.camera, distance) / 2;
+            const [height, width] = frustrumHeightWidth(this.camera, distance);
+            const halfHeight = height / 2;
+            const halfWidth = width / 2;
 
             this.orthographicCamera.top = halfHeight;
             this.orthographicCamera.bottom = -halfHeight;

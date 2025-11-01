@@ -95,15 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
             event.stopPropagation();
             // ensure other top-right dropdowns are closed
             const other = document.getElementById('layers-dropdown');
+            const legend = document.getElementById('legend-dropdown');
             const accessibility = document.getElementById('accessibility-dropdown');
+
             if (other && other !== basemapDropdown) other.style.display = 'none';
+
+            if (legend && legend !== basemapDropdown) {
+                legend.style.display = 'none';
+                const legendBtnEl = document.getElementById('legend-btn');
+                if (legendBtnEl) legendBtnEl.setAttribute('aria-expanded', 'false');
+                legend.setAttribute('aria-hidden', 'true');
+            }
+
             if (accessibility && accessibility !== basemapDropdown) accessibility.style.display = 'none';
 
-            basemapDropdown.style.display = (basemapDropdown.style.display === 'block') ? 'none' : 'block';
+            const open = basemapDropdown.style.display === 'block';
+            basemapDropdown.style.display = open ? 'none' : 'block';
+            basemapBtn.setAttribute('aria-expanded', (!open).toString());
+            basemapDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
         });
 
         document.addEventListener('click', () => {
             basemapDropdown.style.display = 'none';
+            basemapBtn.setAttribute('aria-expanded', 'false');
+            basemapDropdown.setAttribute('aria-hidden', 'true');
         });
 
         basemapDropdown.querySelectorAll('a').forEach(item => {
@@ -132,36 +147,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Apply satellite class on initial load:
-        //         (function applyInitialBasemapClass() {
-        //             const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
-        //             if (!selected) return;
-        //             const url = selected.dataset.url;
-        //             const layer = selected.dataset.layer;
-        //             const isSatellite = (
-        //                 (selected.dataset.satellite === 'true') ||
-        //                 (layer && layer.toString().toLowerCase().includes('satellite')) ||
-        //                 (url && url.toString().toLowerCase().includes('satellite')) ||
-        //                 (layer && layer.toString().toLowerCase().includes('ortho')) ||
-        //                 (url && url.toString().toLowerCase().includes('ortho'))
-        //             );
-        //             document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-        //         })();
-
         (function applyInitialBasemapClass() {
-            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]');
-            if (!selected) return;
-            const url = selected.dataset.url;
-            const layer = selected.dataset.layer;
-            const isSatellite = (
-                (selected.dataset.satellite === 'true') ||
-                (layer && layer.toString().toLowerCase().includes('satellite')) ||
-                (url && url.toString().toLowerCase().includes('satellite')) ||
-                (layer && layer.toString().toLowerCase().includes('ortho')) ||
-                (url && url.toString().toLowerCase().includes('ortho'))
-            );
-            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-        })();
+            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
+            if (!selected) return;
+            const url = selected.dataset.url;
+            const layer = selected.dataset.layer;
+            const isSatellite = (
+                (selected.dataset.satellite === 'true') ||
+                (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                (url && url.toString().toLowerCase().includes('satellite')) ||
+                (layer && layer.toString().toLowerCase().includes('ortho')) ||
+                (url && url.toString().toLowerCase().includes('ortho'))
+            );
+            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        })();
+    }
 
+    // Legend dropdown wiring (matches other top-right controls)
+    const legendBtn = document.getElementById('legend-btn');
+    const legendDropdown = document.getElementById('legend-dropdown');
+    if (legendBtn && legendDropdown) {
+        legendBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // close other top-right dropdowns before toggling this one
+            const other = document.getElementById('basemap-dropdown');
+            const layers = document.getElementById('layers-dropdown');
+            const accessibility = document.getElementById('accessibility-dropdown');
+            if (other && other !== legendDropdown) other.style.display = 'none';
+            if (layers && layers !== legendDropdown) layers.style.display = 'none';
+            if (accessibility && accessibility !== legendDropdown) accessibility.style.display = 'none';
+
+            const open = legendDropdown.style.display === 'block';
+            legendDropdown.style.display = open ? 'none' : 'block';
+            legendBtn.setAttribute('aria-expanded', (!open).toString());
+            legendDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
+        });
+
+        // clicking elsewhere closes the legend
+        document.addEventListener('click', () => {
+            legendDropdown.style.display = 'none';
+            legendBtn.setAttribute('aria-expanded', 'false');
+            legendDropdown.setAttribute('aria-hidden', 'true');
+        });
     }
 
     // Layers dropdown wiring
@@ -179,33 +206,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
             layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
         });
-
-        // layersDropdown.querySelectorAll('a').forEach(item => {
-        //     item.addEventListener('click', (e) => {
-        //         e.preventDefault();
-        //         outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
-        //         layersDropdown.style.display = 'none';
-        //     });
-        // });
-
-        // document.addEventListener('click', () => {
-        //     layersDropdown.style.display = 'none';
-        // });
     }
 
-    // Accessibility dropdown wiring
-    // const accessibilityBtn = document.getElementById('accessibility-btn');
-    // const accessibilityDropdown = document.getElementById('accessibility-dropdown');
-    // if (accessibilityBtn && accessibilityDropdown) {
-    //     accessibilityBtn.addEventListener('click', (event) => {
-    //         event.stopImmediatePropagation();
-    //         accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
-    //     });
+    // Unified mobile bottom-sheet wiring for top-right controls
+    (function unifyTopRightMobileDropdowns() {
+        const MOBILE_QUERY = '(max-width: 620px)';
 
-    //     document.addEventListener('click', () => {
-    //         accessibilityDropdown.style.display = 'none';
-    //     });
-    // }
+        function ensureOverlay(id) {
+            let o = document.getElementById(id);
+            if (!o) {
+                o = document.createElement('div');
+                o.id = id;
+                document.body.appendChild(o);
+            }
+            return o;
+        }
+
+        const items = [
+            { btn: document.getElementById('basemap-btn'), dropdown: document.getElementById('basemap-dropdown'), overlayId: 'basemap-overlay', bodyClass: 'basemap-active-mobile' },
+            { btn: document.getElementById('legend-btn'), dropdown: document.getElementById('legend-dropdown'), overlayId: 'legend-overlay', bodyClass: 'legend-active-mobile' },
+            { btn: document.getElementById('layers-btn'), dropdown: document.getElementById('layers-dropdown'), overlayId: 'layers-overlay', bodyClass: 'layers-active-mobile' },
+        ].filter(i => i.btn && i.dropdown);
+
+        function closeAllMobile() {
+            items.forEach(i => {
+                i.dropdown.classList.remove('mobile-open');
+                i.dropdown.style.removeProperty('display'); // let CSS decide if mobile
+                const ov = document.getElementById(i.overlayId);
+                if (ov) ov.classList.remove('visible');
+                document.body.classList.remove(i.bodyClass);
+            });
+        }
+
+        items.forEach(i => {
+            const overlay = ensureOverlay(i.overlayId);
+            overlay.classList.add('topright-overlay'); // optional hook if you want custom styles
+
+            function isMobile() {
+                return window.matchMedia(MOBILE_QUERY).matches;
+            }
+
+            function openMobile() {
+                // close others first
+                items.forEach(other => {
+                    if (other !== i) {
+                        other.dropdown.classList.remove('mobile-open');
+                        const ov2 = document.getElementById(other.overlayId);
+                        if (ov2) ov2.classList.remove('visible');
+                        document.body.classList.remove(other.bodyClass);
+                    }
+                });
+                // ensure CSS mobile sheet is visible (mobile CSS controls animation)
+                i.dropdown.style.display = ''; // remove inline hide
+                i.dropdown.classList.add('mobile-open');
+                overlay.classList.add('visible');
+                document.body.classList.add(i.bodyClass);
+            }
+
+            function closeMobile() {
+                i.dropdown.classList.remove('mobile-open');
+                overlay.classList.remove('visible');
+                document.body.classList.remove(i.bodyClass);
+            }
+
+            i.btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!isMobile()) {
+                    // Desktop/default behavior left untouched
+                    // Let existing click handlers do their job (some already wired above)
+                    return;
+                }
+                // Mobile toggling
+                if (i.dropdown.classList.contains('mobile-open')) {
+                    closeMobile();
+                } else {
+                    openMobile();
+                }
+            });
+
+            // clicking overlay closes the sheet
+            overlay.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                closeMobile();
+            });
+        });
+
+        // global handlers: escape to close, resize to reset
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape') closeAllMobile();
+        });
+        window.addEventListener('resize', () => {
+            // if exiting mobile size, ensure we close mobile-only UI
+            if (!window.matchMedia(MOBILE_QUERY).matches) {
+                closeAllMobile();
+            }
+        });
+    })();
 
     // Reset view button
     const resetBtn = document.getElementById('reset-btn');
@@ -271,18 +367,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LOD dropdown (kept commented for future use)
-    /*
-    const lodBtn = document.getElementById('lod-btn');
-    const lodDropdown = document.getElementById('lod-dropdown');
-    if (lodBtn && lodDropdown) {
-        // ...existing LOD wiring...
-    }
-    */
-
-    // Reveal search bar after wiring all handlers to prevent initial flash
-    // window.addEventListener('load', () => {
-    //     const searchBar = document.getElementById('search-bar');
-    //     if (searchBar) searchBar.style.visibility = 'visible';
-    // });
 });

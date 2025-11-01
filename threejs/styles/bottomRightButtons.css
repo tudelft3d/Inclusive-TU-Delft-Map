@@ -18,8 +18,8 @@
   --brb-icon-size: 26px;
   --brb-icon-size-mobile: 16px;
 
-  --brb-z: 30;
-  --brb-z-control: 31;
+  --brb-z: 10;
+  --brb-z-control: 11;
   --brb-z-dropdown: 999;
 }
 
@@ -150,8 +150,6 @@
 /* invert external SVG images to appear black; also set inline SVG color */
 .satellite-basemap #reset-btn img,
 .satellite-basemap #reset-btn svg,
-.satellite-basemap #compass-btn img,
-.satellite-basemap #compass-btn svg,
 .satellite-basemap #location-btn img,
 .satellite-basemap #location-btn svg,
 .satellite-basemap #zoom-btn img,
@@ -175,7 +173,7 @@
 
 /* view-toggle specific */
 .satellite-basemap #view-toggle-btn {
-  background: #dddddd;
+  background: #f3f3f3;
   color: #000;
 }
 
@@ -214,7 +212,7 @@
   align-items: center;
   justify-content: center;
   color: var(--brb-btn-color);
-  background: #4694b1;
+  background: var(--brb-btn-bg);
   border: none;
   border-radius: var(--brb-btn-radius);
   cursor: pointer;
@@ -227,7 +225,6 @@
   padding: 0 6px;
 }
 
-/* when the button shows "2D" change color */
 #view-toggle-btn.shows-2d {
   background: var(--brb-btn-bg);
 }
@@ -285,6 +282,7 @@
     transform: translateY(12%);
   } */
 }
+
 
 
 
