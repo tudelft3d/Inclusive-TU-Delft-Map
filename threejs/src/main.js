@@ -95,15 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
             event.stopPropagation();
             // ensure other top-right dropdowns are closed
             const other = document.getElementById('layers-dropdown');
+            const legend = document.getElementById('legend-dropdown');
             const accessibility = document.getElementById('accessibility-dropdown');
+
             if (other && other !== basemapDropdown) other.style.display = 'none';
+
+            if (legend && legend !== basemapDropdown) {
+                legend.style.display = 'none';
+                const legendBtnEl = document.getElementById('legend-btn');
+                if (legendBtnEl) legendBtnEl.setAttribute('aria-expanded', 'false');
+                legend.setAttribute('aria-hidden', 'true');
+            }
+
             if (accessibility && accessibility !== basemapDropdown) accessibility.style.display = 'none';
 
-            basemapDropdown.style.display = (basemapDropdown.style.display === 'block') ? 'none' : 'block';
+            const open = basemapDropdown.style.display === 'block';
+            basemapDropdown.style.display = open ? 'none' : 'block';
+            basemapBtn.setAttribute('aria-expanded', (!open).toString());
+            basemapDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
         });
 
         document.addEventListener('click', () => {
             basemapDropdown.style.display = 'none';
+            basemapBtn.setAttribute('aria-expanded', 'false');
+            basemapDropdown.setAttribute('aria-hidden', 'true');
         });
 
         basemapDropdown.querySelectorAll('a').forEach(item => {
