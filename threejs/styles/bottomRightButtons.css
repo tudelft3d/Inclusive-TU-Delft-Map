@@ -18,8 +18,8 @@
   --brb-icon-size: 26px;
   --brb-icon-size-mobile: 16px;
 
-  --brb-z: 30;
-  --brb-z-control: 31;
+  --brb-z: 10;
+  --brb-z-control: 11;
   --brb-z-dropdown: 999;
 }
 

@@ -191,33 +191,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
             layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
         });
-
-        // layersDropdown.querySelectorAll('a').forEach(item => {
-        //     item.addEventListener('click', (e) => {
-        //         e.preventDefault();
-        //         outline_code(item.dataset.code, map.scene, map.picker, map.outlineManager);
-        //         layersDropdown.style.display = 'none';
-        //     });
-        // });
-
-        // document.addEventListener('click', () => {
-        //     layersDropdown.style.display = 'none';
-        // });
     }
 
-    // Accessibility dropdown wiring
-    // const accessibilityBtn = document.getElementById('accessibility-btn');
-    // const accessibilityDropdown = document.getElementById('accessibility-dropdown');
-    // if (accessibilityBtn && accessibilityDropdown) {
-    //     accessibilityBtn.addEventListener('click', (event) => {
-    //         event.stopImmediatePropagation();
-    //         accessibilityDropdown.style.display = (accessibilityDropdown.style.display === 'block') ? 'none' : 'block';
-    //     });
+    // Unified mobile bottom-sheet wiring for top-right controls
+    (function unifyTopRightMobileDropdowns() {
+        const MOBILE_QUERY = '(max-width: 620px)';
 
-    //     document.addEventListener('click', () => {
-    //         accessibilityDropdown.style.display = 'none';
-    //     });
-    // }
+        function ensureOverlay(id) {
+            let o = document.getElementById(id);
+            if (!o) {
+                o = document.createElement('div');
+                o.id = id;
+                document.body.appendChild(o);
+            }
+            return o;
+        }
+
+        const items = [
+            { btn: document.getElementById('basemap-btn'), dropdown: document.getElementById('basemap-dropdown'), overlayId: 'basemap-overlay', bodyClass: 'basemap-active-mobile' },
+            { btn: document.getElementById('legend-btn'), dropdown: document.getElementById('legend-dropdown'), overlayId: 'legend-overlay', bodyClass: 'legend-active-mobile' },
+            { btn: document.getElementById('layers-btn'), dropdown: document.getElementById('layers-dropdown'), overlayId: 'layers-overlay', bodyClass: 'layers-active-mobile' },
+        ].filter(i => i.btn && i.dropdown);
+
+        function closeAllMobile() {
+            items.forEach(i => {
+                i.dropdown.classList.remove('mobile-open');
+                i.dropdown.style.removeProperty('display'); // let CSS decide if mobile
+                const ov = document.getElementById(i.overlayId);
+                if (ov) ov.classList.remove('visible');
+                document.body.classList.remove(i.bodyClass);
+            });
+        }
+
+        items.forEach(i => {
+            const overlay = ensureOverlay(i.overlayId);
+            overlay.classList.add('topright-overlay'); // optional hook if you want custom styles
+
+            function isMobile() {
+                return window.matchMedia(MOBILE_QUERY).matches;
+            }
+
+            function openMobile() {
+                // close others first
+                items.forEach(other => {
+                    if (other !== i) {
+                        other.dropdown.classList.remove('mobile-open');
+                        const ov2 = document.getElementById(other.overlayId);
+                        if (ov2) ov2.classList.remove('visible');
+                        document.body.classList.remove(other.bodyClass);
+                    }
+                });
+                // ensure CSS mobile sheet is visible (mobile CSS controls animation)
+                i.dropdown.style.display = ''; // remove inline hide
+                i.dropdown.classList.add('mobile-open');
+                overlay.classList.add('visible');
+                document.body.classList.add(i.bodyClass);
+            }
+
+            function closeMobile() {
+                i.dropdown.classList.remove('mobile-open');
+                overlay.classList.remove('visible');
+                document.body.classList.remove(i.bodyClass);
+            }
+
+            i.btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!isMobile()) {
+                    // Desktop/default behavior left untouched
+                    // Let existing click handlers do their job (some already wired above)
+                    return;
+                }
+                // Mobile toggling
+                if (i.dropdown.classList.contains('mobile-open')) {
+                    closeMobile();
+                } else {
+                    openMobile();
+                }
+            });
+
+            // clicking overlay closes the sheet
+            overlay.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                closeMobile();
+            });
+        });
+
+        // global handlers: escape to close, resize to reset
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape') closeAllMobile();
+        });
+        window.addEventListener('resize', () => {
+            // if exiting mobile size, ensure we close mobile-only UI
+            if (!window.matchMedia(MOBILE_QUERY).matches) {
+                closeAllMobile();
+            }
+        });
+    })();
 
     // Reset view button
     const resetBtn = document.getElementById('reset-btn');
@@ -283,18 +352,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // LOD dropdown (kept commented for future use)
-    /*
-    const lodBtn = document.getElementById('lod-btn');
-    const lodDropdown = document.getElementById('lod-dropdown');
-    if (lodBtn && lodDropdown) {
-        // ...existing LOD wiring...
-    }
-    */
-
-    // Reveal search bar after wiring all handlers to prevent initial flash
-    // window.addEventListener('load', () => {
-    //     const searchBar = document.getElementById('search-bar');
-    //     if (searchBar) searchBar.style.visibility = 'visible';
-    // });
 });
