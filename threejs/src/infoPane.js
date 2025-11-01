@@ -54,9 +54,8 @@ class Entry {
             node = document.createTextNode(value);
         } else if (this.image) {
             node = document.createElement("img");
-            node.src = "https://picsum.photos/600/400";
+            node.src = `/assets/threejs/images/${value}`;
             node.setAttribute("width", "100%");
-            // node.appendChild(document.createTextNode(value));
         } else {
             node = document.createTextNode(value);
         }
@@ -69,12 +68,11 @@ class Entry {
 
         // Return nothing if the value is null
         if (!attributeValue) { return }
-        console.log(attributeValue);
 
         var div = document.createElement("div");
         div.className = "info-pane-row";
 
-        if (!this.image) {
+        if (attributeName) {
             var label_span = document.createElement("span");
             label_span.className = "info-pane-label";
             label_span.appendChild(document.createTextNode(attributeName));
@@ -129,10 +127,7 @@ class EntryGroup {
         details.appendChild(summary);
 
         this.entries.forEach((entry) => {
-            console.log("entry", entry);
-
             const formattedEntry = entry.formatNodeFromAttributes(attributes);
-            console.log("formattedEntry", formattedEntry);
             if (!formattedEntry) return;
 
             details.appendChild(formattedEntry);
@@ -181,7 +176,6 @@ export class InfoPane {
         this.hierarchy = {}
 
         for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
-            console.log(hierarchyInfo);
             const title = hierarchyInfo["title"];
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
@@ -614,7 +608,8 @@ export class InfoPane {
         bookRoomButton.className = "info-pane-button";
         bookRoomButton.append(document.createTextNode("Book a room"));
         bookRoomButton.addEventListener('click', () => {
-            console.log("Go to book room page");
+            const target = `https://spacefinder.tudelft.nl/en/buildings/`;
+            window.location.href = target;
         });
 
         bookRoomButtonSpan.appendChild(bookRoomButton);
