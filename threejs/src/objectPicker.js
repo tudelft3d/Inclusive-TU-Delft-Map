@@ -422,19 +422,37 @@ export class ObjectPicker {
 
         // Reset the building view
         if (this.buildingView._isActivated()) {
-            this.buildingView.deactivate();
-            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            // this.buildingView.deactivate();
+            // this.cameraManager.switchToInt(this.buildingViewActivationCamera);
         }
         if (this.buildingView._isInitialisedNotActivated()) {
             this.buildingView.uninitialise();
+            this.infoPane.hide();
         }
 
         if (this.cameraManager.usesOrbitCamera()) {
             this.cameraManager.switchToMap();
         }
+    }
 
-        // Hide the info pane
-        this.infoPane.hide();
+    closeInfoPane() {
+        // Unhighlight
+        this.pickHighlighter.unhighlight();
+
+        // Reset the building view
+        if (this.buildingView._isActivated()) {
+            this.buildingView.deactivate();
+            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            this.infoPane.hide();
+        }
+        if (this.buildingView._isInitialisedNotActivated()) {
+            this.buildingView.uninitialise();
+            this.infoPane.hide();
+        }
+
+        if (this.cameraManager.usesOrbitCamera()) {
+            this.cameraManager.switchToMap();
+        }
     }
 
     switchBuildingView() {

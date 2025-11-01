@@ -103,10 +103,10 @@ class Entry {
 class EntryGroup {
 
     /**
-     * 
-     * @param {String} name 
-     * @param {Entry[]} entries 
-     * @param {Boolean} open 
+     *
+     * @param {String} name
+     * @param {Entry[]} entries
+     * @param {Boolean} open
      */
     constructor(name, entries, open = false) {
         this.name = name;
@@ -168,10 +168,10 @@ function isValidHttpUrl(string) {
 export class InfoPane {
 
     /**
-     * 
-     * @param {HTMLElement} paneElement 
-     * @param {ObjectPicker} picker 
-     * @param {CjHelper} cjHelper 
+     *
+     * @param {HTMLElement} paneElement
+     * @param {ObjectPicker} picker
+     * @param {CjHelper} cjHelper
      */
     constructor(paneElement, picker, cjHelper) {
         this.pane = paneElement;
@@ -469,6 +469,7 @@ export class InfoPane {
         let h3 = document.createElement("h3");
         h3.className = "info-pane-title";
         h3.appendChild(document.createTextNode(title));
+        div.appendChild(h3);
 
         let close_button = document.createElement("button");
 
@@ -477,10 +478,9 @@ export class InfoPane {
         close_button.value = "&times";
         close_button.appendChild(document.createTextNode("x"));
 
-        close_button.addEventListener('click', () => this.hide());
-
-        div.appendChild(h3);
+        close_button.addEventListener('click', () => this.picker.closeInfoPane());
         div.appendChild(close_button);
+
 
         this.pane.appendChild(div);
     }
