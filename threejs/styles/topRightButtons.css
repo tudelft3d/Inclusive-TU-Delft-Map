@@ -207,7 +207,6 @@
   background: #a8a8a82f;
 }
 
-
 /* Legend list & items */
 #legend-dropdown .legend-list {
   list-style: none;
@@ -292,7 +291,6 @@
     height: 30px;
   }
 
-  /* If the caret is an SVG or IMG, force smaller dimensions */
   #layers-dropdown .layer-group-toggle svg,
   #layers-dropdown .layer-group-toggle img {
     width: 20px !important;
