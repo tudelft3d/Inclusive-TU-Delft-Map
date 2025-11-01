@@ -28,12 +28,24 @@ class Entry {
         this.name = displayName;
     }
 
-    _formatValueNodeFromAttributes(attributes) {
-        const value = attributes[this.key];
+    getValue(attributes) {
+        var value = attributes[this.key];
         if (Array.isArray(value) && value.length == 0) {
-            return
+            return null;
         } else if (!value) {
-            return
+            return null;
+        }
+
+        if (this.code) {
+            value = layersDefinition[value]["Name (EN)"];
+        }
+        return value;
+    }
+
+    _formatValueNodeFromAttributes(attributes) {
+        const value = this.getValue(attributes);
+        if (!value) {
+            return null;
         }
 
         var node;
@@ -50,7 +62,6 @@ class Entry {
             node.href = `mailto:${value}`;
             node.appendChild(document.createTextNode(value));
         } else if (this.code) {
-            value = layersDefinition[value]["Name (EN)"];
             node = document.createTextNode(value);
         } else if (this.image) {
             node = document.createElement("img");
@@ -195,7 +206,10 @@ export class InfoPane {
         this.hierarchy = {}
 
         for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
-            const title = hierarchyInfo["title"];
+            const title = hierarchyInfo["title"].map((titleOption) => {
+                return new Entry(titleOption.key, null, titleOption.options || {});
+            });
+
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
                     return new Entry(row.key, row.label, row.options || {});
@@ -412,9 +426,16 @@ export class InfoPane {
         const hierarchy = this.hierarchy[objectType];
 
         // Make the title with the space id if there is one
-        var title = attributes[hierarchy["title"]];
+        const titleOptions = hierarchy["title"];
+        var title;
+        for (const titleOption of titleOptions) {
+            const potentialTitle = titleOption.getValue(attributes);
+            if (potentialTitle) {
+                title = potentialTitle;
+                break;
+            }
+        }
         const spaceId = this.cjHelper.getSpaceId(key);
-        var feedbackLocation;
         if (spaceId) {
             title = title + ` (${spaceId})`
         }

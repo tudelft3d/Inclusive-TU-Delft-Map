@@ -24,15 +24,18 @@ STOREY_SPACE_ID_COLUMN = "Storey CREFM ID [str]"
 
 ARGUMENT_TO_NAME = {
     "cj_key": "cj_key",
+    "space_id": "space_id",
     "icon_position": "icon_position",
     "bag_ids": "bag_ids",
     "skip": "skip",
     "parent_cj_key": "parent_cj_key",
     "code": "code",
+    "unit_gltf": "unit_gltf",
     "unit_spaces": "unit_spaces",
     "unit_storeys": "unit_storeys",
     "parent_units": "parent_units",
-    "space_id": "space_id",
+    "storey_level": "storey_level",
+    "storey_space_id": "storey_space_id",
 }
 
 COL_TO_NAME = {

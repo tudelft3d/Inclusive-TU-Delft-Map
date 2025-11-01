@@ -121,6 +121,7 @@ export class ObjectPicker {
      * @param {*} onAnimationComplete
      */
     pickMesh(pickedKey, onAnimationComplete = () => { }) {
+        console.log("pickedKey", pickedKey);
         const pickedObjectKey = this.cjHelper.keyToObjectKey(pickedKey);
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
 
@@ -275,6 +276,7 @@ export class ObjectPicker {
             // Get the spaces of the units
             const unitSpacesObjectKeys =
                 this.cjHelper.getUnitSpaces(pickedObjectKey);
+            console.log(unitSpacesObjectKeys);
             if (unitSpacesObjectKeys.length == 0) {
                 console.error("A unit with 0 space is not supported yet.");
                 return;

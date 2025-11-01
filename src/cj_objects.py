@@ -434,6 +434,12 @@ class BuildingStorey(CityJSONSpace):
 
     def apply_attr(self, attr: BdgStoreyAttr, overwrite: bool) -> None:
         self.add_attributes(new_attributes=attr.attributes)
+        self.add_attributes(
+            new_attributes={
+                ARGUMENT_TO_NAME["storey_level"]: attr.storey_level,
+                ARGUMENT_TO_NAME["storey_space_id"]: attr.storey_space_id,
+            }
+        )
         if attr.icon_position is not None:
             self.set_icon(attr.icon_position, overwrite=overwrite)
 
