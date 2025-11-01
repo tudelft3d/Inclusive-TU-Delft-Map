@@ -28,7 +28,8 @@ export class ObjectPicker {
         // Create InfoPane instance from the DOM element
         this.infoPane = new InfoPane(
             document.getElementById("info-pane"),
-            this
+            this,
+            this.cjHelper,
         );
         this.buildingViewActivateCamera = null;
     }

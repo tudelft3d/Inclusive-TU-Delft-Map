@@ -5,6 +5,7 @@ import { OutlineManager } from "./outlines";
 import { CjHelper } from "./cjHelper";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
 import { LayerManager } from "./layers";
+import { StoreyManager } from "./storeyManager"
 
 const NOT_INITIALISED = 0;
 const INITIALISED = 1;
@@ -25,6 +26,8 @@ export class BuildingView {
         this.scene = scene;
         this.outlineManager = outlineManager;
         this.layerManager = layerManager;
+
+        this.storeyManager = new StoreyManager(this);
 
         this.cjHelper = new CjHelper(this.scene);
 
@@ -97,11 +100,7 @@ export class BuildingView {
             this._unhideMeshChildren(roomObject, false);
         });
 
-        // Set the icons properly
-        this.layerManager.switch_to_building_view(
-            this.buildingObjectKey,
-            roomsObjectKeys
-        );
+        this.layerManager.add_interior_building_layers(this.buildingObjectKey, this.storeyCode);
 
         this._applyOutlines(roomsObjects, "lod_0", "default");
     }
@@ -132,6 +131,11 @@ export class BuildingView {
         // Populate the buttons to switch between storeys
         this._populateStoreyButtons();
 
+
+        const available_storeys = Object.keys(this._getStoreyObjectKeys());
+
+        this.storeyManager.activate(this.buildingObjectKey, this.storeyCode, available_storeys);
+
         this._updateView();
 
         this._updateStatus(ACTIVATED);
@@ -147,7 +151,7 @@ export class BuildingView {
         this._unhideMeshChildren(this.buildingObject, false);
 
         // Set the icons properly
-        this.layerManager.switch_to_campus_view();
+        this.layerManager.remove_interior_building_layers();
 
         // Update the outlines
         const allBuildingsObjectKeys =
@@ -161,6 +165,8 @@ export class BuildingView {
             "default"
         );
         // this._applyOutlines(allBuildingsMeshes, 'lod_2', 'default');
+
+        this.storeyManager.deactivate();
 
         this._updateStatus(INITIALISED);
     }

@@ -1,268 +1,453 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import infoPaneHierarchy from "../assets/threejs/buildings/info_pane-hierarchy.json" assert { type: "json" };
+import layersDefinition from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+
+import { CjHelper } from "./cjHelper";
+import { ObjectPicker } from "./objectPicker";
+
+
+class Entry {
+
+    constructor(attributeKey, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+        const { url, tel, mail, code, image } = config;
+
+        // The Entry cannot be two of url, tel or mail at the same time
+        const numberTrue = [url, tel, mail, code, image].filter(Boolean).length;
+        if (numberTrue > 1) {
+            console.error("Cannot have multiple config properties.")
+            return;
+        }
+
+        this.url = url;
+        this.tel = tel;
+        this.mail = mail;
+        this.code = code;
+        this.image = image;
+
+        this.key = attributeKey;
+        this.name = displayName;
+    }
+
+    _formatValueNodeFromAttributes(attributes) {
+        const value = attributes[this.key];
+        if (Array.isArray(value) && value.length == 0) {
+            return
+        } else if (!value) {
+            return
+        }
+
+        var node;
+        if (this.url) {
+            node = document.createElement("a");
+            node.href = `${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.tel) {
+            node = document.createElement("a");
+            node.href = `tel:${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.mail) {
+            node = document.createElement("a");
+            node.href = `mailto:${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.code) {
+            value = layersDefinition[value]["Name (EN)"];
+            node = document.createTextNode(value);
+        } else if (this.image) {
+            node = document.createElement("img");
+            node.src = `/assets/threejs/images/${value}`;
+            node.setAttribute("width", "100%");
+        } else {
+            node = document.createTextNode(value);
+        }
+        return node;
+    }
+
+    formatNodeFromAttributes(attributes) {
+        const attributeName = this.name;
+        const attributeValue = this._formatValueNodeFromAttributes(attributes);
+
+        // Return nothing if the value is null
+        if (!attributeValue) { return }
+
+        var div = document.createElement("div");
+        div.className = "info-pane-row";
+
+        if (attributeName) {
+            var label_span = document.createElement("span");
+            label_span.className = "info-pane-label";
+            label_span.appendChild(document.createTextNode(attributeName));
+            div.appendChild(label_span);
+        }
+
+        var value_span = document.createElement("span");
+        value_span.className = "info-pane-value";
+        value_span.appendChild(attributeValue);
+        div.appendChild(value_span);
+
+        return div;
+    }
+
+}
+
+class EntryGroup {
+
+    /**
+     * 
+     * @param {String} name 
+     * @param {Entry[]} entries 
+     * @param {Boolean} open 
+     */
+    constructor(name, entries, open = false) {
+        this.name = name;
+        this.entries = entries;
+        this.open = open;
+    }
+
+    formatNodeFromAttributes(attributes) {
+        // Check if any of the attributes exist before creating the section, otherwise do not include
+        const hasData = this.entries.some(entry => {
+            const value = attributes[entry.key];
+            if (Array.isArray(value)) {
+                return value.length > 0;
+            } else {
+                return value;
+            }
+        });
+        if (!hasData) return;
+
+        let details = document.createElement("details");
+        details.open = this.open;
+
+        let summary = document.createElement("summary");
+        let summarySpan = document.createElement("span");
+        summarySpan.className = "info-pane-label";
+        summarySpan.appendChild(document.createTextNode(this.name));
+        summary.appendChild(summarySpan);
+
+        details.appendChild(summary);
+
+        this.entries.forEach((entry) => {
+            const formattedEntry = entry.formatNodeFromAttributes(attributes);
+            if (!formattedEntry) return;
+
+            details.appendChild(formattedEntry);
+        });
+
+        return details;
+    }
+
+}
+
+function isValidHttpUrl(string) {
+    let url;
+
+    try {
+        url = new URL(string);
+    } catch (_) {
+        return false;
+    }
+
+    return url.protocol === "http:" || url.protocol === "https:";
+}
+
 
 /**
  * InfoPane class - handles all info pane UI logic
  */
 export class InfoPane {
-    constructor(paneElement, picker = null) {
+
+    /**
+     * 
+     * @param {HTMLElement} paneElement 
+     * @param {ObjectPicker} picker 
+     * @param {CjHelper} cjHelper 
+     */
+    constructor(paneElement, picker, cjHelper) {
         this.pane = paneElement;
         this.picker = picker;
+        this.cjHelper = cjHelper;
+        this.key;
+
+        this._loadInfoPaneHierarchy();
+
+        this._addEventListeners();
     }
 
-    /**
-     * Extract building data from CityJSON based on object name
-     */
-    _getBuildingDataFromName(objectName) {
-        if (!objectName) return null;
+    _addEventListeners() {
+        this.mainContainer = document.getElementById("scene-container");
+        this.movedDuringPointer = false;
+        this.mainContainer.addEventListener("pointerdown", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = false;
+            e.target.setPointerCapture(e.pointerId);
+        });
+        this.mainContainer.addEventListener("pointermove", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            this.movedDuringPointer = true;
+        });
+        this.mainContainer.addEventListener("pointerup", (e) => {
+            if (!this.pane.contains(e.target)) return;
+            if (this.movedDuringPointer) return;
+        });
+    }
 
-        // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-        const cleanName = objectName.replace(/-lod_\d+$/, '');
+    _loadInfoPaneHierarchy() {
+        this.hierarchy = {}
 
-        // Look up in CityJSON
-        const cityObjects = cityjson.CityObjects;
-
-        if (cityObjects && cityObjects[cleanName]) {
-            const buildingData = cityObjects[cleanName];
-
-            // Extract useful attributes
-            const attrs = buildingData.attributes || {};
-
-            return {
-                name: attrs["Name"] || attrs["Name (EN)"] || layers_definition_json[attrs["code"]]["Name (EN)"],
-                nameNL: attrs["Name (NL)"],
-                nicknames: attrs.Nicknames ? attrs.Nicknames.join(", ") : undefined,
-                address: attrs.Address,
+        for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
+            const title = hierarchyInfo["title"];
+            const currentHierarchy = hierarchyInfo["rows"].map((row) => {
+                if (row.type === 'entry') {
+                    return new Entry(row.key, row.label, row.options || {});
+                }
+                if (row.type === 'group') {
+                    const entries = row.entries.map(e =>
+                        new Entry(e.key, e.label, e.options || {})
+                    );
+                    return new EntryGroup(row.title, entries, row.expanded);
+                }
+                // Unknown type
+                console.warn('Unknown row type', row);
+                return null;
+            }).filter(Boolean);
+            this.hierarchy[cjType] = {
+                "title": title,
+                "rows": currentHierarchy
             };
         }
-
-        return null;
     }
 
-    _getBuildingDataFromName_alt(objectName) {
-        if (!objectName) return null;
 
-        // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-        const cleanName = objectName.replace(/-lod_\d+$/, '');
+    // /**
+    //  * Extract building data from CityJSON based on object name
+    //  */
+    // _getBuildingDataFromName(objectName) {
+    //     if (!objectName) return null;
 
-        // Look up in CityJSON
-        const cityObjects = cityjson.CityObjects;
+    //     // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
+    //     const cleanName = objectName.replace(/-lod_\d+$/, '');
 
-        if (cityObjects && cityObjects[cleanName]) {
-            const buildingData = cityObjects[cleanName];
+    //     // Look up in CityJSON
+    //     const cityObjects = cityjson.CityObjects;
 
-            return buildingData;
-        }
+    //     if (cityObjects && cityObjects[cleanName]) {
+    //         const buildingData = cityObjects[cleanName];
 
-        return null;
-    }
+    //         // Extract useful attributes
+    //         const attrs = buildingData.attributes || {};
 
-    /**
-     * Show info for a picked object
-     */
-    show(data) {
+    //         return {
+    //             name: attrs["Name"] || attrs["Name (EN)"] || layers_definition_json[attrs["code"]]["Name (EN)"],
+    //             nameNL: attrs["Name (NL)"],
+    //             nicknames: attrs.Nicknames ? attrs.Nicknames.join(", ") : undefined,
+    //             address: attrs.Address,
+    //         };
+    //     }
 
-        const raw_data = data;
+    //     return null;
+    // }
 
-        // Store original name if it's a string
-        const originalName = typeof data === 'string' ? data : null;
+    // _getBuildingDataFromName_alt(objectName) {
+    //     if (!objectName) return null;
 
-        // If data is a string (object name), look it up in CityJSON
-        if (typeof data === 'string') {
-            data = this._getBuildingDataFromName(data);
-        }
+    //     // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
+    //     const cleanName = objectName.replace(/-lod_\d+$/, '');
 
-        // If no data found, but we have a name, show that
-        if (!data || Object.keys(data).length === 0) {
-            if (originalName) {
-                data = {
-                    name: originalName,
-                    Type: 'Building Object'
-                };
-            } else {
-                this.hide();
-                return;
-            }
-        }
+    //     // Look up in CityJSON
+    //     const cityObjects = cityjson.CityObjects;
 
-        // Extract building name/title if it exists
-        const title = data.name || data.buildingName || data.title || data["Name (EN)"] || 'Building Information';
+    //     if (cityObjects && cityObjects[cleanName]) {
+    //         const buildingData = cityObjects[cleanName];
 
-        // Create structured HTML
-        let html = `
-            <div class="info-pane-header">
-                <h3 class="info-pane-title">${title}</h3>
-                <button class="info-pane-close" aria-label="Close">&times;</button>
-            </div>
-            <div class="info-pane-content">
-        `;
+    //         return buildingData;
+    //     }
 
-        // Define which keys to exclude and which to prioritize
-        const excludeKeys = [
-            'name', 'buildingName', 'title', 'Name (EN)', 'key', 'icon_position',
-            'Skip', '3D BAG Buildings IDs', 'bagIds', 'buildingType'
-        ];
+    //     return null;
+    // }
 
-        // Priority fields to show first (in order)
-        const priorityFields = [
-            { key: 'nameNL', label: 'Name (NL)' },
-            { key: 'nicknames', label: 'Nicknames' },
-            { key: 'address', label: 'Address' },
-            { key: 'spaceId', label: 'Building Code' },
-            { key: 'buildingType', label: 'Type' }
-        ];
+    // /**
+    //  * Show info for a picked object
+    //  */
+    // show(key) {
+    //     const alt = true;
+    //     this.key = key;
 
-        // Add priority fields first
-        priorityFields.forEach(({ key, label }) => {
-            if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
-                html += `
-                    <div class="info-pane-row">
-                        <span class="info-pane-label">${label}:</span>
-                        <span class="info-pane-value">${data[key]}</span>
-                    </div>
-                `;
-            }
-        });
+    //     if (alt) {
+    //         this.show_alt(key);
+    //         return;
+    //     }
 
-        // Add other fields
-        const entries = Object.entries(data).filter(([k]) =>
-            !excludeKeys.includes(k) &&
-            !priorityFields.some(pf => pf.key === k)
-        );
+    //     const attributes = this.cjHelper.getAttributes(key);
+    //     console.log(attributes);
 
-        if (entries.length > 0) {
-            entries.forEach(([key, value]) => {
-                // Skip if value is undefined, null, empty string, or empty array
-                if (value === undefined || value === null || value === '' ||
-                    (Array.isArray(value) && value.length === 0)) {
-                    return;
-                }
+    //     // Extract building name/title if it exists
+    //     const title = attributes["Name (EN)"] || 'No name'
+    //     // const title = data.name || data.buildingName || data.title || data["Name (EN)"] || 'Building Information';
 
-                const formattedKey = key
-                    .replace(/([A-Z])/g, ' $1')
-                    .replace(/^./, str => str.toUpperCase())
-                    .trim();
+    //     // Create structured HTML
+    //     let html = `
+    //         <div class="info-pane-header">
+    //             <h3 class="info-pane-title">${title}</h3>
+    //             <button class="info-pane-close" aria-label="Close">&times;</button>
+    //         </div>
+    //         <div class="info-pane-content">
+    //     `;
 
-                // Format arrays nicely
-                const displayValue = Array.isArray(value) ? value.join(', ') : value;
+    //     // Define which keys to exclude and which to prioritize
+    //     // const excludeKeys = [
+    //     //     'name', 'buildingName', 'title', 'Name (EN)', 'key', 'icon_position',
+    //     //     'Skip', '3D BAG Buildings IDs', 'bagIds', 'buildingType'
+    //     // ];
+    //     const excludeKeys = [
+    //         'key',
+    //         'Name (EN)',
+    //         'icon_position',
+    //         'parent_units',
+    //         'Skip',
+    //         '3D BAG Buildings IDs',
+    //         'Color_class',
+    //     ];
 
-                html += `
-                    <div class="info-pane-row">
-                        <span class="info-pane-label">${formattedKey}:</span>
-                        <span class="info-pane-value">${displayValue}</span>
-                    </div>
-                `;
-            });
-        }
 
-        html += `</div>`;
+    //     // Priority fields to show first (in order)
+    //     const priorityFields = [
+    //         { key: 'Category', label: 'Category' },
+    //         { key: 'space_id', label: 'Official code' },
+    //         { key: 'ShortName (EN)', label: 'Short name' },
+    //         { key: 'Name (NL)', label: 'Dutch name' },
+    //         { key: 'Nicknames', label: 'Nicknames' },
+    //         { key: 'Address', label: 'Address' },
+    //         { key: 'Phone number', label: 'Phone number' },
+    //         { key: 'Email', label: 'Email' },
+    //         { key: 'TU Delft page (EN)', label: 'TU Delft page (EN)' }
+    //     ];
 
-        // Add floor plan button if buildingView is available
-        if (this.picker) {
-            html += `
-                <div class="info-pane-footer">
-                    <button class="info-pane-floorplan-btn" id="info-pane-floorplan-btn">
-                        <i class="fa-solid fa-layer-group"></i>
-                        View Floorplan
-                    </button>
-                </div>
-            `;
-        }
+    //     // Add priority fields first
+    //     priorityFields.forEach(({ key, label }) => {
+    //         const val = attributes[key];
 
-        this.pane.innerHTML = html;
+    //         if (![undefined, null, ""].includes(val) && !(Array.isArray(val) && val.length == 0)) {
+    //             console.log(Array.isArray(val))
+    //             console.log(val);
+    //             html += `
+    //                 <div class="info-pane-row">
+    //                     <span class="info-pane-label">${label}:</span>
+    //                     <span class="info-pane-value">${val}</span>
+    //                 </div>
+    //             `;
+    //         }
+    //     });
+
+    //     // Add other fields
+    //     const entries = Object.entries(attributes).filter(([k]) =>
+    //         !excludeKeys.includes(k) &&
+    //         !priorityFields.some(pf => pf.key === k)
+    //     );
+
+    //     if (entries.length > 0) {
+    //         entries.forEach(([key, value]) => {
+    //             // Skip if value is undefined, null, empty string, or empty array
+    //             if (value === undefined || value === null || value === '' ||
+    //                 (Array.isArray(value) && value.length === 0)) {
+    //                 return;
+    //             }
+
+    //             const formattedKey = key
+    //                 .replace(/([A-Z])/g, ' $1')
+    //                 .replace(/^./, str => str.toUpperCase())
+    //                 .trim();
+
+    //             // Format arrays nicely
+    //             const displayValue = Array.isArray(value) ? value.join(', ') : value;
+
+    //             html += `
+    //                 <div class="info-pane-row">
+    //                     <span class="info-pane-label">${formattedKey}:</span>
+    //                     <span class="info-pane-value">${displayValue}</span>
+    //                 </div>
+    //             `;
+    //         });
+    //     }
+
+    //     html += `</div>`;
+
+    //     // Add floor plan button if buildingView is available
+    //     if (this.picker) {
+    //         html += `
+    //             <div class="info-pane-footer">
+    //                 <button class="info-pane-floorplan-btn" id="info-pane-floorplan-btn">
+    //                     <i class="fa-solid fa-layer-group"></i>
+    //                     View Floorplan
+    //                 </button>
+    //             </div>
+    //         `;
+    //     }
+
+    //     this.pane.innerHTML = html;
+    //     this.pane.style.opacity = '1';
+    //     this.pane.style.display = 'block'; // Keep it always visible, even with no info
+
+    //     this._attachEventListeners();
+    // }
+
+    show(key) {
+        this.key = key;
+
+        const attributes = this.cjHelper.getAttributes(key);
+        const objectType = this.cjHelper.getType(key);
+
+        // Reset the info pane
+        this.pane.innerHTML = "";
+
+        // Make it visible
         this.pane.style.opacity = '1';
         this.pane.style.display = 'block'; // Keep it always visible, even with no info
 
-        this._attachEventListeners();
+        if (!Object.keys(this.hierarchy).includes(objectType)) {
+            console.error("Unsupported type for the info pane:", objectType)
+            this.hide();
+            return;
+        }
 
-        this.show_alt(raw_data);
-    }
+        const hierarchy = this.hierarchy[objectType];
 
-    show_alt(object_threejs_name) {
+        // Make the title with the space id if there is one
+        var title = attributes[hierarchy["title"]];
+        const spaceId = this.cjHelper.getSpaceId(key);
+        var feedbackLocation;
+        if (spaceId) {
+            title = title + ` (${spaceId})`
+        }
+        const infoPaneDefinition = hierarchy["rows"]
 
-        // TODO add checks for missing data
-
-        this.pane.innerHTML = "";
-
-        const object_json = this._getBuildingDataFromName_alt(object_threejs_name);
-
-        this._add_infoPane_title(object_json);
+        this._addTitle(title);
 
         // Create content container
         let content_div = document.createElement("div");
         content_div.className = "info-pane-content";
         this.pane.appendChild(content_div);
 
-        const wanted_attributes = [
-            "Address",
-            "Phone number",
-            "Email"
-        ];
+        for (const row of infoPaneDefinition) {
+            const formattedNode = row.formatNodeFromAttributes(attributes);
+            if (!formattedNode) { continue }
+            this.pane.appendChild(formattedNode);
+        }
 
-        wanted_attributes.forEach((attribute_name) => {
-            this._add_infoPane_object(object_json, attribute_name, content_div);
-        });
+        this._addFloorPlanButton(key);
 
-        // Opening Hours configuration
-        const opening_hours_config = {
-            title: "Opening Hours",
-            attributes: [
-                "Opening hours (Monday)",
-                "Opening hours (Tuesday)",
-                "Opening hours (Wednesday)",
-                "Opening hours (Thursday)",
-                "Opening hours (Friday)",
-                "Opening hours (Saturday)",
-                "Opening hours (Sunday)",
-            ],
-            open: true,
-            labelTransform: (attr) => {
-                // Extract day name from "Opening hours (Monday)" -> "Monday"
-                const match = attr.match(/\(([^)]+)\)/);
-                return match ? match[1] : attr;
-            }
-        };
-
-        this._add_infoPane_details_section(object_json, opening_hours_config, content_div);
-
-        // Wheelchair Accessibility configuration
-        const wheelchair_config = {
-            title: "Wheelchair Accessibility",
-            attributes: [
-                "Wheelchair accessibility (Parking)",
-                "Wheelchair accessibility (Entrances)",
-                "Wheelchair accessibility (Elevators)",
-            ],
-            open: false,
-            labelTransform: (attr) => {
-                // Extract category from "Wheelchair accessibility (Parking)" -> "Parking"
-                const match = attr.match(/\(([^)]+)\)/);
-                return match ? match[1] : attr;
-            }
-        };
-
-        this._add_infoPane_details_section(object_json, wheelchair_config, content_div);
-
-        this._add_infoPane_floorplan_button();
-
-        this._add_infoPane_extra_buttons();
-
+        // Add the extra buttons
+        this._addInfoPaneExtraButtons(title);
     }
 
 
-    _add_infoPane_title(object_json) {
+    _addTitle(title) {
 
         let div = document.createElement("div");
-
         div.className = "info-pane-header";
 
         let h3 = document.createElement("h3");
-
         h3.className = "info-pane-title";
-
-        const title_text = object_json.attributes["Name (EN)"];
-
-        h3.appendChild(document.createTextNode(title_text));
+        h3.appendChild(document.createTextNode(title));
 
         let close_button = document.createElement("button");
 
@@ -277,117 +462,115 @@ export class InfoPane {
         div.appendChild(close_button);
 
         this.pane.appendChild(div);
-
     }
 
-    _add_infoPane_object(object_json, attribute_name, container = null) {
+    // _add_infoPane_object(attribute_value, attribute_name, container = null) {
 
-        let div = document.createElement("div");
-        div.className = "info-pane-row";
-
-
-        let label_span = document.createElement("span");
-        label_span.className = "info-pane-label";
-        label_span.appendChild(document.createTextNode(attribute_name));
+    //     let div = document.createElement("div");
+    //     div.className = "info-pane-row";
 
 
-        let value_span = document.createElement("span");
-        value_span.className = "info-pane-value";
-
-        const attribute_value = object_json.attributes[attribute_name];
-
-        // Check if it's a phone number or email and make it clickable
-        if (attribute_name === "Phone number") {
-            let link = document.createElement("a");
-            link.href = `tel:${attribute_value}`;
-            link.appendChild(document.createTextNode(attribute_value));
-            value_span.appendChild(link);
-        } else if (attribute_name === "Email") {
-            let link = document.createElement("a");
-            link.href = `mailto:${attribute_value}`;
-            link.appendChild(document.createTextNode(attribute_value));
-            value_span.appendChild(link);
-        } else {
-            value_span.appendChild(document.createTextNode(attribute_value));
-        }
+    //     let label_span = document.createElement("span");
+    //     label_span.className = "info-pane-label";
+    //     label_span.appendChild(document.createTextNode(attribute_name));
 
 
-        div.appendChild(label_span);
-        div.appendChild(value_span);
+    //     let value_span = document.createElement("span");
+    //     value_span.className = "info-pane-value";
 
-        const target = container || this.pane;
-        target.appendChild(div);
-
-    }
-
-
-    /**
-     * Add a collapsible details section with configurable options
-     * @param {Object} object_json - The building JSON data
-     * @param {Object} config - Configuration object
-     * @param {string} config.title - Title of the details element
-     * @param {Array<string>} config.attributes - Array of the underlying attributes
-     * @param {boolean} config.open - Whether the details should be open by default, the default is false
-     * @param {Function} config.labelTransform - Optional function to transform attribute names for display
-     * @param {HTMLElement} container - Optional container element to append to
-     */
-    _add_infoPane_details_section(object_json, config, container = null) {
-        const {
-            title,
-            attributes,
-            open = false,
-            labelTransform = null
-        } = config;
-
-        // Check if any of the attributes exist before creating the section, otherwise do not include
-        const hasData = attributes.some(attr => object_json.attributes[attr]);
-        if (!hasData) return;
-
-        let details = document.createElement("details");
-        details.open = open;
-
-        let summary = document.createElement("summary");
-        let summary_span = document.createElement("span");
-        summary_span.className = "info-pane-label";
-        summary_span.appendChild(document.createTextNode(title));
-        summary.appendChild(summary_span);
-
-        details.appendChild(summary);
-
-        attributes.forEach((attribute_name) => {
-            const attribute_value = object_json.attributes[attribute_name];
-
-            // Skip if attribute doesn't exist or is empty
-            if (!attribute_value) return;
-
-            // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
-            const display_label = labelTransform
-                ? labelTransform(attribute_name)
-                : attribute_name;
-
-            let div = document.createElement("div");
-            div.className = "info-pane-row";
-
-            let label_span = document.createElement("span");
-            label_span.className = "info-pane-label";
-            label_span.appendChild(document.createTextNode(display_label));
-
-            let value_span = document.createElement("span");
-            value_span.className = "info-pane-value";
-            value_span.appendChild(document.createTextNode(attribute_value));
-
-            div.appendChild(label_span);
-            div.appendChild(value_span);
-
-            details.appendChild(div);
-        });
-
-        const target = container || this.pane;
-        target.appendChild(details);
-    }
+    //     // Check if it's a phone number or email and make it clickable
+    //     if (attribute_name === "Phone number") {
+    //         let link = document.createElement("a");
+    //         link.href = `tel:${attribute_value}`;
+    //         link.appendChild(document.createTextNode(attribute_value));
+    //         value_span.appendChild(link);
+    //     } else if (attribute_name === "Email") {
+    //         let link = document.createElement("a");
+    //         link.href = `mailto:${attribute_value}`;
+    //         link.appendChild(document.createTextNode(attribute_value));
+    //         value_span.appendChild(link);
+    //     } else {
+    //         value_span.appendChild(document.createTextNode(attribute_value));
+    //     }
 
 
-    _add_infoPane_floorplan_button() {
+    //     div.appendChild(label_span);
+    //     div.appendChild(value_span);
+
+    //     const target = container || this.pane;
+    //     target.appendChild(div);
+
+    // }
+
+
+    // /**
+    //  * Add a collapsible details section with configurable options
+    //  * @param {Object} attributes - The building JSON attributes
+    //  * @param {string} title - Title of the details element
+    //  * @param {Object} config - Configuration object
+    //  * @param {Array<string>} config.attributeNames - Array of the underlying attributes
+    //  * @param {boolean} config.open - Whether the details should be open by default, the default is false
+    //  * @param {HTMLElement} container - Optional container element to append to
+    //  */
+    // _add_infoPane_details_section(attributes, title, config, container = null) {
+    //     const {
+    //         attributeNames,
+    //         open = false,
+    //         // labelTransform = null
+    //     } = config;
+
+    //     // Check if any of the attributes exist before creating the section, otherwise do not include
+    //     const hasData = Object.keys(attributeNames).some(attr => attributes[attr]);
+    //     if (!hasData) return;
+
+    //     let details = document.createElement("details");
+    //     details.open = open;
+
+    //     let summary = document.createElement("summary");
+    //     let summary_span = document.createElement("span");
+    //     summary_span.className = "info-pane-label";
+    //     summary_span.appendChild(document.createTextNode(title));
+    //     summary.appendChild(summary_span);
+
+    //     details.appendChild(summary);
+
+    //     Object.entries(attributeNames).forEach(([attributeKey, attributeName]) => {
+    //         console.log("attributeKey", attributeKey);
+    //         console.log("attributeName", attributeName);
+    //         const attributeValue = attributes[attributeKey];
+
+    //         // Skip if attribute doesn't exist or is empty
+    //         if (!attributeValue) return;
+
+    //         // // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
+    //         // const display_label = labelTransform
+    //         //     ? labelTransform(attributeName)
+    //         //     : attributeName;
+
+    //         let div = document.createElement("div");
+    //         div.className = "info-pane-row";
+
+    //         let label_span = document.createElement("span");
+    //         label_span.className = "info-pane-label";
+    //         label_span.appendChild(document.createTextNode(attributeName));
+
+    //         let value_span = document.createElement("span");
+    //         value_span.className = "info-pane-value";
+    //         value_span.appendChild(document.createTextNode(attributeValue));
+
+    //         div.appendChild(label_span);
+    //         div.appendChild(value_span);
+
+    //         details.appendChild(div);
+    //     });
+
+    //     const target = container || this.pane;
+    //     target.appendChild(details);
+    // }
+
+
+    _addFloorPlanButton(key) {
+        if (!this.cjHelper.buildingHasFloorPlan(key)) { return }
 
         let div = document.createElement("div");
         div.className = "info-pane-button-background";
@@ -399,10 +582,16 @@ export class InfoPane {
         button_icon.className = "fa-solid fa-layer-group";
 
         button.appendChild(button_icon);
-        button.append(document.createTextNode("View Floorplan"));
+        button.appendChild(document.createTextNode("View Floorplan"));
 
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (event) => {
+
+            console.log("pressed button");
+
             if (this.picker) {
+
+                console.log("Button clicked");
+
                 this.picker.switchBuildingView();
             }
         });
@@ -412,46 +601,43 @@ export class InfoPane {
 
     }
 
-    _add_infoPane_extra_buttons() {
+    _addInfoPaneExtraButtons(feedbackLocation) {
 
+        // Container for the buttons
         let div = document.createElement("div");
         div.className = "info-pane-button-background";
         div.classList.add("info-pane-row");
 
+        // Button to report issues
+        let reportButtonSpan = document.createElement("span");
 
-        let report_button_span = document.createElement("span");
-
-        let report_button = document.createElement("button");
-        report_button.className = "info-pane-button";
-
-        report_button.append(document.createTextNode("Report Issue"));
-
-        report_button.addEventListener('click', () => {
-            console.log("Go to issue page");
+        let reportButton = document.createElement("button");
+        reportButton.className = "info-pane-button";
+        reportButton.append(document.createTextNode("Report an error"));
+        reportButton.addEventListener('click', () => {
+            // Go to the feedback page with the current location value
+            const target = `/feedback.html?location=${feedbackLocation}`;
+            window.location.href = target;
         });
 
-        report_button_span.appendChild(report_button);
+        reportButtonSpan.appendChild(reportButton);
+        div.appendChild(reportButtonSpan);
 
+        /// Button to book a room
+        let bookRoomButtonSpan = document.createElement("span");
 
-        let book_room_button_span = document.createElement("span");
-
-        let book_room_button = document.createElement("button");
-        book_room_button.className = "info-pane-button";
-
-        book_room_button.append(document.createTextNode("Book a room"));
-
-        book_room_button.addEventListener('click', () => {
-            console.log("Go to book room page");
+        let bookRoomButton = document.createElement("button");
+        bookRoomButton.className = "info-pane-button";
+        bookRoomButton.append(document.createTextNode("Book a room"));
+        bookRoomButton.addEventListener('click', () => {
+            const target = `https://spacefinder.tudelft.nl/en/buildings/`;
+            window.location.href = target;
         });
 
-        book_room_button_span.appendChild(book_room_button);
-
-
-        div.appendChild(report_button_span);
-        div.appendChild(book_room_button_span);
+        bookRoomButtonSpan.appendChild(bookRoomButton);
+        div.appendChild(bookRoomButtonSpan);
 
         this.pane.appendChild(div);
-
     }
 
 
@@ -468,40 +654,5 @@ export class InfoPane {
         //     this.pane.innerHTML = '';
         //     this.pane.style.display = 'none';
         // }, 3000);
-    }
-
-    /**
-     * Attach event listeners to pane elements
-     */
-    _attachEventListeners() {
-        // Necessary to make the events happen
-        this.mainContainer = document.getElementById("scene-container");
-        this.movedDuringPointer = false;
-        this.mainContainer.addEventListener("pointerdown", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            this.movedDuringPointer = false;
-            e.target.setPointerCapture(e.pointerId);
-        });
-        this.mainContainer.addEventListener("pointermove", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            this.movedDuringPointer = true;
-        });
-        this.mainContainer.addEventListener("pointerup", (e) => {
-            if (!this.pane.contains(e.target)) return;
-            if (this.movedDuringPointer) return;
-        });
-
-        // Close the pane
-        const closeBtn = this.pane.querySelector('.info-pane-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hide());
-        }
-
-        const floorplanBtn = this.pane.querySelector('#info-pane-floorplan-btn');
-        if (floorplanBtn && this.picker) {
-            floorplanBtn.addEventListener('click', () => {
-                this.buildingView.switchBuildingView();
-            });
-        }
     }
 }

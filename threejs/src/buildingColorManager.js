@@ -9,15 +9,20 @@ export class BuildingColorManager {
 
 		this.scene = scene;
 
-		// TODO make this work properly @ LARS
-
-		setTimeout(() => {
-			this._random_color();
-		}, 300);
+		this._assign_colors()
 
 	}
 
-	_random_color() {
+	_assign_colors() {
+
+		const threejs_world_object = this.scene.getObjectByName("world");
+
+		if (threejs_world_object == undefined) {
+			setTimeout(() => {
+				this._assign_colors();
+			}, 100);
+			return;
+		}
 
 		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
 
@@ -25,7 +30,7 @@ export class BuildingColorManager {
 				continue;
 			}
 
-			const color_class = building_json.attributes["Color_class"];
+			const color_class = building_json.attributes["Importance"];
 
 			var constant_name;
 
@@ -46,7 +51,7 @@ export class BuildingColorManager {
 					constant_name = QUINARY_COLOR_3;
 					break;
 				default:
-					console.log("invalid color code for", building_key, "defaulting to Quinary color");
+					console.log("invalid importance code for", building_key, "defaulting to Quinary importance");
 					constant_name = QUINARY_COLOR_3;
 			}
 
