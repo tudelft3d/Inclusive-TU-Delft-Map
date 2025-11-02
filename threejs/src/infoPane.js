@@ -8,15 +8,24 @@ import { ObjectPicker } from "./objectPicker";
 
 class Entry {
 
-    constructor(attributeKey, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+    constructor(keyOrValue = { key: null, value: null }, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+        const { key, value } = keyOrValue;
         const { url, tel, mail, code, image } = config;
 
-        // The Entry cannot be two of url, tel or mail at the same time
+        // The Entry cannot be two of url, tel, mail, code or image at the same time
         const numberTrue = [url, tel, mail, code, image].filter(Boolean).length;
         if (numberTrue > 1) {
             console.error("Cannot have multiple config properties.")
             return;
         }
+
+        // The Entry cannot be key and value at the same time
+        const numberTrueKeyValue = [key, value].filter(Boolean).length;
+        if (numberTrueKeyValue > 1) {
+            console.error("Cannot have both key and value.")
+            return;
+        }
+
 
         this.url = url;
         this.tel = tel;
@@ -24,11 +33,17 @@ class Entry {
         this.code = code;
         this.image = image;
 
-        this.key = attributeKey;
+        this.key = key;
+        this.value = value;
+
         this.name = displayName;
     }
 
     getValue(attributes) {
+        if (this.value) {
+            return this.value;
+        }
+
         var value = attributes[this.key];
         if (Array.isArray(value) && value.length == 0) {
             return null;
@@ -149,18 +164,6 @@ class EntryGroup {
 
 }
 
-function isValidHttpUrl(string) {
-    let url;
-
-    try {
-        url = new URL(string);
-    } catch (_) {
-        return false;
-    }
-
-    return url.protocol === "http:" || url.protocol === "https:";
-}
-
 
 /**
  * InfoPane class - handles all info pane UI logic
@@ -207,23 +210,27 @@ export class InfoPane {
 
         for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
             const title = hierarchyInfo["title"].map((titleOption) => {
-                return new Entry(titleOption.key, null, titleOption.options || {});
+                const keyOrValue = { key: titleOption["key"], value: titleOption["value"] };
+                return new Entry(keyOrValue, null, titleOption.options || {});
             });
             var titleNumber = null;
             if (Object.keys(hierarchyInfo).includes("title_number")) {
                 titleNumber = hierarchyInfo["title_number"].map((titleOption) => {
-                    return new Entry(titleOption.key, null, titleOption.options || {});
+                    const keyOrValue = { key: titleOption["key"], value: titleOption["value"] };
+                    return new Entry(keyOrValue, null, titleOption.options || {});
                 });
             }
 
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
-                    return new Entry(row.key, row.label, row.options || {});
+                    const keyOrValue = { key: row["key"], value: row["value"] };
+                    return new Entry(keyOrValue, row.label, row.options || {});
                 }
                 if (row.type === 'group') {
-                    const entries = row.entries.map(e =>
-                        new Entry(e.key, e.label, e.options || {})
-                    );
+                    const entries = row.entries.map(e => {
+                        const keyOrValue = { key: e["key"], value: e["value"] };
+                        return new Entry(keyOrValue, e.label, e.options || {});
+                    });
                     return new EntryGroup(row.title, entries, row.expanded);
                 }
                 // Unknown type
