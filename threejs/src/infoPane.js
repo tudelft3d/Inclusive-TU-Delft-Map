@@ -8,8 +8,8 @@ import { ObjectPicker } from "./objectPicker";
 
 class Entry {
 
-    constructor(keyOrValue = { key: null, value: null }, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
-        const { key, value } = keyOrValue;
+    constructor(keyOrElse = { key: null, value: null, object: null }, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+        const { key, value, object } = keyOrElse;
         const { url, tel, mail, code, image } = config;
 
         // The Entry cannot be two of url, tel, mail, code or image at the same time
@@ -19,10 +19,10 @@ class Entry {
             return;
         }
 
-        // The Entry cannot be key and value at the same time
-        const numberTrueKeyValue = [key, value].filter(Boolean).length;
+        // The Entry cannot be two of key, value or object at the same time
+        const numberTrueKeyValue = [key, value, object].filter(Boolean).length;
         if (numberTrueKeyValue > 1) {
-            console.error("Cannot have both key and value.")
+            console.error("Cannot have two of key, value and object.")
             return;
         }
 
@@ -35,15 +35,45 @@ class Entry {
 
         this.key = key;
         this.value = value;
+        this.object = object;
 
         this.name = displayName;
     }
 
-    getValue(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    getValue(infoPane, key) {
         if (this.value) {
             return this.value;
+        } else if (this.object) {
+            if (this.object == "ParentBuilding") {
+                const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
+                const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
+                this.objectTarget = parentBuildingObjectKey;
+                return buildingTitle;
+            } else if (this.object == "ChildrenUnits") {
+                if (!infoPane.cjHelper.isBuilding(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for ChildrenUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const unitGroupsKeys = infoPane.cjHelper.getBuildingUnitGroupsObjectKeys(key);
+                const unitCodes = unitGroupsKeys.map((unitGroupKey) => {
+                    const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
+                    return attributes["code"];
+                })
+                return unitCodes;
+            } else {
+                console.error(`Support for object '${this.object}' is not supported yet.`);
+                return;
+            }
         }
 
+        const attributes = infoPane.cjHelper.getAttributes(key);
         var value = attributes[this.key];
         if (Array.isArray(value) && value.length == 0) {
             return null;
@@ -57,10 +87,44 @@ class Entry {
         return value;
     }
 
-    _formatValueNodeFromAttributes(attributes) {
-        const value = this.getValue(attributes);
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    _formatValueNodeFromAttributes(infoPane, key) {
+        const value = this.getValue(infoPane, key);
         if (!value) {
             return null;
+        } else if (this.object) {
+            var node = null;
+            if (this.object == "ParentBuilding") {
+                node = document.createElement("button");
+                node.onclick = () => { infoPane.picker.pickMesh(this.objectTarget) };
+                node.appendChild(document.createTextNode(value));
+            } else if (this.object == "ChildrenUnits") {
+                const icons = value.map((unitCode) => {
+                    const iconName = layersDefinition[unitCode]["Icon name"];
+                    if (!iconName) { return }
+                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconName}`;
+                    const img = document.createElement("img");
+                    img.className = "icon";
+                    img.setAttribute("width", "40px");
+                    img.src = iconPath;
+                    return img;
+                }).filter(Boolean);
+                if (icons.length == 0) {
+                    return null;
+                }
+                node = document.createElement("a");
+                icons.forEach((icon) => {
+                    node.appendChild(icon);
+                })
+            } else {
+                console.error(`Support for object '${this.object}' is not supported yet.`);
+            }
+            return node;
         }
 
         var node;
@@ -88,9 +152,15 @@ class Entry {
         return node;
     }
 
-    formatNodeFromAttributes(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
         const attributeName = this.name;
-        const attributeValue = this._formatValueNodeFromAttributes(attributes);
+        const attributeValue = this._formatValueNodeFromAttributes(infoPane, key);
 
         // Return nothing if the value is null
         if (!attributeValue) { return }
@@ -129,7 +199,14 @@ class EntryGroup {
         this.open = open;
     }
 
-    formatNodeFromAttributes(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
+        const attributes = infoPane.cjHelper.getAttributes(key);
         // Check if any of the attributes exist before creating the section, otherwise do not include
         const hasData = this.entries.some(entry => {
             const value = attributes[entry.key];
@@ -153,7 +230,7 @@ class EntryGroup {
         details.appendChild(summary);
 
         this.entries.forEach((entry) => {
-            const formattedEntry = entry.formatNodeFromAttributes(attributes);
+            const formattedEntry = entry.formatNodeFromAttributes(infoPane, key);
             if (!formattedEntry) return;
 
             details.appendChild(formattedEntry);
@@ -210,25 +287,25 @@ export class InfoPane {
 
         for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
             const title = hierarchyInfo["title"].map((titleOption) => {
-                const keyOrValue = { key: titleOption["key"], value: titleOption["value"] };
+                const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
                 return new Entry(keyOrValue, null, titleOption.options || {});
             });
             var titleNumber = null;
             if (Object.keys(hierarchyInfo).includes("title_number")) {
                 titleNumber = hierarchyInfo["title_number"].map((titleOption) => {
-                    const keyOrValue = { key: titleOption["key"], value: titleOption["value"] };
+                    const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
                     return new Entry(keyOrValue, null, titleOption.options || {});
                 });
             }
 
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
-                    const keyOrValue = { key: row["key"], value: row["value"] };
+                    const keyOrValue = { key: row["key"], value: row["value"], object: row["object"] };
                     return new Entry(keyOrValue, row.label, row.options || {});
                 }
                 if (row.type === 'group') {
                     const entries = row.entries.map(e => {
-                        const keyOrValue = { key: e["key"], value: e["value"] };
+                        const keyOrValue = { key: e["key"], value: e["value"], object: e["object"] };
                         return new Entry(keyOrValue, e.label, e.options || {});
                     });
                     return new EntryGroup(row.title, entries, row.expanded);
@@ -245,184 +322,8 @@ export class InfoPane {
         }
     }
 
-
-    // /**
-    //  * Extract building data from CityJSON based on object name
-    //  */
-    // _getBuildingDataFromName(objectName) {
-    //     if (!objectName) return null;
-
-    //     // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-    //     const cleanName = objectName.replace(/-lod_\d+$/, '');
-
-    //     // Look up in CityJSON
-    //     const cityObjects = cityjson.CityObjects;
-
-    //     if (cityObjects && cityObjects[cleanName]) {
-    //         const buildingData = cityObjects[cleanName];
-
-    //         // Extract useful attributes
-    //         const attrs = buildingData.attributes || {};
-
-    //         return {
-    //             name: attrs["Name"] || attrs["Name (EN)"] || layers_definition_json[attrs["code"]]["Name (EN)"],
-    //             nameNL: attrs["Name (NL)"],
-    //             nicknames: attrs.Nicknames ? attrs.Nicknames.join(", ") : undefined,
-    //             address: attrs.Address,
-    //         };
-    //     }
-
-    //     return null;
-    // }
-
-    // _getBuildingDataFromName_alt(objectName) {
-    //     if (!objectName) return null;
-
-    //     // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-    //     const cleanName = objectName.replace(/-lod_\d+$/, '');
-
-    //     // Look up in CityJSON
-    //     const cityObjects = cityjson.CityObjects;
-
-    //     if (cityObjects && cityObjects[cleanName]) {
-    //         const buildingData = cityObjects[cleanName];
-
-    //         return buildingData;
-    //     }
-
-    //     return null;
-    // }
-
-    // /**
-    //  * Show info for a picked object
-    //  */
-    // show(key) {
-    //     const alt = true;
-    //     this.key = key;
-
-    //     if (alt) {
-    //         this.show_alt(key);
-    //         return;
-    //     }
-
-    //     const attributes = this.cjHelper.getAttributes(key);
-    //     console.log(attributes);
-
-    //     // Extract building name/title if it exists
-    //     const title = attributes["Name (EN)"] || 'No name'
-    //     // const title = data.name || data.buildingName || data.title || data["Name (EN)"] || 'Building Information';
-
-    //     // Create structured HTML
-    //     let html = `
-    //         <div class="info-pane-header">
-    //             <h3 class="info-pane-title">${title}</h3>
-    //             <button class="info-pane-close" aria-label="Close">&times;</button>
-    //         </div>
-    //         <div class="info-pane-content">
-    //     `;
-
-    //     // Define which keys to exclude and which to prioritize
-    //     // const excludeKeys = [
-    //     //     'name', 'buildingName', 'title', 'Name (EN)', 'key', 'icon_position',
-    //     //     'Skip', '3D BAG Buildings IDs', 'bagIds', 'buildingType'
-    //     // ];
-    //     const excludeKeys = [
-    //         'key',
-    //         'Name (EN)',
-    //         'icon_position',
-    //         'parent_units',
-    //         'Skip',
-    //         '3D BAG Buildings IDs',
-    //         'Color_class',
-    //     ];
-
-
-    //     // Priority fields to show first (in order)
-    //     const priorityFields = [
-    //         { key: 'Category', label: 'Category' },
-    //         { key: 'space_id', label: 'Official code' },
-    //         { key: 'ShortName (EN)', label: 'Short name' },
-    //         { key: 'Name (NL)', label: 'Dutch name' },
-    //         { key: 'Nicknames', label: 'Nicknames' },
-    //         { key: 'Address', label: 'Address' },
-    //         { key: 'Phone number', label: 'Phone number' },
-    //         { key: 'Email', label: 'Email' },
-    //         { key: 'TU Delft page (EN)', label: 'TU Delft page (EN)' }
-    //     ];
-
-    //     // Add priority fields first
-    //     priorityFields.forEach(({ key, label }) => {
-    //         const val = attributes[key];
-
-    //         if (![undefined, null, ""].includes(val) && !(Array.isArray(val) && val.length == 0)) {
-    //             console.log(Array.isArray(val))
-    //             console.log(val);
-    //             html += `
-    //                 <div class="info-pane-row">
-    //                     <span class="info-pane-label">${label}:</span>
-    //                     <span class="info-pane-value">${val}</span>
-    //                 </div>
-    //             `;
-    //         }
-    //     });
-
-    //     // Add other fields
-    //     const entries = Object.entries(attributes).filter(([k]) =>
-    //         !excludeKeys.includes(k) &&
-    //         !priorityFields.some(pf => pf.key === k)
-    //     );
-
-    //     if (entries.length > 0) {
-    //         entries.forEach(([key, value]) => {
-    //             // Skip if value is undefined, null, empty string, or empty array
-    //             if (value === undefined || value === null || value === '' ||
-    //                 (Array.isArray(value) && value.length === 0)) {
-    //                 return;
-    //             }
-
-    //             const formattedKey = key
-    //                 .replace(/([A-Z])/g, ' $1')
-    //                 .replace(/^./, str => str.toUpperCase())
-    //                 .trim();
-
-    //             // Format arrays nicely
-    //             const displayValue = Array.isArray(value) ? value.join(', ') : value;
-
-    //             html += `
-    //                 <div class="info-pane-row">
-    //                     <span class="info-pane-label">${formattedKey}:</span>
-    //                     <span class="info-pane-value">${displayValue}</span>
-    //                 </div>
-    //             `;
-    //         });
-    //     }
-
-    //     html += `</div>`;
-
-    //     // Add floor plan button if buildingView is available
-    //     if (this.picker) {
-    //         html += `
-    //             <div class="info-pane-footer">
-    //                 <button class="info-pane-floorplan-btn" id="info-pane-floorplan-btn">
-    //                     <i class="fa-solid fa-layer-group"></i>
-    //                     View Floorplan
-    //                 </button>
-    //             </div>
-    //         `;
-    //     }
-
-    //     this.pane.innerHTML = html;
-    //     this.pane.style.opacity = '1';
-    //     this.pane.style.display = 'block'; // Keep it always visible, even with no info
-
-    //     this._attachEventListeners();
-    // }
-
     show(key) {
         this.key = key;
-
-        const attributes = this.cjHelper.getAttributes(key);
-        const objectType = this.cjHelper.getType(key);
 
         // Reset the info pane
         this.pane.innerHTML = "";
@@ -431,19 +332,52 @@ export class InfoPane {
         this.pane.style.opacity = '1';
         this.pane.style.display = 'block'; // Keep it always visible, even with no info
 
+        const objectType = this.cjHelper.getType(key);
         if (!Object.keys(this.hierarchy).includes(objectType)) {
             console.error("Unsupported type for the info pane:", objectType)
             this.hide();
             return;
         }
 
+
+        const title = this._makeTitle(key);
+        this._addTitle(title);
+
+        const hierarchy = this.hierarchy[objectType];
+        const infoPaneDefinition = hierarchy["rows"]
+
+        // Create content container
+        let content_div = document.createElement("div");
+        content_div.className = "info-pane-content";
+        this.pane.appendChild(content_div);
+
+        for (const row of infoPaneDefinition) {
+            const formattedNode = row.formatNodeFromAttributes(this, key);
+            if (!formattedNode) { continue }
+            this.pane.appendChild(formattedNode);
+        }
+
+        this._addFloorPlanButton(key);
+
+        // Add the extra buttons
+        this._addInfoPaneExtraButtons(title);
+    }
+
+
+    /**
+     * Make the title with the space id if there is one.
+     * 
+     * @param {string} key 
+     * @returns 
+     */
+    _makeTitle(key) {
+        const objectType = this.cjHelper.getType(key);
         const hierarchy = this.hierarchy[objectType];
 
-        // Make the title with the space id if there is one
         var title;
         const titleOptions = hierarchy["title"];
         for (const titleOption of titleOptions) {
-            const potentialTitle = titleOption.getValue(attributes);
+            const potentialTitle = titleOption.getValue(this, key);
             if (potentialTitle) {
                 title = potentialTitle;
                 break;
@@ -452,7 +386,7 @@ export class InfoPane {
         const titleNumberOptions = hierarchy["titleNumber"];
         if (titleNumberOptions) {
             for (const titleNumberOption of titleNumberOptions) {
-                const potentialTitleNumber = titleNumberOption.getValue(attributes);
+                const potentialTitleNumber = titleNumberOption.getValue(this, key);
                 if (potentialTitleNumber) {
                     if (title) {
                         title += ` (${potentialTitleNumber})`;
@@ -463,26 +397,7 @@ export class InfoPane {
                 }
             }
         }
-
-        const infoPaneDefinition = hierarchy["rows"]
-
-        this._addTitle(title);
-
-        // Create content container
-        let content_div = document.createElement("div");
-        content_div.className = "info-pane-content";
-        this.pane.appendChild(content_div);
-
-        for (const row of infoPaneDefinition) {
-            const formattedNode = row.formatNodeFromAttributes(attributes);
-            if (!formattedNode) { continue }
-            this.pane.appendChild(formattedNode);
-        }
-
-        this._addFloorPlanButton(key);
-
-        // Add the extra buttons
-        this._addInfoPaneExtraButtons(title);
+        return title;
     }
 
 
@@ -509,111 +424,6 @@ export class InfoPane {
 
         this.pane.appendChild(div);
     }
-
-    // _add_infoPane_object(attribute_value, attribute_name, container = null) {
-
-    //     let div = document.createElement("div");
-    //     div.className = "info-pane-row";
-
-
-    //     let label_span = document.createElement("span");
-    //     label_span.className = "info-pane-label";
-    //     label_span.appendChild(document.createTextNode(attribute_name));
-
-
-    //     let value_span = document.createElement("span");
-    //     value_span.className = "info-pane-value";
-
-    //     // Check if it's a phone number or email and make it clickable
-    //     if (attribute_name === "Phone number") {
-    //         let link = document.createElement("a");
-    //         link.href = `tel:${attribute_value}`;
-    //         link.appendChild(document.createTextNode(attribute_value));
-    //         value_span.appendChild(link);
-    //     } else if (attribute_name === "Email") {
-    //         let link = document.createElement("a");
-    //         link.href = `mailto:${attribute_value}`;
-    //         link.appendChild(document.createTextNode(attribute_value));
-    //         value_span.appendChild(link);
-    //     } else {
-    //         value_span.appendChild(document.createTextNode(attribute_value));
-    //     }
-
-
-    //     div.appendChild(label_span);
-    //     div.appendChild(value_span);
-
-    //     const target = container || this.pane;
-    //     target.appendChild(div);
-
-    // }
-
-
-    // /**
-    //  * Add a collapsible details section with configurable options
-    //  * @param {Object} attributes - The building JSON attributes
-    //  * @param {string} title - Title of the details element
-    //  * @param {Object} config - Configuration object
-    //  * @param {Array<string>} config.attributeNames - Array of the underlying attributes
-    //  * @param {boolean} config.open - Whether the details should be open by default, the default is false
-    //  * @param {HTMLElement} container - Optional container element to append to
-    //  */
-    // _add_infoPane_details_section(attributes, title, config, container = null) {
-    //     const {
-    //         attributeNames,
-    //         open = false,
-    //         // labelTransform = null
-    //     } = config;
-
-    //     // Check if any of the attributes exist before creating the section, otherwise do not include
-    //     const hasData = Object.keys(attributeNames).some(attr => attributes[attr]);
-    //     if (!hasData) return;
-
-    //     let details = document.createElement("details");
-    //     details.open = open;
-
-    //     let summary = document.createElement("summary");
-    //     let summary_span = document.createElement("span");
-    //     summary_span.className = "info-pane-label";
-    //     summary_span.appendChild(document.createTextNode(title));
-    //     summary.appendChild(summary_span);
-
-    //     details.appendChild(summary);
-
-    //     Object.entries(attributeNames).forEach(([attributeKey, attributeName]) => {
-    //         console.log("attributeKey", attributeKey);
-    //         console.log("attributeName", attributeName);
-    //         const attributeValue = attributes[attributeKey];
-
-    //         // Skip if attribute doesn't exist or is empty
-    //         if (!attributeValue) return;
-
-    //         // // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
-    //         // const display_label = labelTransform
-    //         //     ? labelTransform(attributeName)
-    //         //     : attributeName;
-
-    //         let div = document.createElement("div");
-    //         div.className = "info-pane-row";
-
-    //         let label_span = document.createElement("span");
-    //         label_span.className = "info-pane-label";
-    //         label_span.appendChild(document.createTextNode(attributeName));
-
-    //         let value_span = document.createElement("span");
-    //         value_span.className = "info-pane-value";
-    //         value_span.appendChild(document.createTextNode(attributeValue));
-
-    //         div.appendChild(label_span);
-    //         div.appendChild(value_span);
-
-    //         details.appendChild(div);
-    //     });
-
-    //     const target = container || this.pane;
-    //     target.appendChild(details);
-    // }
-
 
     _addFloorPlanButton(key) {
         if (!this.cjHelper.isBuilding(key)) { return }

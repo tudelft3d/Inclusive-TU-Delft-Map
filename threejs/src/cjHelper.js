@@ -73,6 +73,11 @@ export class CjHelper {
         return type.startsWith("Building");
     }
 
+    isCityObjectGroup(key) {
+        const type = this.getType(key);
+        return type.startsWith("CityObjectGroup");
+    }
+
     /**
      * Finds the key of the Building that is the parent of this object.
      *
@@ -202,6 +207,22 @@ export class CjHelper {
             }
         }
         return allObjectKeys;
+    }
+
+    getBuildingUnitGroupsObjectKeys(key) {
+        if (!this.isBuilding(key)) {
+            return null;
+        }
+        const childrenKeys = this.getChildrenObjectKeys(key).filter(
+            (childKey) => { return this.isCityObjectGroup(childKey); }
+        );
+        console.log("childrenKeys", childrenKeys);
+        if (childrenKeys.length > 1) {
+            console.error("Expected only one CityObjectGroup child for a building.");
+            return null;
+        }
+        const buildingUnitMainGroup = childrenKeys[0];
+        return this.getChildrenObjectKeys(buildingUnitMainGroup);
     }
 
     getAllBuildingsObjectKeys() {
