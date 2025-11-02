@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import layer_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 import layer_hierarchy_json from "../assets/threejs/buildings/thematic_codelist-hierarchy.json" assert {type: "json"};
+import { CjHelper } from "./cjHelper";
 
 import {
 	// layerset,
@@ -19,6 +20,8 @@ export class LayerManager {
 		this.scene = scene;
 		this.iconsSceneManager = iconsSceneManager;
 		this.svgLoader = svgLoader;
+
+		this.cjHelper = new CjHelper(this.scene);
 
 		this.layer_hierarchy = layer_hierarchy_json;
 		this.layer_definition = {};
@@ -41,105 +44,17 @@ export class LayerManager {
 		this.active_building_key = null;
 		this.active_storey_code = null;
 
-		this.building_BuildingUnitContainers = this._extract_building_buildingUnitContainers();
-		this.campus_OutdoorUnitContainers = this._extract_outdoor_unit_containers();
+		// this.building_BuildingUnitContainers = this._extract_building_buildingUnitContainers();
+		// this.campus_OutdoorUnitContainers = this._extract_outdoor_unit_containers();
+
+		this.building_BuildingUnitContainers = this.cjHelper.extract_building_buildingUnitContainers();
+		this.campus_OutdoorUnitContainers = this.cjHelper.extract_outdoor_unit_containers();
 
 		this._populate_layer_buttons();
 
 		this._add_initial_iconsets();
 
 		this._unhide_mesh_parents();
-
-	}
-
-	/**
-     * Extracts all the buildingUnitContainers for each building on the campus from the cityjson.
-     * 
-     * This function assumes that buildings have a child of type BuildingUnitObject.
-     * If not, the building will be skipped and never be assigned icons.
-     * 
-     * The end result is:
-     * 
-     * {
-     	* building_1: {
-     		* code1: b1_code1_key,
-     		* code2: b1_code2_key
-     	* },
-     	* building_2: {
-     		* code1: b2_code1_key,
-     		* code2: b2_code2_key
-     	* }
-     * }
-     *
-     * @returns A dictionary mapping building keys to a dictionary mapping layer codes to buildingUnitContainer keys.
-     */
-	_extract_building_buildingUnitContainers() {
-
-		const building_buildingUnitContainers = {};
-
-		for (const [building_key, building_object] of Object.entries(cityjson.CityObjects)) {
-
-			if (building_object.type == "Building") {
-
-				if (!(building_object.children)) {
-					building_buildingUnitContainers[building_key] = {};
-					continue;
-				}
-
-				const buildingUnitObject_key = building_object.children.find((element) => element.includes("BuildingUnitObject"));
-
-				if (buildingUnitObject_key == undefined) {
-					console.error("Building:", building_key, " did not have any BuildingUnitObject");
-					building_buildingUnitContainers[building_key] = {};
-					continue;
-				}
-
-				const buildingUnitObject_children_keys = cityjson.CityObjects[buildingUnitObject_key].children;
-
-				let buildingUnitObject_children_dict = {};
-
-				buildingUnitObject_children_keys.forEach((current_unit_key) => {
-
-					const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
-					buildingUnitObject_children_dict[current_layer_code] = current_unit_key;
-
-				});
-
-				building_buildingUnitContainers[building_key] = buildingUnitObject_children_dict;
-
-			}
-		}
-		return building_buildingUnitContainers;
-	}
-
-	/**
-     * Extracts all the OutdoorUnitContainers from the cityjson
-     * 
-     * This function assumes that the cityjson file has one object called Outdoor-CityObjectGroup-OutdoorObject.
-     *
-     * The end result is:
-     * 
-     * {
-     	* code1: unit1_key,
-     	* code2: unit2_key
-     * }
-     * 
-     * @returns An object where layer codes map to their respective OutdoorUnitContainer.
-     */
-	_extract_outdoor_unit_containers() {
-
-		const campus_OutdoorUnitContainers = {};
-
-		const outdoor_unit_keys = cityjson.CityObjects["Outdoor-CityObjectGroup-OutdoorObject"].children;
-
-		outdoor_unit_keys.forEach((current_unit_key) => {
-
-			const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
-			campus_OutdoorUnitContainers[current_layer_code] = current_unit_key;
-
-		});
-
-		return campus_OutdoorUnitContainers;
 
 	}
 
