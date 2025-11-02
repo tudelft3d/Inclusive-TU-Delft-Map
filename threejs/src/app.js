@@ -43,7 +43,7 @@ export class Map {
         // Cameras and controls
 
         const cameraPosition = new THREE.Vector3(85070, 1170, -445825);
-        const cameraLookAt = new THREE.Vector3(85508, -25, -446006);
+        const cameraLookAt = new THREE.Vector3(85508, 5, -446006);
 
         this.cameraManager = new CamerasControls(
             this.mainContainer,
