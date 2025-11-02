@@ -117,7 +117,7 @@
   position: absolute;
   top: 100%;               /* center vertically relative to the button */
   right: 85%;            /* place left of the control */
-  transform: translateY(-44%);
+  transform: translateY(-38.5%);
   margin-right: 12px;     /* gap between button and dropdown */
   background: #fafafa;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -207,6 +207,24 @@
   background: #a8a8a82f;
 }
 
+.satellite-basemap #legend-dropdown .legend-list {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.satellite-basemap #legend-dropdown .legend-item {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 4px;
+  display: flex; /* keep swatch + label layout */
+  align-items: center;
+}
+
+.satellite-basemap #legend-dropdown .legend-item:hover {
+  background: #a8a8a82f;
+}
+
 /* Legend list & items */
 #legend-dropdown .legend-list {
   list-style: none;
@@ -228,6 +246,7 @@
   font-family: "Open Sans", sans-serif;
   font-size: 14px;
 }
+
 
 #legend-dropdown .legend-item:hover {
   background: #f2f9fb;
@@ -372,6 +391,15 @@
   body.layers-active-mobile #layers-btn {
     z-index: 1510;
     pointer-events: auto;
+  }
+
+  /* hide top-right controls while the info pane mobile sheet is open */
+  body.info-pane-active-mobile #top-right-sidebar-controls {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translateX(8px);
+    transition: opacity 180ms ease, transform 180ms ease;
   }
 }
 

@@ -1,130 +1,331 @@
-/* Info Pane Base Styles */
 #info-pane {
   position: fixed;
   top: calc(var(--height, 64px) + 14px);
-  left: 14px;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  
-  max-width: 425px;
-  min-width: 425px;
-  padding: 8px 12px;
+  left: 29px;
+  background: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.15);
+  width: 420px;
+  max-width: 420px;
+  padding: 12px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 10000;
-  font-family: Sans-Serif;
+  font-family: "Open Sans", sans-serif;
   font-size: 14px;
-  line-height: 1.4;
-  overflow: hidden;
+  line-height: 1.35;
+  overflow: visible;
   pointer-events: auto;
 }
 
-
-/* Header */
 .info-pane-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: -12px -12px 8px -12px; /* cancel container padding */
   padding: 12px 14px;
-  background: #00A6D6;
+  background: #027dab; 
   color: white;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  gap: 8px;
 }
 
+/* Title */
 .info-pane-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  padding-left: 15px;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Close button (SVG placed via JS) */
 .info-pane-close {
   background: none;
   border: none;
   color: white;
-  font-size: 20px;
   cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
+  padding: 6px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: background 0.2s ease;
+  transition: background 0.12s ease;
 }
-
+.info-pane-close img.info-pane-close-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  pointer-events: none;
+}
 .info-pane-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.08);
 }
 
-/* Content */
+/* Scrollable content area */
 .info-pane-content {
-  padding: 12px 14px;
-  max-height: 350px;
+  padding: 3px 0 0 0; 
+  max-height: 339px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* Generic row styling (label/value) */
 .info-pane-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 12px;
   border-bottom: 1px solid #eee;
-  gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
+  background: transparent;
 }
-
 .info-pane-row:last-child {
   border-bottom: none;
 }
 
-.info-pane-label {
-  font-weight: 600;
-  color: #444;
-  flex-shrink: 0;
+/* compact variant for specific rows ( Address, Category) */
+.info-pane-row--compact {
+  padding: 14px 14px;
+}
+.info-pane-row--compact .info-pane-label {
+  font-size: 14px;
+}
+.info-pane-row--compact .info-pane-value {
+  font-size: 14px;
 }
 
+/* Left label */
+.info-pane-label {
+  font-weight: 550;
+  font-size: 14px;
+  color: #323232;
+  flex: 0 0 30%;
+  max-width: 30%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left; 
+}
+
+/* Right value */
 .info-pane-value {
-  color: #666;
+  color: #000000;
+  font-weight: 500;
   text-align: right;
+  flex: 1 1 70%;
   word-break: break-word;
 }
 
-/* Footer with Floor plan Button */
-.info-pane-button-background {
-  padding: 12px 14px;
-  background: #f3f3f3;
-  border-top: 1px solid #ddd;
+/* Details */
+.info-pane-group {
+  border-bottom: 1px solid #e9e9e9;
+  background: transparent;
 }
 
+/* hide default marker */
+.info-pane-group > summary::-webkit-details-marker {
+  display: none;
+}
+.info-pane-group > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 14px 14px 14px;
+  display: flex;
+  align-items: center;          /* changed from 'left' (invalid) -> stable vertical alignment */
+  justify-content: space-between;
+  font-weight: 700;
+  color: #333;
+  font-size: 14px;
+  background: transparent;
+  box-sizing: border-box;      /* ensure padding doesn't alter measured height */
+  min-height: 50px;            /* keeps summary height consistent when toggling */
+}
+
+/* chevron using SVG icons */
+.info-pane-group > summary::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 12px;
+  background-image: url('../assets/threejs/graphics/icons/ui-buttons/carret-down.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.18s ease, background-image 0.18s ease;
+  transform: rotate(0deg);
+  flex: 0 0 auto;
+  filter: brightness(0) saturate(100%) invert(31%) sepia(93%) saturate(1240%) hue-rotate(168deg) brightness(89%) contrast(101%);
+
+}
+
+/* when open, use the up icon */
+.info-pane-group[open] > summary::after {
+  background-image: url('../assets/threejs/graphics/icons/ui-buttons/carret-up.svg');
+  transform: rotate(0deg);
+  filter: brightness(0) saturate(100%) invert(31%) sepia(93%) saturate(1240%) hue-rotate(168deg) brightness(89%) contrast(101%);
+}
+
+/* entries inside a group should look like rows */
+.info-pane-group > .info-pane-row {
+  padding-left: 14px;
+  padding-right: 14px;
+  background: #fff;
+}
+
+/* style labels for entries inside collapsible groups */
+.info-pane-group > .info-pane-row .info-pane-label {
+  font-weight: 500;        
+  color: #484848;      
+  font-size: 14px;         
+  flex: 0 0 40%;         
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* style the value column for group entries */
+.info-pane-group > .info-pane-row .info-pane-value {
+  color: #000000;
+  font-weight: 500;
+  text-align: right;      
+  flex: 1 1 60%;
+  font-size: 14px;
+}
+
+/* slightly different background for group entries */
+.info-pane-group > .info-pane-row {
+  background: #fcfdff;
+}
+
+/* Footer / primary action */
+.info-pane-button-background {
+  margin: -2px -12px 2px -12px; /* remove top margin that added the gap */
+  padding: 12px 14px;
+  background: #ffffff;
+  border-top: 1px solid #eee;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Primary large button */
 .info-pane-button {
   width: 100%;
-  padding: 10px 16px;
-  background: white;
-  color: #444;
+  padding: 10px 14px;
+  background: #027dab;
+  color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0,126,166,0.15);
 }
 
-.info-pane-button:hover {
-  background: #f3f3f3;
-  transform: translateY(-1px);
+/* two small actions layout */
+.info-pane-row.info-pane-button-background {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.info-pane-row.info-pane-button-background span {
+  flex: 1 1 0;
+}
+.info-pane-row.info-pane-button-background .info-pane-button {
+  background: #fff;
+  color: #027dab;
+  border: 2px solid rgba(0, 127, 166, 0.293);
+  box-shadow: none;
+  font-weight: 600;
 }
 
-.info-pane-button:active {
-  transform: translateY(0);
+/* Group title styling */
+.info-pane-group > summary .info-pane-label {
+  flex: 0 0 48%;
+  max-width: 48%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0;
+  text-align: left;
 }
 
-.info-pane-button i {
-  font-size: 16px;
+/* small responsive tweak */
+@media (max-width: 620px) {
+  /* Mobile bottom-sheet behavior (match top-right dropdown mobile style) */
+  #info-pane {
+    display: block !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    margin: 0;
+    background: #fafafa;
+    border-radius: 8px 8px 0 0;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 12px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.14);
+    transform: translateY(100%);
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+    opacity: 0;
+    z-index: 2400;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  /* open state */
+  #info-pane.mobile-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* touch-friendly header and controls */
+  .info-pane-header {
+    padding: 14px 16px;
+    border-radius: 8px 8px 0 0;
+    gap: 10px;
+  }
+  .info-pane-close {
+    width: 44px;
+    height: 44px;
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  /* adjust content area so it fits inside sheet with footer */
+  .info-pane-content {
+    max-height: calc(80vh - 300px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* primary button touch target */
+  .info-pane-button {
+    font-size: 13px;
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+
+  /* keep left margin on very narrow screens consistent */
+  #info-pane { left: 0; }
 }

@@ -273,14 +273,14 @@
     border-radius: 8px;
   }
 
-  /* #accessibility-dropdown {
-    font-size: 14px;
-    min-width: 170px;
-    padding: 6px 0px;
-    bottom: 100%;
-    right: 100%;
-    transform: translateY(12%);
-  } */
+  /* hide bottom-right controls while the info pane mobile sheet is open */
+  body.info-pane-active-mobile #bottom-right-sidebar-controls {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
 }
 
 
