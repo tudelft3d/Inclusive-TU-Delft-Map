@@ -121,9 +121,20 @@ export class ObjectPicker {
      * @param {*} onAnimationComplete
      */
     pickMesh(pickedKey, onAnimationComplete = () => { }) {
+        this._pickMesh(pickedKey, pickedKey, onAnimationComplete);
+    }
+
+    /**
+     * Pick the mesh corresponding to the given key.
+     *
+     * @param {string} pickedKey (object or mesh key)
+     * @param {*} onAnimationComplete
+     */
+    _pickMesh(pickedKey, paneKey, onAnimationComplete = () => { }) {
         console.log("pickedKey", pickedKey);
         const pickedObjectKey = this.cjHelper.keyToObjectKey(pickedKey);
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
+        const paneObjectKey = this.cjHelper.keyToObjectKey(paneKey);
 
         if (pickedObjectType == "Building") {
             // Pick a Building
@@ -497,6 +508,8 @@ export class ObjectPicker {
             var buildingMesh;
 
             if (unitSpacesObjectKeys.length != 0) {
+                // Case where the unit links to spaces
+
                 unitSpacesMeshes = unitSpacesObjectKeys.map((objectKey) => {
                     return this.cjHelper.getMesh(objectKey);
                 });
@@ -542,13 +555,18 @@ export class ObjectPicker {
                 //     }
                 // }
             } else {
-                unitSpacesMeshes = [this.cjHelper.getMesh(pickedObjectKey)];
-                // const attributes = this.cjHelper.getAttributes(pickedObjectKey);
-                // const storeyFullCode = attributes["unit_storeys"][0];
-                // storeyCode = storeyFullCode.split(".")[2];
+                // Case where the unit has no spaces
+
+                unitSpacesMeshes = this.cjHelper.getMesh(pickedObjectKey);
+                console.log("unitSpacesMeshes", unitSpacesMeshes);
                 buildingObjectKey =
                     this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
                 buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
+
+                if (!unitSpacesMeshes) {
+                    // Case where the unit has no geometry
+                    return this._pickMesh(buildingObjectKey, pickedObjectKey, onAnimationComplete);
+                }
             }
 
             const storeyCode =
@@ -665,7 +683,7 @@ export class ObjectPicker {
                 pickedObjectType
             );
         }
-        this.infoPane.show(pickedObjectKey);
+        this.infoPane.show(paneObjectKey);
     }
 
     unpick(onAnimationComplete) {
