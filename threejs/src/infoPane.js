@@ -209,6 +209,12 @@ export class InfoPane {
             const title = hierarchyInfo["title"].map((titleOption) => {
                 return new Entry(titleOption.key, null, titleOption.options || {});
             });
+            var titleNumber = null;
+            if (Object.keys(hierarchyInfo).includes("title_number")) {
+                titleNumber = hierarchyInfo["title_number"].map((titleOption) => {
+                    return new Entry(titleOption.key, null, titleOption.options || {});
+                });
+            }
 
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
@@ -226,6 +232,7 @@ export class InfoPane {
             }).filter(Boolean);
             this.hierarchy[cjType] = {
                 "title": title,
+                "titleNumber": titleNumber,
                 "rows": currentHierarchy
             };
         }
@@ -426,8 +433,8 @@ export class InfoPane {
         const hierarchy = this.hierarchy[objectType];
 
         // Make the title with the space id if there is one
-        const titleOptions = hierarchy["title"];
         var title;
+        const titleOptions = hierarchy["title"];
         for (const titleOption of titleOptions) {
             const potentialTitle = titleOption.getValue(attributes);
             if (potentialTitle) {
@@ -435,10 +442,21 @@ export class InfoPane {
                 break;
             }
         }
-        const spaceId = this.cjHelper.getSpaceId(key);
-        if (spaceId) {
-            title = title + ` (${spaceId})`
+        const titleNumberOptions = hierarchy["titleNumber"];
+        if (titleNumberOptions) {
+            for (const titleNumberOption of titleNumberOptions) {
+                const potentialTitleNumber = titleNumberOption.getValue(attributes);
+                if (potentialTitleNumber) {
+                    if (title) {
+                        title += ` (${potentialTitleNumber})`;
+                    } else {
+                        title = potentialTitleNumber;
+                    }
+                    break;
+                }
+            }
         }
+
         const infoPaneDefinition = hierarchy["rows"]
 
         this._addTitle(title);
@@ -591,6 +609,7 @@ export class InfoPane {
 
 
     _addFloorPlanButton(key) {
+        if (!this.cjHelper.isBuilding(key)) { return }
         if (!this.cjHelper.buildingHasFloorPlan(key)) { return }
 
         let div = document.createElement("div");

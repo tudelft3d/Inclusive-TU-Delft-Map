@@ -51,7 +51,7 @@ export class StoreyManager {
         this.available_storeys = {};
         const levels = [];
         for (const [storey_code, storey_object_keys] of Object.entries(available_storeys)) {
-            console.log("storey_object_keys", storey_object_keys);
+            // console.log("storey_object_keys", storey_object_keys);
             const storeys_attributes = storey_object_keys.map((key) => { return this.cjHelper.getAttributes(key) });
 
             // Extract the attributes

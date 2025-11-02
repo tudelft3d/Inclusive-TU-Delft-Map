@@ -1,4 +1,5 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
+import { Vector3 } from "three/src/Three.Core.js";
 
 export class CjHelper {
     constructor(scene) {
@@ -23,17 +24,21 @@ export class CjHelper {
             meshKey = objectKey + "-lod_2";
         } else if (objectType == "BuildingRoom") {
             meshKey = objectKey + "-lod_0";
-        } else {
-            console.error(
-                "Only Building and BuildingRoom objects have a mesh."
-            );
+        } else if (objectType == "BuildingUnit") {
+            meshKey = objectKey + "-lod_0";
+        } else if (objectType == "GenericCityObject") {
+            meshKey = objectKey + "-lod_0";
+            // } else {
+            //     console.error(
+            //         `Only Building, BuildingRoom, BuildingUnit and GenericCityObject objects can have a mesh, not ${objectType}.`
+            //     );
         }
 
-        if (!this.checkMeshKeyExists(meshKey)) {
-            console.error(
-                "The mesh key obtained doesn't correspond to an object in the scene."
-            );
-        }
+        // if (!this.checkMeshKeyExists(meshKey)) {
+        //     console.error(
+        //         "The mesh key obtained doesn't correspond to an object in the scene."
+        //     );
+        // }
         return meshKey;
     }
 
@@ -46,6 +51,26 @@ export class CjHelper {
     checkMeshKeyExists(meshKey) {
         const mesh = this.scene.getObjectByName(meshKey);
         return !!mesh;
+    }
+
+    hasMesh(key) {
+        const meshKey = this.keyToMeshKey(key);
+        return checkMeshKeyExists(meshKey);
+    }
+
+    isBuilding(key) {
+        const type = this.getType(key);
+        return type == "Building";
+    }
+
+    isBuildingUnit(key) {
+        const type = this.getType(key);
+        return type == "BuildingUnit";
+    }
+
+    isBuildingSomething(key) {
+        const type = this.getType(key);
+        return type.startsWith("Building");
     }
 
     /**
@@ -64,22 +89,29 @@ export class CjHelper {
         return objectKey;
     }
 
-    getRoomStoreyCode(key) {
+    getStoreyCode(key) {
         const roomType = this.getType(key);
-        if (roomType != "BuildingRoom") {
-            console.error("This function expects a BuildingRoom as an input.");
-            return;
-        }
-        const roomAttributes = this.getAttributes(key);
-        const spaceId = roomAttributes["space_id"];
-        const allCodes = spaceId.split(".");
-        if (allCodes.length != 4) {
+        var storeyObjectKey;
+        if (roomType == "BuildingRoom") {
+            storeyObjectKey = this.getParentObjectKey(key);
+        } else if (roomType == "BuildingStorey") {
+            storeyObjectKey = key;
+        } else {
             console.error(
-                "A BuildingRoom is expected to have 4 numbers in its space ID."
+                "This function expects a BuildingRoom or BuildingStorey as an input."
             );
             return;
         }
-        return allCodes[2];
+        console.log("storeyObjectKey", storeyObjectKey);
+        return this.getAttributes(storeyObjectKey)["storey_space_id"];
+    }
+
+    getUnitMainStoreyCode(key) {
+        if (!this.isBuildingUnit(key)) {
+            return;
+        }
+        const attributes = this.getAttributes(key);
+        return attributes["Entrance Storey Code"]
     }
 
     getJson(key) {
@@ -98,6 +130,15 @@ export class CjHelper {
             return json["children"];
         } else {
             return [];
+        }
+    }
+
+    getParentObjectKey(key) {
+        const json = this.getJson(key);
+        if (Object.keys(json).includes("parents")) {
+            return json["parents"][0];
+        } else {
+            return null;
         }
     }
 
@@ -133,11 +174,22 @@ export class CjHelper {
         return attributes["space_id"];
     }
 
+    getIconPositionVector3(key) {
+        const attributes = this.getAttributes(key);
+        const iconPosition = attributes["icon_position"];
+        // Rotate to have the correct axes
+        return new Vector3(
+            iconPosition[0],
+            iconPosition[2],
+            -iconPosition[1]
+        );
+    }
+
     /**
      * Get the object keys of all the objects of one of the given types.
-     * 
-     * @param {string[]} objectTypes 
-     * @returns 
+     *
+     * @param {string[]} objectTypes
+     * @returns
      */
     _getAllObjectKeysFilter(objectTypes) {
         const allObjectKeys = [];
@@ -157,19 +209,55 @@ export class CjHelper {
     }
 
     getAllUnitsObjectKeys() {
-        return this._getAllObjectKeysFilter(["BuildingUnit", "GenericCityObject"]);
+        return this._getAllObjectKeysFilter([
+            "BuildingUnit",
+            "GenericCityObject",
+        ]);
     }
 
-    buildingHasFloorPlan(key) {
+    getBuildingPartsObjectKeys(buildingKey) {
         // Check if the object is a building
-        const objectType = this.getType(key);
+        const objectType = this.getType(buildingKey);
         if (objectType != "Building") {
             console.error("The queried object is not a building.");
             return;
         }
 
-        const childrenKeys = this.getChildrenObjectKeys(key);
-        const buildingParts = childrenKeys.filter(childKey => this.getType(childKey) == "BuildingPart");
+        const childrenObjectKeys = this.getChildrenObjectKeys(buildingKey);
+        const buildingPartsObjectKeys = childrenObjectKeys.filter(
+            (childObjectKey) => this.getType(childObjectKey) == "BuildingPart"
+        );
+        return buildingPartsObjectKeys;
+    }
+
+    getBuildingStoreysObjectKeys(buildingKey, filteredStoreyCode = null) {
+        const buildingParts = this.getBuildingPartsObjectKeys(buildingKey);
+        if (!buildingParts) {
+            return;
+        }
+        const buildingStoreys = [];
+        buildingParts.forEach((partObjectKey) => {
+            const storeysObjectKeys = this.getChildrenObjectKeys(partObjectKey);
+            storeysObjectKeys.forEach((storeyObjectKey) => {
+                const currentStoreyCode = this.getStoreyCode(storeyObjectKey);
+                if (
+                    !filteredStoreyCode ||
+                    currentStoreyCode == filteredStoreyCode
+                ) {
+                    buildingStoreys.push(storeyObjectKey);
+                }
+            });
+        });
+        console.log(buildingStoreys);
+        return buildingStoreys;
+    }
+
+    buildingHasFloorPlan(buildingKey) {
+        // Check if the object is a building
+        const buildingParts = this.getBuildingPartsObjectKeys(buildingKey);
+        if (!buildingParts) {
+            return;
+        }
         return buildingParts.length > 0;
     }
 }
