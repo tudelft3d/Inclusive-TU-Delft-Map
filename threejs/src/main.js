@@ -196,6 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const layersDropdown = document.getElementById('layers-dropdown');
 
     if (layersBtn && layersDropdown) {
+        // Function to close the layers dropdown
+        const closeLayersDropdown = () => {
+            layersDropdown.style.display = 'none';
+            layersBtn.setAttribute('aria-expanded', 'false');
+            layersDropdown.setAttribute('aria-hidden', 'true');
+        };
+
+        // Toggle the layers dropdown when clicking the button
         layersBtn.addEventListener('click', (event) => {
             event.stopPropagation();
             // close other top-right dropdowns before toggling this one
@@ -204,7 +212,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (other && other !== layersDropdown) other.style.display = 'none';
             if (accessibility && accessibility !== layersDropdown) accessibility.style.display = 'none';
 
-            layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
+            const isOpen = layersDropdown.style.display === 'block';
+            layersDropdown.style.display = isOpen ? 'none' : 'block';
+            layersBtn.setAttribute('aria-expanded', (!isOpen).toString());
+            layersDropdown.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+        });
+
+        // Prevent clicks inside the dropdown from closing it
+        layersDropdown.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        // Close the dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            // Only close if the click wasn't inside the dropdown and the dropdown is visible
+            if (!layersDropdown.contains(event.target) && 
+                !layersBtn.contains(event.target) && 
+                layersDropdown.style.display === 'block') {
+                closeLayersDropdown();
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && layersDropdown.style.display === 'block') {
+                closeLayersDropdown();
+            }
         });
     }
 
