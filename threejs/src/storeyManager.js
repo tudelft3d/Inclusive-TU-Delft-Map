@@ -138,25 +138,27 @@ export class StoreyManager {
         let arrow_span = document.createElement("span");
         controls_div.appendChild(arrow_span);
 
+        // vertical split button 
         let arrow_button_div = document.createElement("div");
+        arrow_button_div.className = "storey-vertical-button";
         arrow_span.appendChild(arrow_button_div);
 
-        let up_arrow_button = document.createElement("button");
-        up_arrow_button.append(document.createTextNode("Go Up"));
-
-        up_arrow_button.addEventListener("click", (event) => {
+        let up_half = document.createElement("button");
+        up_half.className = "storey-vertical-half up";
+        up_half.type = "button";
+        up_half.addEventListener("click", (event) => {
             this._go_up_one_storey();
         });
 
-        let down_arrow_button = document.createElement("button");
-        down_arrow_button.append(document.createTextNode("Go Down"));
-
-        down_arrow_button.addEventListener("click", (event) => {
+        let down_half = document.createElement("button");
+        down_half.className = "storey-vertical-half down";
+        down_half.type = "button";
+        down_half.addEventListener("click", (event) => {
             this._go_down_one_storey();
         });
 
-        arrow_button_div.appendChild(up_arrow_button);
-        arrow_button_div.appendChild(down_arrow_button);
+        arrow_button_div.appendChild(up_half);
+        arrow_button_div.appendChild(down_half);
 
 
     }

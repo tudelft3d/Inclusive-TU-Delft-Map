@@ -190,7 +190,7 @@
 .satellite-basemap #basemap-btn:hover,
 .satellite-basemap #layers-btn:hover,
 .satellite-basemap #legend-btn:hover {
-  background: #b0b0b0;
+  background: #e3e3e3;
 }
 
 #layers-dropdown---old {
@@ -314,9 +314,9 @@
   #basemap-btn,
   #layers-btn,
   #legend-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
   }
 
   /* smaller icons inside buttons */
