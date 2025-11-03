@@ -981,7 +981,7 @@ export class LayerManager {
 			// initialize group checkbox state
 			updateGroupCheckbox();
 
-			// Toggle open/close group when clicking header (but ignore clicks on controls area)
+			// Toggle open/close group when clicking header (but ignore clicks on controls area and checkbox)
 			const toggleGroup = () => {
 				const isOpen = itemsContainer.style.display === "flex";
 				itemsContainer.style.display = isOpen ? "none" : "flex";
@@ -990,8 +990,14 @@ export class LayerManager {
 			};
 
 			header.addEventListener("click", (ev) => {
-				if (controls.contains(ev.target)) return;
-				// toggleGroup();
+				// Don't toggle if clicking the checkbox or controls area
+				if (controls.contains(ev.target) || ev.target === groupCheckbox) return;
+				toggleGroup();
+			});
+
+			// Prevent checkbox clicks from propagating to header
+			groupCheckbox.addEventListener("click", (ev) => {
+				ev.stopPropagation();
 			});
 
 			toggleBtn.addEventListener("click", (ev) => {
@@ -1010,14 +1016,28 @@ export class LayerManager {
 					} else if (!shouldActivate && alreadyActive) {
 						this._update_active_layers(c);
 					}
+					// Update all checkboxes with this code across all containers
+					document.querySelectorAll(`input[type="checkbox"][value="${c}"]`).forEach(cb => {
+						cb.checked = this.active_layers.includes(c);
+					});
 				});
 				// refresh child checkboxes to match active_layers
 				itemsContainer.querySelectorAll("input[type=checkbox]").forEach(ch => {
 					ch.checked = this.active_layers.includes(ch.value);
 				});
+				// Update all other group checkboxes that might contain these codes
+				document.querySelectorAll('.layer-group-checkbox').forEach(groupCb => {
+					if (groupCb !== groupCheckbox) {
+						const groupDiv = groupCb.closest('.layer-group');
+						const groupItems = groupDiv.querySelectorAll('.layer-item input[type="checkbox"]');
+						const groupCodes = Array.from(groupItems).map(item => item.value);
+						const activeCount = groupCodes.filter(c => this.active_layers.includes(c)).length;
+						groupCb.checked = activeCount === groupCodes.length && groupCodes.length > 0;
+						groupCb.indeterminate = activeCount > 0 && activeCount < groupCodes.length;
+					}
+				});
 				// no indeterminate after explicit user action
 				groupCheckbox.indeterminate = false;
-				updateGroupCheckbox();
 			});
 		}
 	}
@@ -1061,8 +1081,10 @@ export class LayerManager {
 		checkbox.addEventListener("change", (ev) => {
 			ev.stopPropagation();
 			this._update_active_layers(layer_code);
-			// make sure UI matches resulting active_layers
-			ev.target.checked = this.active_layers.includes(layer_code);
+			// make sure UI matches resulting active_layers for all checkboxes with the same layer code
+			document.querySelectorAll(`input[type="checkbox"][value="${layer_code}"]`).forEach(cb => {
+				cb.checked = this.active_layers.includes(layer_code);
+			});
 			updateGroupCheckbox();
 		});
 
