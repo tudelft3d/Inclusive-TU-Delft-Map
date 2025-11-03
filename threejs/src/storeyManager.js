@@ -85,6 +85,14 @@ export class StoreyManager {
 
     }
 
+    setStorey(storey) {
+        if (this.current_storey_code == storey) {
+            return;
+        }
+        this.current_storey_code = storey;
+        this.storey_code_to_opt[this.current_storey_code].selected = true;
+    }
+
     _create_storey_manager(buildingObjectKey) {
 
         this.pane.innerHTML = "";
@@ -131,28 +139,30 @@ export class StoreyManager {
         controls_div.appendChild(drop_down_span);
 
         // use a native <select> populated from available storeys (ordered)
-        let select = document.createElement("select");
-        select.id = "storey-select";
-        select.className = "storey-select";
+        this.select = document.createElement("select");
+        this.select.id = "storey-select";
+        this.select.className = "storey-select";
 
         // populate options in visual order
+        this.storey_code_to_opt = {};
         this.order_to_storey_code.forEach((storey_code) => {
             const info = this.available_storeys[storey_code];
             const label = info.name + ` (${info.displayedPrefix})`;
             let opt = document.createElement("option");
             opt.value = storey_code;
             opt.text = label;
+            this.storey_code_to_opt[storey_code] = opt;
             if (storey_code === this.current_storey_code) opt.selected = true;
-            select.appendChild(opt);
+            this.select.appendChild(opt);
         });
 
-        select.addEventListener("change", (e) => {
+        this.select.addEventListener("change", (e) => {
             const selected = e.target.value;
             this.current_storey_code = selected;
             this.buildingView.setStorey(selected);
         });
 
-        drop_down_span.appendChild(select);
+        drop_down_span.appendChild(this.select);
 
 
         let arrow_span = document.createElement("span");
@@ -192,6 +202,7 @@ export class StoreyManager {
         this.current_storey_code = this.order_to_storey_code[next_order];
 
         this.buildingView.setStorey(this.current_storey_code);
+        this.storey_code_to_opt[this.current_storey_code].selected = true;
     }
 
     _go_down_one_storey() {
@@ -203,6 +214,7 @@ export class StoreyManager {
         this.current_storey_code = this.order_to_storey_code[next_order];
 
         this.buildingView.setStorey(this.current_storey_code);
+        this.storey_code_to_opt[this.current_storey_code].selected = true;
     }
 
     _populate_storey_dropdown() {

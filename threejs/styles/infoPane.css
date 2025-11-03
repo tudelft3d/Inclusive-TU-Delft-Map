@@ -19,7 +19,7 @@
   font-family: "Open Sans", sans-serif;
   font-size: 14px;
   line-height: 1.35;
-  overflow: visible;
+  /* overflow: visible; */
   pointer-events: auto;
   display: flex;
   flex-direction: column;
@@ -45,9 +45,9 @@
   font-weight: 700;
   padding-left: 15px;
   color: #ffffff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-wrap: balance;
+  /* white-space: nowrap; */
+  text-align: left;
 }
 
 /* Close button (SVG placed via JS) */
@@ -86,11 +86,11 @@
 }
 
 /* Generic row styling (label/value) */
-.info-pane-row {
+.info-pane-row, .info-pane-row--compact {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 6px 10px;
   gap: 12px;
   border-bottom: 1px solid #eee;
   font-size: 14px;
@@ -102,7 +102,7 @@
 
 /* compact variant for specific rows ( Address, Category) */
 .info-pane-row--compact {
-  padding: 14px 14px;
+  padding: 14px;
 }
 .info-pane-row--compact .info-pane-label {
   font-size: 14px;
@@ -116,28 +116,32 @@
   font-weight: 550;
   font-size: 14px;
   color: #323232;
-  flex: 0 0 30%;
-  max-width: 30%;
+  flex: 1 1 auto;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
   text-align: left; 
 }
 
 /* Right value */
-.info-pane-value {
+.info-pane-value, .info-pane-value-alone {
   color: #000000;
   font-weight: 500;
   text-align: right;
-  flex: 1 1 70%;
+  flex: 1 1 auto;
   word-break: break-word;
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
 
+.info-pane-value-alone {
+  text-align: center;
+  justify-content: center;
+}
+
 .info-pane-buttons-group {
   display: flex;
+  flex: 1 1 auto;
   justify-content: end;
   padding: 8px 0;
   gap: 10px;
@@ -149,7 +153,14 @@
 /* Details */
 .info-pane-group {
   border-bottom: 1px solid #e9e9e9;
-  background: transparent;
+  background: #f0f0f0;
+  border-radius: 14px;
+  padding: 4px;
+  margin: 4px 0px;
+}
+
+.info-pane-row:last-child {
+  border-radius: 0px 0px 10px 10px;
 }
 
 /* hide default marker */
@@ -159,7 +170,7 @@
 .info-pane-group > summary {
   list-style: none;
   cursor: pointer;
-  padding: 14px 14px 14px 14px;
+  padding: 10px;
   display: flex;
   align-items: center;          /* changed from 'left' (invalid) -> stable vertical alignment */
   justify-content: space-between;
@@ -168,7 +179,7 @@
   font-size: 14px;
   background: transparent;
   box-sizing: border-box;      
-  min-height: 50px;            
+  /* min-height: 50px;          */
 }
 
 /* chevron using SVG icons */
@@ -208,11 +219,10 @@
   font-weight: 500;        
   color: #484848;      
   font-size: 14px;         
-  flex: 0 0 25%;         
+  flex: 1 1 auto;       
   max-width: 100%;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
   text-align: left;
 }
 
@@ -224,7 +234,7 @@
 
   /* make the value cell the same proportion as top-level rows
      and ensure it is a flex container so buttons can be pushed to the far right */
-  flex: 1 1 75%;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -335,7 +345,7 @@
   max-width: 48%;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
   padding: 0;
   text-align: left;
 }

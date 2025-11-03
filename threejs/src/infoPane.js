@@ -166,9 +166,17 @@ class Entry {
 
         var node;
         if (this.url) {
-            node = document.createElement("a");
-            node.href = `${value}`;
-            node.appendChild(document.createTextNode(value));
+            // Group of buttons
+            node = document.createElement("div");
+            node.className = "info-pane-buttons-group";
+
+            // Button
+            const button = document.createElement("button");
+            button.className = "info-pane-button-part";
+            button.onclick = () => { window.location.href = `${value}` };
+            button.appendChild(document.createTextNode(this.name));
+
+            node.appendChild(button);
         } else if (this.tel) {
             node = document.createElement("a");
             node.href = `tel:${value}`;
@@ -193,22 +201,26 @@ class Entry {
      * 
      * @param {InfoPane} infoPane 
      * @param {string} key 
+     * @param {boolean} inGroup
      * @returns 
      */
-    formatNodeFromAttributes(infoPane, key) {
-        const attributeName = this.name;
+    formatNodeFromAttributes(infoPane, key, inGroup = false) {
+        var attributeName = this.name;
         const attributeValue = this._formatValueNodeFromAttributes(infoPane, key);
 
         // Return nothing if the value is null
         if (!attributeValue) { return }
 
         var div = document.createElement("div");
-        div.className = "info-pane-row";
 
-        // TODO: fix this
-        // make Category and Address rows use a more compact padding
-        if (attributeName === "Address" || attributeName === "Category") {
-            div.classList.add("info-pane-row--compact");
+        if (this.url) {
+            attributeName = null;
+        }
+
+        if (inGroup) {
+            div.className = "info-pane-row";
+        } else {
+            div.className = "info-pane-row--compact";
         }
 
         if (attributeName) {
@@ -219,7 +231,11 @@ class Entry {
         }
 
         var value_span = document.createElement("span");
-        value_span.className = "info-pane-value";
+        if (attributeName) {
+            value_span.className = "info-pane-value";
+        } else {
+            value_span.className = "info-pane-value-alone";
+        }
         value_span.appendChild(attributeValue);
         div.appendChild(value_span);
 
@@ -277,7 +293,7 @@ class EntryGroup {
         details.appendChild(summary);
 
         this.entries.forEach((entry) => {
-            const formattedEntry = entry.formatNodeFromAttributes(infoPane, key);
+            const formattedEntry = entry.formatNodeFromAttributes(infoPane, key, true);
             if (!formattedEntry) return;
 
             // keep each entry inside the details block
