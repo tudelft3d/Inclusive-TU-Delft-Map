@@ -501,8 +501,16 @@ export class InfoPane {
         if (!this.cjHelper.isBuilding(key)) { return }
         if (!this.cjHelper.buildingHasFloorPlan(key)) { return }
 
-        let div = document.createElement("div");
-        div.className = "info-pane-button-background";
+        let footer = this.pane.querySelector('.info-pane-button-background.info-pane-footer');
+        if (!footer) {
+            footer = document.createElement("div");
+            footer.className = "info-pane-button-background info-pane-footer";
+            this.pane.appendChild(footer);
+        }
+
+        // full-width row inside the footer for the floorplan button
+        let row = document.createElement("div");
+        row.className = "info-pane-row";
 
         let button = document.createElement("button");
         button.className = "info-pane-button";
@@ -514,28 +522,28 @@ export class InfoPane {
         button.appendChild(document.createTextNode("View Floorplan"));
 
         button.addEventListener('click', (event) => {
-
-            console.log("pressed button");
-
             if (this.picker) {
-
-                console.log("Button clicked");
-
                 this.picker.switchBuildingView();
             }
         });
 
-        div.appendChild(button);
-        this.pane.appendChild(div);
-
+        row.appendChild(button);
+        footer.insertBefore(row, footer.firstChild);
     }
 
     _addInfoPaneExtraButtons(feedbackLocation) {
 
-        // Container for the buttons
+        // footer that is sticky on mobile
+        let footer = this.pane.querySelector('.info-pane-button-background.info-pane-footer');
+        if (!footer) {
+            footer = document.createElement("div");
+            footer.className = "info-pane-button-background info-pane-footer";
+            this.pane.appendChild(footer);
+        }
+
+        //two small buttons as a single row inside the footer
         let div = document.createElement("div");
-        div.className = "info-pane-button-background";
-        div.classList.add("info-pane-row");
+        div.className = "info-pane-row info-pane-button-background";
 
         // Button to report issues
         let reportButtonSpan = document.createElement("span");
@@ -544,7 +552,6 @@ export class InfoPane {
         reportButton.className = "info-pane-button";
         reportButton.append(document.createTextNode("Report an error"));
         reportButton.addEventListener('click', () => {
-            // Go to the feedback page with the current location value
             const target = `/feedback.html?location=${feedbackLocation}`;
             window.location.href = target;
         });
@@ -566,7 +573,7 @@ export class InfoPane {
         bookRoomButtonSpan.appendChild(bookRoomButton);
         div.appendChild(bookRoomButtonSpan);
 
-        this.pane.appendChild(div);
+        footer.appendChild(div);
     }
 
 

@@ -7,7 +7,8 @@
   box-shadow: 0 6px 22px rgba(0,0,0,0.15);
   width: 420px;
   max-width: 420px;
-  max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px);
+  /* max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px); */
+  max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px - 125px);
   padding: 12px;
   opacity: 0;
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -353,7 +354,7 @@
 
 /* small responsive tweak */
 @media (max-width: 620px) {
-  /* Mobile bottom-sheet behavior (match top-right dropdown mobile style) */
+  /* Mobile bottom-sheet behavior */
   #info-pane {
     display: block !important;
     position: fixed;
@@ -366,7 +367,8 @@
     border-radius: 8px 8px 0 0;
     min-width: 100%;
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 75vh;
+    height: auto;
     overflow-y: auto;
     padding: 12px;
     box-shadow: 0 -10px 30px rgba(0,0,0,0.14);
@@ -376,6 +378,8 @@
     z-index: 2400;
     box-sizing: border-box;
     pointer-events: none;
+
+   --info-pane-sticky-offset: 1px;
   }
 
   /* open state */
@@ -400,7 +404,8 @@
 
   /* adjust content area so it fits inside sheet with footer */
   .info-pane-content {
-    max-height: calc(80vh - 300px);
+    max-height: calc(75vh - 350px);
+    min-height: 50vh;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -411,6 +416,37 @@
     border-radius: 10px;
   }
 
+  .info-pane-button-background .info-pane-row {
+    padding: 6px 5px 8px 5px;
+  }
+
   /* keep left margin on very narrow screens consistent */
   #info-pane { left: 0; }
+
+  /* Anchor the footer buttons to the bottom and make them non-scrollable */
+  .info-pane-button-background {
+    position: sticky;
+    bottom: 1px;
+    z-index: 30;
+    margin: 0 -12px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border-top: 1px solid #eee;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.06);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .info-pane-content {
+    padding-bottom: calc(110px + var(--info-pane-sticky-offset));
+    max-height: calc(75vh - 350px);
+    min-height: 50vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .info-pane-row.info-pane-button-background {
+    display: flex;
+    gap: 6px;
+    padding: 12px 14px;
+  }
 }

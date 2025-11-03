@@ -16,6 +16,13 @@ export class StoreyManager {
         this.pane = document.getElementById("storey-manager");
 
         this._add_event_listeners();
+
+        this.controlsDiv = null;
+        window.addEventListener('resize', () => this._position_storey_controls());
+        window.addEventListener('scroll', () => this._position_storey_controls(), { passive: true });
+
+        this.infoPaneObserver = null;
+        this.bodyObserver = null;
     }
 
     _add_event_listeners() {
@@ -83,6 +90,15 @@ export class StoreyManager {
         this.pane.style.opacity = '0';
         this.pane.style.display = 'none';
 
+        if (this.infoPaneObserver) {
+            this.infoPaneObserver.disconnect();
+            this.infoPaneObserver = null;
+        }
+        if (this.bodyObserver) {
+            this.bodyObserver.disconnect();
+            this.bodyObserver = null;
+        }
+
     }
 
     _create_storey_manager(buildingObjectKey) {
@@ -92,43 +108,56 @@ export class StoreyManager {
         this.pane.style.opacity = '1';
         this.pane.style.display = 'block';
 
+        if (!this.controlsDiv) {
+            this.controlsDiv = document.createElement("div");
+            this.controlsDiv.className = "storey-controls";
+            document.body.appendChild(this.controlsDiv);
+        }
 
-        let drop_down_element_div = document.createElement("div");
-        drop_down_element_div.className = "storey-manager-content";
-        drop_down_element_div.id = "storey_manager_dropdown"
-        this.pane.appendChild(drop_down_element_div);
+        this.controlsDiv.innerHTML = "";
+        this.controlsDiv.style.display = ""; // allow CSS to control visibility
+        const controls_div = this.controlsDiv;
 
+        let left_col = document.createElement("div");
+        left_col.className = "storey-controls-left";
 
-        let controls_div = document.createElement("div");
-        controls_div.className = "storey-manager-content";
-        this.pane.appendChild(controls_div);
+        let right_col = document.createElement("div");
+        right_col.className = "storey-controls-right";
 
+        controls_div.appendChild(left_col);
+        controls_div.appendChild(right_col);
 
         let exit_span = document.createElement("span");
-        controls_div.appendChild(exit_span);
+        left_col.appendChild(exit_span);
 
         let exit_button = document.createElement("button");
         exit_button.className = "storey-exit-btn";
         exit_button.type = "button";
-        exit_button.setAttribute("aria-label", "Close storey manager");
         exit_button.title = "Close";
         let exit_img = document.createElement("img");
         exit_img.src = "../assets/threejs/graphics/icons/ui-buttons/close_icon_white.svg";
         exit_img.alt = "";
         exit_button.appendChild(exit_img);
 
-        exit_button.addEventListener("click", (event) => {
+exit_button.addEventListener("click", (event) => {
+            if (this.buildingView && this.buildingView.picker && typeof this.buildingView.picker.switchBuildingView === "function") {
+                this.buildingView.picker.switchBuildingView();
+            }
 
-            this.buildingView.picker.switchBuildingView();
+            if (this.controlsDiv) {
+                this.controlsDiv.innerHTML = "";
+                this.controlsDiv.style.display = "none";
+            }
+
             this.deactivate();
 
-        });
+         });
 
         exit_span.appendChild(exit_button);
 
 
         let drop_down_span = document.createElement("span");
-        controls_div.appendChild(drop_down_span);
+        right_col.appendChild(drop_down_span);
 
         // use a native <select> populated from available storeys (ordered)
         let select = document.createElement("select");
@@ -156,7 +185,7 @@ export class StoreyManager {
 
 
         let arrow_span = document.createElement("span");
-        controls_div.appendChild(arrow_span);
+        left_col.appendChild(arrow_span);
 
         // vertical split button 
         let arrow_button_div = document.createElement("div");
@@ -179,8 +208,9 @@ export class StoreyManager {
 
         arrow_button_div.appendChild(up_half);
         arrow_button_div.appendChild(down_half);
+        this._position_storey_controls();
 
-
+        this._ensure_info_pane_observers();
     }
 
     _go_up_one_storey() {
@@ -234,6 +264,64 @@ export class StoreyManager {
 
         });
 
+    }
+
+    _position_storey_controls() {
+        const c = this.controlsDiv;
+        if (!c) return;
+
+        const infoPane = document.getElementById('info-pane');
+        const paneExists = !!infoPane;
+        const paneVisible = paneExists && window.getComputedStyle(infoPane).display !== 'none' && window.getComputedStyle(infoPane).visibility !== 'hidden' && infoPane.offsetParent !== null;
+
+        if (paneVisible) {
+            if (c.parentElement !== infoPane) {
+                infoPane.appendChild(c);
+            }
+            c.classList.add('storey-controls--attached');
+            c.style.display = '';
+        } else {
+            if (c.parentElement !== document.body) {
+                document.body.appendChild(c);
+            }
+            c.classList.remove('storey-controls--attached');
+            c.style.display = '';
+        }
+    }
+
+    _ensure_info_pane_observers() {
+        const infoPane = document.getElementById('info-pane');
+
+        if (infoPane && !this.infoPaneObserver) {
+            this.infoPaneObserver = new MutationObserver(() => this._position_storey_controls());
+            this.infoPaneObserver.observe(infoPane, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
+
+        if (!this.bodyObserver) {
+            this.bodyObserver = new MutationObserver((mutations) => {
+                for (const m of mutations) {
+                    if (m.type === 'childList') {
+                        const hasInfoPane = !!document.getElementById('info-pane');
+                        if (hasInfoPane) {
+                            if (this.infoPaneObserver) {
+                                this.infoPaneObserver.disconnect();
+                                this.infoPaneObserver = null;
+                            }
+                            this._position_storey_controls();
+                            const newPane = document.getElementById('info-pane');
+                            if (newPane) {
+                                this.infoPaneObserver = new MutationObserver(() => this._position_storey_controls());
+                                this.infoPaneObserver.observe(newPane, { attributes: true, attributeFilter: ['style', 'class'] });
+                            }
+                        } else {
+                            this._position_storey_controls();
+                        }
+                        break;
+                    }
+                }
+            });
+            this.bodyObserver.observe(document.body, { childList: true, subtree: true });
+        }
     }
 
 }
