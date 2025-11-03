@@ -1,26 +1,26 @@
 :root{
-  --brb-btn-size: 34px;
-  --brb-btn-size-mobile: 34px;
-  --brb-btn-radius: 10px;
-  --brb-btn-bg: #f3f3f3;
-  --brb-btn-hover-bg: #e3e3e3;
-  --brb-btn-color: #ffffff;
-  --brb-btn-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  --brb-btn-size-st: 34px;
+  --brb-btn-size-mobile-st: 34px;
+  --brb-btn-radius-st: 10px;
+  --brb-btn-bg-st: #f3f3f3;
+  --brb-btn-hover-bg-st: #e3e3e3;
+  --brb-btn-color-st: #ffffff;
+  --brb-btn-shadow-st: 0 1px 3px rgba(0,0,0,0.2);
 
-  --brb-sidebar-gap: 6px;
-  --brb-sidebar-bottom: 14px;
-  --brb-sidebar-right: 14px;
+  --brb-sidebar-gap-st: 6px;
+  --brb-sidebar-bottom-st: 14px;
+  --brb-sidebar-right-st: 14px;
 
-  --brb-dropdown-bg: #f1f1f1;
-  --brb-dropdown-min-width: 200px;
-  --brb-dropdown-padding-vertical: 8px;
+  --brb-dropdown-bg-st: #f1f1f1;
+  --brb-dropdown-min-width-st: 200px;
+  --brb-dropdown-padding-vertical-st: 8px;
 
-  --brb-icon-size: 26px;
-  --brb-icon-size-mobile: 16px;
+  --brb-icon-size-st: 26px;
+  --brb-icon-size-mobile-st: 16px;
 
-  --brb-z: 10;
-  --brb-z-control: 11;
-  --brb-z-dropdown: 999;
+  --brb-z-st: 10;
+  --brb-z-control-st: 11;
+  --brb-z-dropdown-st: 999;
 }
 
 #storey-manager {
@@ -59,15 +59,15 @@
 }
 
 .storey-vertical-button {
-  width: var(--brb-btn-size);
-  height: calc((var(--brb-btn-size) * 2) + var(--brb-sidebar-gap));
+  width: var(--brb-btn-size-st);
+  height: calc((var(--brb-btn-size-st) * 2) + var(--brb-sidebar-gap-st));
   display: flex;
   flex-direction: column;
-  border-radius: var(--brb-btn-radius);
+  border-radius: var(--brb-btn-radius-st);
   overflow: visible; 
-  background: var(--brb-btn-bg); 
-  box-shadow: var(--brb-btn-shadow);
-  z-index: var(--brb-z-control);
+  background: var(--brb-btn-bg-st); 
+  box-shadow: var(--brb-btn-shadow-st);
+  z-index: var(--brb-z-control-st);
 }
 
 .storey-vertical-half {
@@ -99,7 +99,7 @@
 }
 
 .storey-vertical-half:hover {
-  background-color: var(--brb-btn-hover-bg);
+  background-color: var(--brb-btn-hover-bg-st);
   transform: translateY(-1px);
 }
 
@@ -114,15 +114,79 @@
   line-height: 0;
 }
 
+.storey-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #f3f3f3;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 6px 30px 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #000;
+  height: 34px;
+  min-width: 140px;
+  cursor: pointer;
+  background-image: url("../assets/threejs/graphics/icons/ui-buttons/carret-down.svg");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+}
+
+.storey-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,166,214,0.14);
+}
+
+/* show the current value arrow when closed and keep consistent on small screens */
 @media (max-width: 620px) {
+  .storey-select {
+    min-width: 110px;
+    height: 32px;
+    background-size: 10px 10px;
+
   .storey-vertical-button {
     width: 34px;
     height: 60px;
     border-radius: 8px;
   }
+
   .storey-vertical-button img,
   .storey-vertical-button svg {
     width: 18px;
     height: 18px;
   }
+}
+}
+
+/*keep populate fallback hidden, i should prob delete it in js */
+#storey_manager_dropdown {
+  display: none;
+}
+
+.storey-exit-btn {
+  width: var(--brb-btn-size-st);
+  height: var(--brb-btn-size-st);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--brb-btn-radius-st);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.storey-exit-btn:hover {
+  background: rgba(255,255,255,0.07); /* subtle highlight on the blue header */
+  transform: translateY(-1px);
+}
+
+.storey-exit-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  line-height: 0;
 }
