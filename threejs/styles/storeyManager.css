@@ -1,17 +1,34 @@
+:root{
+  --brb-btn-size-st: 34px;
+  --brb-btn-size-mobile-st: 34px;
+  --brb-btn-radius-st: 10px;
+  --brb-btn-bg-st: #f3f3f3;
+  --brb-btn-hover-bg-st: #e3e3e3;
+  --brb-btn-color-st: #ffffff;
+  --brb-btn-shadow-st: 0 1px 3px rgba(0,0,0,0.2);
+
+  --brb-sidebar-gap-st: 6px;
+  --brb-sidebar-bottom-st: 14px;
+  --brb-sidebar-right-st: 14px;
+
+  --brb-dropdown-bg-st: #f1f1f1;
+  --brb-dropdown-min-width-st: 200px;
+  --brb-dropdown-padding-vertical-st: 8px;
+
+  --brb-icon-size-st: 26px;
+  --brb-icon-size-mobile-st: 16px;
+
+  --brb-z-st: 10;
+  --brb-z-control-st: 11;
+  --brb-z-dropdown-st: 999;
+}
+
 #storey-manager {
   position: absolute;
-/*  top: calc(var(--height, 64px) + 14px);
-  left: 14px;*/
-
   bottom: 50px;
-  /*left: width/2;*/
-
-  /*transform: translateY(-50%);*/
-
   background: white;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  
   max-width: 425px;
   min-width: 425px;
   padding: 8px 12px;
@@ -39,4 +56,137 @@
 
 .storey-manager-dropdown-element {
   padding: 5px 5px;
+}
+
+.storey-vertical-button {
+  width: var(--brb-btn-size-st);
+  height: calc((var(--brb-btn-size-st) * 2) + var(--brb-sidebar-gap-st));
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--brb-btn-radius-st);
+  overflow: visible; 
+  background: var(--brb-btn-bg-st); 
+  box-shadow: var(--brb-btn-shadow-st);
+  z-index: var(--brb-z-control-st);
+}
+
+.storey-vertical-half {
+  flex: 1 1 50%;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px 18px;
+  cursor: pointer;
+  outline: none;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.storey-vertical-half.up {
+  background-image: url("../assets/threejs/graphics/icons/ui-buttons/carret-up.svg");
+  border-radius: 10px 10px 0 0;
+}
+
+.storey-vertical-half.down {
+  background-image: url("../assets/threejs/graphics/icons/ui-buttons/carret-down.svg");
+  border-top: 1px solid rgba(0,0,0,0.06);
+  border-radius: 0 0 10px 10px;
+}
+
+.storey-vertical-half:hover {
+  background-color: var(--brb-btn-hover-bg-st);
+  transform: translateY(-1px);
+}
+
+
+.storey-vertical-button img,
+.storey-vertical-button svg {
+  width: 23px;
+  height: 23px;
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+  line-height: 0;
+}
+
+.storey-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #f3f3f3;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 6px 30px 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #000;
+  height: 34px;
+  min-width: 140px;
+  cursor: pointer;
+  background-image: url("../assets/threejs/graphics/icons/ui-buttons/carret-down.svg");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+}
+
+.storey-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,166,214,0.14);
+}
+
+/* show the current value arrow when closed and keep consistent on small screens */
+@media (max-width: 620px) {
+  .storey-select {
+    min-width: 110px;
+    height: 32px;
+    background-size: 10px 10px;
+
+  .storey-vertical-button {
+    width: 34px;
+    height: 60px;
+    border-radius: 8px;
+  }
+
+  .storey-vertical-button img,
+  .storey-vertical-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+}
+
+/*keep populate fallback hidden, i should prob delete it in js */
+#storey_manager_dropdown {
+  display: none;
+}
+
+.storey-exit-btn {
+  width: var(--brb-btn-size-st);
+  height: var(--brb-btn-size-st);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--brb-btn-radius-st);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.storey-exit-btn:hover {
+  background: rgba(255,255,255,0.07); /* subtle highlight on the blue header */
+  transform: translateY(-1px);
+}
+
+.storey-exit-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  line-height: 0;
 }

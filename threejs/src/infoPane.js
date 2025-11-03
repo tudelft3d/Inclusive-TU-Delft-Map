@@ -89,7 +89,7 @@ class Entry {
 
                 // Button
                 const buildingButton = document.createElement("button");
-                buildingButton.className = "info-pane-button";
+                buildingButton.className = "info-pane-button-part";
                 buildingButton.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
                 buildingButton.appendChild(document.createTextNode(buildingTitle));
                 node.appendChild(buildingButton);
@@ -144,7 +144,7 @@ class Entry {
                 unitsKeys.forEach((unitKey) => {
                     const unitTitle = infoPane._makeTitle(unitKey);
                     const unitButton = document.createElement("button");
-                    unitButton.className = "info-pane-button";
+                    unitButton.className = "info-pane-button-part";
                     unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
                     unitButton.appendChild(document.createTextNode(unitTitle));
                     node.appendChild(unitButton);
