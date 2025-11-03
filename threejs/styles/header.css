@@ -203,7 +203,7 @@ main,
 }
 
 /* mobile / small-screen header & panel */
-@media (max-width:860px) {
+@media (max-width:620px) {
   .site-header {
     position: fixed !important;
     left: 0;
