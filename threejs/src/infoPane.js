@@ -83,7 +83,7 @@ class Entry {
                 const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
                 const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
                 node = document.createElement("button");
-                node.className = "info-pane-button";
+                node.className = "info-pane-button-building";
                 node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
                 node.appendChild(document.createTextNode(buildingTitle));
             } else if (this.object == "ChildrenUnits") {
@@ -133,7 +133,7 @@ class Entry {
                 unitsKeys.forEach((unitKey) => {
                     const unitTitle = infoPane._makeTitle(unitKey);
                     const unitButton = document.createElement("button");
-                    unitButton.className = "info-pane-button";
+                    unitButton.className = "info-pane-button-part";
                     unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
                     unitButton.appendChild(document.createTextNode(unitTitle));
                     node.appendChild(unitButton);

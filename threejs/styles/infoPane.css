@@ -124,6 +124,9 @@
   text-align: right;
   flex: 1 1 70%;
   word-break: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .info-pane-buttons-group {
@@ -167,8 +170,8 @@
   color: #333;
   font-size: 14px;
   background: transparent;
-  box-sizing: border-box;      /* ensure padding doesn't alter measured height */
-  min-height: 50px;            /* keeps summary height consistent when toggling */
+  box-sizing: border-box;      
+  min-height: 50px;            
 }
 
 /* chevron using SVG icons */
@@ -220,8 +223,15 @@
 .info-pane-group > .info-pane-row .info-pane-value {
   color: #000000;
   font-weight: 500;
-  text-align: right;      
-  flex: 1 1 60%;
+  text-align: right;
+
+  /* make the value cell the same proportion as top-level rows
+     and ensure it is a flex container so buttons can be pushed to the far right */
+  flex: 1 1 70%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
   font-size: 14px;
 }
 
@@ -258,6 +268,44 @@
   box-shadow: 0 2px 6px rgba(0,126,166,0.15);
 }
 
+
+.info-pane-button-part, .info-pane-button-building {
+  width: 100%;
+  padding: 10px 14px;
+  color: #027dab;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;     
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.info-pane-button-part:hover, .info-pane-button-building:hover {
+  color: #027eab9d;
+}
+
+/* building link/button should not stretch full width — keep its size and sit at the right */
+.info-pane-button-building {
+  width: auto;
+  padding: 10px 14px;
+  color: #027dab;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 /* two small actions layout */
 .info-pane-row.info-pane-button-background {
   display: flex;
@@ -275,6 +323,14 @@
   font-weight: 600;
 }
 
+.info-pane-row.info-pane-button-background .info-pane-button:hover {
+  background: #fff;
+  color: #027eab92;
+  border: 2px solid rgba(0, 127, 166, 0.293);
+  box-shadow: none;
+  font-weight: 600;
+}
+
 /* Group title styling */
 .info-pane-group > summary .info-pane-label {
   flex: 0 0 48%;
@@ -285,6 +341,11 @@
   padding: 0;
   text-align: left;
 }
+
+.info-pane-button:hover {
+  background: #027eabad;
+}
+
 
 /* small responsive tweak */
 @media (max-width: 620px) {
