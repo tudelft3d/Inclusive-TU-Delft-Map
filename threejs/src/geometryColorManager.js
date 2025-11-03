@@ -40,17 +40,17 @@ export class GeometryColorManager {
 
 		this._assign_building_colors()
 
-		const test_color = "0xF761FF";
+		const test_color = "0x545454";
 
 		this._assign_geometry_unit_colors("Na-Fl-Co", test_color);
 		this._assign_geometry_unit_colors("Na-Fl-Ha", test_color);
 
-		for (const [key, value] of Object.entries(this.layer_definition)) {
+		// for (const [key, value] of Object.entries(this.layer_definition)) {
 
-			const color = '0x'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0');
+		// 	const color = '0x'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0');
 
-			this._assign_geometry_unit_colors(key, color);
-		}
+		// 	this._assign_geometry_unit_colors(key, color);
+		// }
 
 
 	}
