@@ -11,7 +11,7 @@ const MAP_CAMERA = 0;
 const ORBIT_CAMERA = 1;
 const ORTHOGRAPHIC_CAMERA = 2;
 
-const fov = 75;
+const fov = 55;
 const near = 0.1;
 const far = 100000;
 const frustumSize = 1;
@@ -487,32 +487,66 @@ export class CamerasControls {
         }
     }
 
-    /* Reset camera rotation to point north (align with Z-axis) */
-    resetNorth() {
-        // Get current target position
+    /* Reset camera rotation to point north (align with Z-axis) or return to previous position */
+    resetNorth(onComplete = () => { }) {
+        // Get current target and position (on click of button)
         const target = this.controls.target.clone();
+        const currentPosition = this.camera.position.clone();
 
-        // Get current distance from camera to target
-        const distance = this.camera.position.distanceTo(target);
+        // Check if the camera is already pointing north (within a small threshold)
+        const currentDirection = currentPosition.clone().sub(target);
+        currentDirection.y = 0; // Only check horizontal direction
+        currentDirection.normalize();
+        const northDirection = new THREE.Vector3(0, 0, 1);
+        const angle = Math.acos(Math.max(-1, Math.min(1, currentDirection.dot(northDirection))));
+        const isCurrentlyNorth = angle < 0.05; // ~3 degrees threshold
 
-        // Calculate the height difference between camera and target
-        const heightDiff = this.camera.position.y - target.y;
+        let finalPosition;
 
-        // Calculate horizontal distance maintaining total distance
-        const horizontalDistance = Math.sqrt(
-            Math.max(0, distance * distance - heightDiff * heightDiff)
+
+        if (isCurrentlyNorth && this.previousNonNorthPosition) {
+            // We're at north and have a previous position -> return to it
+            finalPosition = this.previousNonNorthPosition.clone();
+        } else {
+            // Store current position if it's not north (and not during animation)
+            if (!isCurrentlyNorth && !this._animating()) {
+                this.previousNonNorthPosition = currentPosition.clone();
+            }
+
+            // Calculate position pointing north
+            const distance = currentPosition.distanceTo(target);
+            const heightDiff = currentPosition.y - target.y;
+            const horizontalDistance = Math.sqrt(
+                Math.max(0, distance * distance - heightDiff * heightDiff)
+            );
+
+
+            finalPosition = new THREE.Vector3(
+                target.x,
+                currentPosition.y,
+                target.z + horizontalDistance
+            );
+        }
+
+        // Store initial position and target
+        const initPosition = currentPosition;
+        const initTarget = this.controls.target.clone();
+
+        // Calculate duration based on angular distance
+        const initDirection = initPosition.clone().sub(target).normalize();
+        const finalDirection = finalPosition.clone().sub(target).normalize();
+        const rotationAngle = Math.acos(Math.max(-1, Math.min(1, initDirection.dot(finalDirection))));
+        const duration = 300 + rotationAngle * 200; // Scale duration with rotation angle
+
+        // Animate to final position
+        return this._createAnimation(
+            initPosition,
+            initTarget,
+            finalPosition,
+            target,
+            duration,
+            onComplete
         );
-
-        // Set camera position north of target (positive Z direction)
-        // Maintain the same distance and height relative to target
-        this.camera.position.set(
-            target.x,
-            this.camera.position.y,
-            target.z + horizontalDistance
-        );
-
-        this.camera.lookAt(target);
-        this.controls.update();
     }
 
     _zoomPerspective(newTarget, distance, onComplete = () => { }) {

@@ -28,7 +28,8 @@ export class ObjectPicker {
         // Create InfoPane instance from the DOM element
         this.infoPane = new InfoPane(
             document.getElementById("info-pane"),
-            this
+            this,
+            this.cjHelper
         );
         this.buildingViewActivateCamera = null;
     }
@@ -120,8 +121,20 @@ export class ObjectPicker {
      * @param {*} onAnimationComplete
      */
     pickMesh(pickedKey, onAnimationComplete = () => { }) {
+        this._pickMesh(pickedKey, pickedKey, onAnimationComplete);
+    }
+
+    /**
+     * Pick the mesh corresponding to the given key.
+     *
+     * @param {string} pickedKey (object or mesh key)
+     * @param {*} onAnimationComplete
+     */
+    _pickMesh(pickedKey, paneKey, onAnimationComplete = () => { }) {
+        // console.log("pickedKey", pickedKey);
         const pickedObjectKey = this.cjHelper.keyToObjectKey(pickedKey);
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
+        const paneObjectKey = this.cjHelper.keyToObjectKey(paneKey);
 
         if (pickedObjectType == "Building") {
             // Pick a Building
@@ -176,6 +189,219 @@ export class ObjectPicker {
                     );
                 }
             }
+        } else if (pickedObjectType == "BuildingPart") {
+            // Pick a BuildingUnit
+            console.log("Picking a BuildingPart");
+
+            // Get the building
+            const buildingObjectKey =
+                this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
+            const buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
+
+            // Get the rooms in the part
+            const roomsObjectKeys = [];
+            this.cjHelper
+                .getChildrenObjectKeys(pickedObjectKey)
+                .forEach((storeyObjectKey) => {
+                    roomsObjectKeys.push(
+                        ...this.cjHelper.getChildrenObjectKeys(storeyObjectKey)
+                    );
+                });
+
+            const roomsMeshes = roomsObjectKeys.map((objectKey) => {
+                return this.cjHelper.getMesh(objectKey);
+            });
+            const storeyCode = "00";
+
+            // Highlight the meshes
+            this.pickHighlighter.highlight(roomsMeshes);
+
+            if (this.buildingView._isNotInitialised()) {
+                // Building view not initialised
+                this.buildingView.initialise(buildingObjectKey, storeyCode);
+                this.buildingView.activate();
+                this.buildingViewActivationCamera =
+                    this.cameraManager.cameraInt;
+                const onComplete = () => {
+                    const onComplete2 = () => {
+                        this.cameraManager.zoomToObject(
+                            roomsMeshes,
+                            onAnimationComplete
+                        );
+                    };
+                    this.cameraManager.switchToOrthographic(onComplete2);
+                };
+                this.cameraManager.zoomToObject(buildingMesh, onComplete);
+            } else if (this.buildingView._isInitialisedNotActivated()) {
+                // Building view not activated
+                if (buildingObjectKey == this.buildingView.buildingObjectKey) {
+                    // Same building
+                    this.buildingView.setStorey(storeyCode);
+                    this.buildingView.activate();
+                    this.buildingViewActivationCamera =
+                        this.cameraManager.cameraInt;
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                } else {
+                    // Different building
+                    this.buildingView.initialise(buildingObjectKey, storeyCode);
+                    this.buildingView.activate();
+                    this.buildingViewActivationCamera =
+                        this.cameraManager.cameraInt;
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                }
+            } else if (this.buildingView._isActivated()) {
+                if (buildingObjectKey == this.buildingView.buildingObjectKey) {
+                    // Same building
+                    this.buildingView.setStorey(storeyCode);
+                    const onComplete = () => {
+                        this.cameraManager.zoomToObject(
+                            roomsMeshes,
+                            onAnimationComplete
+                        );
+                    };
+                    this.cameraManager.switchToOrthographic(onComplete);
+                } else {
+                    // Different building
+                    this.buildingView.deactivate();
+                    this.buildingView.initialise(objectKey, storeyCode);
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                }
+            }
+        } else if (pickedObjectType == "BuildingStorey") {
+            // Pick a BuildingUnit
+            console.log("Picking a BuildingStorey");
+
+            // Get the building
+            const buildingObjectKey =
+                this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
+            const buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
+
+            // Get the rooms in the storey
+            const storeyCode = this.cjHelper.getStoreyCode(pickedObjectKey);
+            const buildingStoreysObjectKeys =
+                this.cjHelper.getBuildingStoreysObjectKeys(
+                    buildingObjectKey,
+                    storeyCode
+                );
+            const roomsObjectKeys = [];
+            buildingStoreysObjectKeys.forEach((storeyObjectKey) => {
+                roomsObjectKeys.push(
+                    ...this.cjHelper.getChildrenObjectKeys(storeyObjectKey)
+                );
+            });
+
+            const roomsMeshes = roomsObjectKeys.map((objectKey) => {
+                return this.cjHelper.getMesh(objectKey);
+            });
+
+            // Highlight the meshes
+            this.pickHighlighter.highlight(roomsMeshes);
+
+            if (this.buildingView._isNotInitialised()) {
+                // Building view not initialised
+                this.buildingView.initialise(buildingObjectKey, storeyCode);
+                this.buildingView.activate();
+                this.buildingViewActivationCamera =
+                    this.cameraManager.cameraInt;
+                const onComplete = () => {
+                    const onComplete2 = () => {
+                        this.cameraManager.zoomToObject(
+                            roomsMeshes,
+                            onAnimationComplete
+                        );
+                    };
+                    this.cameraManager.switchToOrthographic(onComplete2);
+                };
+                this.cameraManager.zoomToObject(buildingMesh, onComplete);
+            } else if (this.buildingView._isInitialisedNotActivated()) {
+                // Building view not activated
+                if (buildingObjectKey == this.buildingView.buildingObjectKey) {
+                    // Same building
+                    this.buildingView.setStorey(storeyCode);
+                    this.buildingView.activate();
+                    this.buildingViewActivationCamera =
+                        this.cameraManager.cameraInt;
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                } else {
+                    // Different building
+                    this.buildingView.initialise(buildingObjectKey, storeyCode);
+                    this.buildingView.activate();
+                    this.buildingViewActivationCamera =
+                        this.cameraManager.cameraInt;
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                }
+            } else if (this.buildingView._isActivated()) {
+                if (buildingObjectKey == this.buildingView.buildingObjectKey) {
+                    // Same building
+                    this.buildingView.setStorey(storeyCode);
+                    const onComplete = () => {
+                        this.cameraManager.zoomToObject(
+                            roomsMeshes,
+                            onAnimationComplete
+                        );
+                    };
+                    this.cameraManager.switchToOrthographic(onComplete);
+                } else {
+                    // Different building
+                    this.buildingView.deactivate();
+                    this.buildingView.initialise(objectKey, storeyCode);
+                    const onComplete = () => {
+                        const onComplete2 = () => {
+                            this.cameraManager.zoomToObject(
+                                roomsMeshes,
+                                onAnimationComplete
+                            );
+                        };
+                        this.cameraManager.switchToOrthographic(onComplete2);
+                    };
+                    this.cameraManager.zoomToObject(buildingMesh, onComplete);
+                }
+            }
         } else if (pickedObjectType == "BuildingRoom") {
             // Pick a BuildingRoom
             console.log("Picking a BuildingRoom");
@@ -187,7 +413,7 @@ export class ObjectPicker {
             const buildingObjectKey =
                 this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
             const buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
-            const storeyCode = this.cjHelper.getRoomStoreyCode(pickedObjectKey);
+            const storeyCode = this.cjHelper.getStoreyCode(pickedObjectKey);
 
             if (this.buildingView._isNotInitialised()) {
                 // Building view not initialised
@@ -274,54 +500,80 @@ export class ObjectPicker {
             // Get the spaces of the units
             const unitSpacesObjectKeys =
                 this.cjHelper.getUnitSpaces(pickedObjectKey);
-            if (unitSpacesObjectKeys.length == 0) {
-                console.error("A unit with 0 space is not supported yet.");
-                return;
-            }
-            const unitSpacesMeshes = unitSpacesObjectKeys.map((objectKey) => {
-                return this.cjHelper.getMesh(objectKey);
-            });
-            const unitSpacesBuildingObjectKeys = unitSpacesObjectKeys.map(
-                (objectKey) => {
-                    return this.cjHelper.findParentBuildingObjectKey(objectKey);
-                }
-            );
 
-            // Check if all the unit spaces are in the same building
-            if (
-                !unitSpacesBuildingObjectKeys.every(
-                    (v) => v === unitSpacesBuildingObjectKeys[0]
-                )
-            ) {
-                console.error(
-                    "A unit with spaces in multiple buildings is not supported."
+            var unitSpacesMeshes;
+            var buildingObjectKey;
+            var buildingMesh;
+
+            if (unitSpacesObjectKeys.length != 0) {
+                // Case where the unit links to spaces
+
+                unitSpacesMeshes = unitSpacesObjectKeys.map((objectKey) => {
+                    return this.cjHelper.getMesh(objectKey);
+                });
+                const unitSpacesBuildingObjectKeys = unitSpacesObjectKeys.map(
+                    (objectKey) => {
+                        return this.cjHelper.findParentBuildingObjectKey(
+                            objectKey
+                        );
+                    }
                 );
-                return;
+
+                // Check if all the unit spaces are in the same building
+                if (
+                    !unitSpacesBuildingObjectKeys.every(
+                        (v) => v === unitSpacesBuildingObjectKeys[0]
+                    )
+                ) {
+                    console.error(
+                        "A unit with spaces in multiple buildings is not supported."
+                    );
+                    return;
+                }
+                buildingObjectKey = unitSpacesBuildingObjectKeys[0];
+                buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
+
+                // // Find the most frequent storey code
+                // const unitSpacesStoreyCodes = unitSpacesObjectKeys.map(
+                //     (objectKey) => {
+                //         return this.cjHelper.getStoreyCode(objectKey);
+                //     }
+                // );
+                // var counts = {};
+                // var compare = 0;
+                // for (const spaceStoreyCode of unitSpacesStoreyCodes) {
+                //     if (counts[spaceStoreyCode] === undefined) {
+                //         counts[spaceStoreyCode] = 1;
+                //     } else {
+                //         counts[spaceStoreyCode] += 1;
+                //     }
+                //     if (counts[spaceStoreyCode] > compare) {
+                //         compare = counts[spaceStoreyCode];
+                //         storeyCode = spaceStoreyCode;
+                //     }
+                // }
+            } else {
+                // Case where the unit has no spaces
+
+                unitSpacesMeshes = this.cjHelper.getMesh(pickedObjectKey);
+                buildingObjectKey =
+                    this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
+                buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
+
+                if (!unitSpacesMeshes) {
+                    // Case where the unit has no geometry
+                    return this._pickMesh(buildingObjectKey, pickedObjectKey, onAnimationComplete);
+                }
             }
 
-            const buildingObjectKey = unitSpacesBuildingObjectKeys[0];
-            const buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
-
-            // Find the most frequent storey code
-            const unitSpacesStoreyCodes = unitSpacesObjectKeys.map(
-                (objectKey) => {
-                    return this.cjHelper.getRoomStoreyCode(objectKey);
-                }
-            );
-            var counts = {};
-            var compare = 0;
-            var storeyCode;
-            for (const spaceStoreyCode of unitSpacesStoreyCodes) {
-                if (counts[spaceStoreyCode] === undefined) {
-                    counts[spaceStoreyCode] = 1;
-                } else {
-                    counts[spaceStoreyCode] += 1;
-                }
-                if (counts[spaceStoreyCode] > compare) {
-                    compare = counts[spaceStoreyCode];
-                    storeyCode = spaceStoreyCode;
-                }
+            // Get the storey (keep the current if the unit has a space in it, otherwise move to the main storey of the unit)
+            const allUnitStoreyCodes = this.cjHelper.getUnitAllStoreyCodes(pickedObjectKey);
+            const currentStoreyCode = this.buildingView.storeyCode;
+            var storeyCode = currentStoreyCode;
+            if (!allUnitStoreyCodes.includes(storeyCode)) {
+                storeyCode = this.cjHelper.getUnitMainStoreyCode(pickedObjectKey);
             }
+
 
             // Highlight the meshes
             this.pickHighlighter.highlight(unitSpacesMeshes);
@@ -404,13 +656,38 @@ export class ObjectPicker {
                     this.cameraManager.zoomToObject(buildingMesh, onComplete);
                 }
             }
+        } else if (pickedObjectType == "GenericCityObject") {
+            // Pick a BuildingUnit
+            console.log("Picking a GenericCityObject");
+
+            // Highlight the meshes
+            const pickedMesh = this.cjHelper.getMesh(pickedObjectKey);
+
+            this.unpick();
+
+            if (pickedMesh) {
+                this.pickHighlighter.highlight(pickedMesh);
+                this.cameraManager.zoomToObject(
+                    pickedMesh,
+                    onAnimationComplete
+                );
+            } else {
+                const newTarget =
+                    this.cjHelper.getIconPositionVector3(pickedObjectKey);
+                this.cameraManager.zoomToCoordinates(
+                    newTarget,
+                    200,
+                    onAnimationComplete
+                );
+            }
         } else {
             console.error(
                 "The object has a type that is not supported for picking:",
                 pickedObjectType
             );
         }
-        this.infoPane.show(pickedObjectKey);
+        console.log("paneObjectKey", paneObjectKey);
+        this.infoPane.show(paneObjectKey);
     }
 
     unpick(onAnimationComplete) {
@@ -419,19 +696,37 @@ export class ObjectPicker {
 
         // Reset the building view
         if (this.buildingView._isActivated()) {
-            this.buildingView.deactivate();
-            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            // this.buildingView.deactivate();
+            // this.cameraManager.switchToInt(this.buildingViewActivationCamera);
         }
         if (this.buildingView._isInitialisedNotActivated()) {
             this.buildingView.uninitialise();
+            this.infoPane.hide();
         }
 
         if (this.cameraManager.usesOrbitCamera()) {
             this.cameraManager.switchToMap();
         }
+    }
 
-        // Hide the info pane
-        this.infoPane.hide();
+    closeInfoPane() {
+        // Unhighlight
+        this.pickHighlighter.unhighlight();
+
+        // Reset the building view
+        if (this.buildingView._isActivated()) {
+            this.buildingView.deactivate();
+            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            this.infoPane.hide();
+        }
+        if (this.buildingView._isInitialisedNotActivated()) {
+            this.buildingView.uninitialise();
+            this.infoPane.hide();
+        }
+
+        if (this.cameraManager.usesOrbitCamera()) {
+            this.cameraManager.switchToMap();
+        }
     }
 
     switchBuildingView() {
@@ -448,9 +743,13 @@ export class ObjectPicker {
             );
             this.cameraManager.zoomToObject(buildingMesh, onComplete);
         } else if (this.buildingView._isActivated()) {
+            const buildingKey = this.buildingView.buildingObjectKey;
             this.buildingView.deactivate();
             this.cameraManager.switchToInt(this.buildingViewActivationCamera);
-            this.cameraManager.switchToOrbit();
+            const onComplete = () => {
+                this.cameraManager.switchToOrbit();
+            };
+            this.pickMesh(buildingKey, onComplete);
         } else {
             console.error("Unexpected status!");
         }

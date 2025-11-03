@@ -26,10 +26,9 @@ export class BuildingView {
         this.scene = scene;
         this.outlineManager = outlineManager;
         this.layerManager = layerManager;
-
-        this.storeyManager = new StoreyManager(this);
-
         this.cjHelper = new CjHelper(this.scene);
+
+        this.storeyManager = new StoreyManager(this, this.cjHelper);
 
         this._status = NOT_INITIALISED;
     }
@@ -102,7 +101,7 @@ export class BuildingView {
 
         this.layerManager.add_interior_building_layers(this.buildingObjectKey, this.storeyCode);
 
-        this._applyOutlines(roomsObjects, "lod_0", "default");
+        this._applyOutlines(roomsObjects, "lod_0", "interior");
     }
 
     activate() {
@@ -128,11 +127,16 @@ export class BuildingView {
         this._unhideMeshChildren(this.buildingObject, true);
         this._hideMeshChildren(this.buildingObject, false);
 
+        // Move the building up so every storey is visible
+        // Translate with Z because the parent is rotated
+        const bbox = new THREE.Box3().setFromObject(this.buildingObject);
+        this.buildingTranslationZ = -bbox.min.y + 1;
+        this.buildingObject.translateZ(this.buildingTranslationZ);
+
         // Populate the buttons to switch between storeys
         this._populateStoreyButtons();
 
-
-        const available_storeys = Object.keys(this._getStoreyObjectKeys());
+        const available_storeys = this._getStoreyObjectKeys();
 
         this.storeyManager.activate(this.buildingObjectKey, this.storeyCode, available_storeys);
 
@@ -145,6 +149,9 @@ export class BuildingView {
         if (this._isInitialisedNotActivated()) {
             return;
         }
+
+        // Move the building back
+        this.buildingObject.translateZ(-this.buildingTranslationZ);
 
         // Show only the building shell
         this._hideMeshChildren(this.buildingObject, true);

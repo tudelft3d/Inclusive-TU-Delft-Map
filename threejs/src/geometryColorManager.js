@@ -38,20 +38,21 @@ export class GeometryColorManager {
 			return;
 		}
 
-		this._assign_building_colors()
+		this._assign_building_colors();
 
-		const test_color = "0x545454";
+		this._assign_standard_room_colors("#ede4d3");
+		// this._assign_standard_room_colors("#ffffff");
 
-		this._assign_geometry_unit_colors("Na-Fl-Co", test_color);
-		this._assign_geometry_unit_colors("Na-Fl-Ha", test_color);
+		for (const [layer_code, layer_object] of Object.entries(this.layer_definition)) {
+			if (layer_object["Geometry color"]) {
+				this._assign_geometry_unit_colors(layer_code, layer_object["Geometry color"]);
+			}
+		}
 
-		// for (const [key, value] of Object.entries(this.layer_definition)) {
+		const hall_way_color = "#bdbdbd";
 
-		// 	const color = '0x'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0');
-
-		// 	this._assign_geometry_unit_colors(key, color);
-		// }
-
+		this._assign_geometry_unit_colors("Na-Fl-Ha", hall_way_color);
+		this._assign_geometry_unit_colors("Na-Fl-Co", hall_way_color);
 
 	}
 
@@ -99,6 +100,32 @@ export class GeometryColorManager {
 			mesh_object.material = mesh_object.material.clone();
 
 			mesh_object.material.color.setHex(constant_name);
+
+		}
+
+	}
+
+	_assign_standard_room_colors(color) {
+
+		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
+
+			if (building_json.type != "BuildingRoom") {
+				continue;
+			}
+
+			let mesh_key = this.cjHelper.keyToMeshKey(building_key)
+
+			let mesh_object = this.scene.getObjectByName(mesh_key);
+
+			if (!mesh_object) {
+				continue;
+			}
+
+			mesh_object.material = mesh_object.material.clone();
+
+			const threejs_color = this._hex_to_threejs_hex(color);
+
+			mesh_object.material.color.setHex(threejs_color);
 
 		}
 
@@ -160,10 +187,16 @@ export class GeometryColorManager {
 
 			mesh_object.material = mesh_object.material.clone();
 
-			mesh_object.material.color.setHex(color);
+			const threejs_color = this._hex_to_threejs_hex(color);
+
+			mesh_object.material.color.setHex(threejs_color);
 
 		}
 
+	}
+
+	_hex_to_threejs_hex(hex_color) {
+		return hex_color.toUpperCase().replace("#", "0x");
 	}
 
 }

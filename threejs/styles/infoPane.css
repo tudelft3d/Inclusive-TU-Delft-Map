@@ -73,6 +73,7 @@
   border-bottom: 1px solid #eee;
   gap: 10px;
   font-size: 13px;
+  align-items: center;
 }
 
 .info-pane-row:last-child {
@@ -90,6 +91,16 @@
   text-align: right;
   word-break: break-word;
 }
+
+.info-pane-buttons-group {
+  display: flex;
+  justify-content: end;
+  padding: 8px 0;
+  gap: 10px;
+  font-size: 13px;
+  align-items: center;
+}
+
 
 /* Footer with Floor plan Button */
 .info-pane-button-background {

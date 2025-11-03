@@ -1,18 +1,287 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
-import layers_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import infoPaneHierarchy from "../assets/threejs/buildings/info_pane-hierarchy.json" assert { type: "json" };
+import layersDefinition from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+
+import { CjHelper } from "./cjHelper";
+import { ObjectPicker } from "./objectPicker";
+
+
+class Entry {
+
+    constructor(keyOrElse = { key: null, value: null, object: null }, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+        const { key, value, object } = keyOrElse;
+        const { url, tel, mail, code, image } = config;
+
+        // The Entry cannot be two of url, tel, mail, code or image at the same time
+        const numberTrue = [url, tel, mail, code, image].filter(Boolean).length;
+        if (numberTrue > 1) {
+            console.error("Cannot have multiple config properties.")
+            return;
+        }
+
+        // The Entry cannot be two of key, value or object at the same time
+        const numberTrueKeyValue = [key, value, object].filter(Boolean).length;
+        if (numberTrueKeyValue > 1) {
+            console.error("Cannot have two of key, value and object.")
+            return;
+        }
+
+
+        this.url = url;
+        this.tel = tel;
+        this.mail = mail;
+        this.code = code;
+        this.image = image;
+
+        this.key = key;
+        this.value = value;
+        this.object = object;
+
+        this.name = displayName;
+    }
+
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    getValue(infoPane, key) {
+        if (this.value) {
+            return this.value;
+        } else if (this.object) {
+            return this.object;
+        }
+
+        const attributes = infoPane.cjHelper.getAttributes(key);
+        var value = attributes[this.key];
+        if (Array.isArray(value) && value.length == 0) {
+            return null;
+        } else if (!value) {
+            return null;
+        }
+
+        if (this.code) {
+            value = layersDefinition[value]["Name (EN)"];
+        }
+        return value;
+    }
+
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    _formatValueNodeFromAttributes(infoPane, key) {
+        const value = this.getValue(infoPane, key);
+        if (!value) {
+            return null;
+        } else if (this.object) {
+            var node = null;
+            if (this.object == "ParentBuilding") {
+                const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
+                const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
+                node = document.createElement("button");
+                node.className = "info-pane-button";
+                node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
+                node.appendChild(document.createTextNode(buildingTitle));
+            } else if (this.object == "ChildrenUnits") {
+                if (!infoPane.cjHelper.isBuilding(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for ChildrenUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const unitGroupsKeys = infoPane.cjHelper.getBuildingUnitGroupsObjectKeys(key);
+                const unitCodes = unitGroupsKeys.map((unitGroupKey) => {
+                    const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
+                    return attributes["code"];
+                })
+                const icons = unitCodes.map((unitCode) => {
+                    const iconFile = layersDefinition[unitCode]["Icon name"];
+                    if (!iconFile) { return }
+                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconFile}`;
+                    const img = document.createElement("img");
+                    img.className = "icon";
+                    const iconName = layersDefinition[unitCode]["Name (EN)"];
+                    img.setAttribute("alt", iconName);
+                    img.setAttribute("title", iconName);
+                    img.setAttribute("width", "40px");
+                    img.src = iconPath;
+                    return img;
+                }).filter(Boolean);
+                if (icons.length == 0) {
+                    return null;
+                }
+                node = document.createElement("a");
+                icons.forEach((icon) => {
+                    node.appendChild(icon);
+                })
+            } else if (this.object == "RoomUnits") {
+                if (!infoPane.cjHelper.isBuildingRoom(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for RoomUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const roomAttributes = infoPane.cjHelper.getAttributes(key);
+                const unitsKeys = roomAttributes["parent_units"];
+                if (unitsKeys.length == 0) {
+                    return null;
+                }
+                node = document.createElement("div");
+                node.className = "info-pane-buttons-group";
+                unitsKeys.forEach((unitKey) => {
+                    const unitTitle = infoPane._makeTitle(unitKey);
+                    const unitButton = document.createElement("button");
+                    unitButton.className = "info-pane-button";
+                    unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
+                    unitButton.appendChild(document.createTextNode(unitTitle));
+                    node.appendChild(unitButton);
+                })
+            } else {
+                console.error(`Support for object '${this.object}' is not supported yet.`);
+            }
+            return node;
+        }
+
+        var node;
+        if (this.url) {
+            node = document.createElement("a");
+            node.href = `${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.tel) {
+            node = document.createElement("a");
+            node.href = `tel:${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.mail) {
+            node = document.createElement("a");
+            node.href = `mailto:${value}`;
+            node.appendChild(document.createTextNode(value));
+        } else if (this.code) {
+            node = document.createTextNode(value);
+        } else if (this.image) {
+            node = document.createElement("img");
+            node.src = `/assets/threejs/images/${value}`;
+            node.setAttribute("width", "100%");
+        } else {
+            node = document.createTextNode(value);
+        }
+        return node;
+    }
+
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
+        const attributeName = this.name;
+        const attributeValue = this._formatValueNodeFromAttributes(infoPane, key);
+
+        // Return nothing if the value is null
+        if (!attributeValue) { return }
+
+        var div = document.createElement("div");
+        div.className = "info-pane-row";
+
+        if (attributeName) {
+            var label_span = document.createElement("span");
+            label_span.className = "info-pane-label";
+            label_span.appendChild(document.createTextNode(attributeName));
+            div.appendChild(label_span);
+        }
+
+        var value_span = document.createElement("span");
+        value_span.className = "info-pane-value";
+        value_span.appendChild(attributeValue);
+        div.appendChild(value_span);
+
+        return div;
+    }
+
+}
+
+class EntryGroup {
+
+    /**
+     *
+     * @param {String} name
+     * @param {Entry[]} entries
+     * @param {Boolean} open
+     */
+    constructor(name, entries, open = false) {
+        this.name = name;
+        this.entries = entries;
+        this.open = open;
+    }
+
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
+        const attributes = infoPane.cjHelper.getAttributes(key);
+        // Check if any of the attributes exist before creating the section, otherwise do not include
+        const hasData = this.entries.some(entry => {
+            const value = attributes[entry.key];
+            if (Array.isArray(value)) {
+                return value.length > 0;
+            } else {
+                return value;
+            }
+        });
+        if (!hasData) return;
+
+        let details = document.createElement("details");
+        details.open = this.open;
+
+        let summary = document.createElement("summary");
+        let summarySpan = document.createElement("span");
+        summarySpan.className = "info-pane-label";
+        summarySpan.appendChild(document.createTextNode(this.name));
+        summary.appendChild(summarySpan);
+
+        details.appendChild(summary);
+
+        this.entries.forEach((entry) => {
+            const formattedEntry = entry.formatNodeFromAttributes(infoPane, key);
+            if (!formattedEntry) return;
+
+            details.appendChild(formattedEntry);
+        });
+
+        return details;
+    }
+
+}
+
 
 /**
  * InfoPane class - handles all info pane UI logic
  */
 export class InfoPane {
-    constructor(paneElement, picker = null) {
+
+    /**
+     *
+     * @param {HTMLElement} paneElement
+     * @param {ObjectPicker} picker
+     * @param {CjHelper} cjHelper
+     */
+    constructor(paneElement, picker, cjHelper) {
         this.pane = paneElement;
         this.picker = picker;
+        this.cjHelper = cjHelper;
+        this.key;
 
-        this._add_event_listeners();
+        this._loadInfoPaneHierarchy();
+
+        this._addEventListeners();
     }
 
-    _add_event_listeners() {
+    _addEventListeners() {
         this.mainContainer = document.getElementById("scene-container");
         this.movedDuringPointer = false;
         this.mainContainer.addEventListener("pointerdown", (e) => {
@@ -30,141 +299,134 @@ export class InfoPane {
         });
     }
 
-    /**
-     * Extract building data from CityJSON based on object name
-     */
-    _getBuildingDataFromName(objectName) {
-        if (!objectName) return null;
+    _loadInfoPaneHierarchy() {
+        this.hierarchy = {}
 
-        // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-        const cleanName = objectName.replace(/-lod_\d+$/, '');
+        for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
+            const title = hierarchyInfo["title"].map((titleOption) => {
+                const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
+                return new Entry(keyOrValue, null, titleOption.options || {});
+            });
+            var titleNumber = null;
+            if (Object.keys(hierarchyInfo).includes("title_number")) {
+                titleNumber = hierarchyInfo["title_number"].map((titleOption) => {
+                    const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
+                    return new Entry(keyOrValue, null, titleOption.options || {});
+                });
+            }
 
-        // Look up in CityJSON
-        const cityObjects = cityjson.CityObjects;
-
-        if (cityObjects && cityObjects[cleanName]) {
-            const buildingData = cityObjects[cleanName];
-
-            // Extract useful attributes
-            const attrs = buildingData.attributes || {};
-
-            return {
-                name: attrs["Name"] || attrs["Name (EN)"] || layers_definition_json[attrs["code"]]["Name (EN)"],
-                nameNL: attrs["Name (NL)"],
-                nicknames: attrs.Nicknames ? attrs.Nicknames.join(", ") : undefined,
-                address: attrs.Address,
+            const currentHierarchy = hierarchyInfo["rows"].map((row) => {
+                if (row.type === 'entry') {
+                    const keyOrValue = { key: row["key"], value: row["value"], object: row["object"] };
+                    return new Entry(keyOrValue, row.label, row.options || {});
+                }
+                if (row.type === 'group') {
+                    const entries = row.entries.map(e => {
+                        const keyOrValue = { key: e["key"], value: e["value"], object: e["object"] };
+                        return new Entry(keyOrValue, e.label, e.options || {});
+                    });
+                    return new EntryGroup(row.title, entries, row.expanded);
+                }
+                // Unknown type
+                console.warn('Unknown row type', row);
+                return null;
+            }).filter(Boolean);
+            this.hierarchy[cjType] = {
+                "title": title,
+                "titleNumber": titleNumber,
+                "rows": currentHierarchy
             };
         }
-
-        return null;
     }
 
-    _getBuildingDataFromName_alt(objectName) {
-        if (!objectName) return null;
+    show(key) {
+        this.key = key;
 
-        // Remove the LOD suffix (e.g., "-lod_2", "-lod_0")
-        const cleanName = objectName.replace(/-lod_\d+$/, '');
-
-        // Look up in CityJSON
-        const cityObjects = cityjson.CityObjects;
-
-        if (cityObjects && cityObjects[cleanName]) {
-            const buildingData = cityObjects[cleanName];
-
-            return buildingData;
-        }
-
-        return null;
-    }
-
-    show(object_threejs_name) {
-
-        this.pane.style.opacity = '1';
-        this.pane.style.display = 'block';
-
-        // TODO add checks for missing data
-
+        // Reset the info pane
         this.pane.innerHTML = "";
 
-        const object_json = this._getBuildingDataFromName_alt(object_threejs_name);
+        // Make it visible
+        this.pane.style.opacity = '1';
+        this.pane.style.display = 'block'; // Keep it always visible, even with no info
 
-        this._add_infoPane_title(object_json);
+        const objectType = this.cjHelper.getType(key);
+        if (!Object.keys(this.hierarchy).includes(objectType)) {
+            console.error("Unsupported type for the info pane:", objectType)
+            this.hide();
+            return;
+        }
+
+
+        const title = this._makeTitle(key);
+        this._addTitle(title);
+
+        const hierarchy = this.hierarchy[objectType];
+        const infoPaneDefinition = hierarchy["rows"]
 
         // Create content container
         let content_div = document.createElement("div");
         content_div.className = "info-pane-content";
         this.pane.appendChild(content_div);
 
-        const wanted_attributes = [
-            "Address",
-            "Phone number",
-            "Email"
-        ];
+        for (const row of infoPaneDefinition) {
+            const formattedNode = row.formatNodeFromAttributes(this, key);
+            if (!formattedNode) { continue }
+            this.pane.appendChild(formattedNode);
+        }
 
-        wanted_attributes.forEach((attribute_name) => {
-            this._add_infoPane_object(object_json, attribute_name, content_div);
-        });
+        this._addFloorPlanButton(key);
 
-        // Opening Hours configuration
-        const opening_hours_config = {
-            title: "Opening Hours",
-            attributes: [
-                "Opening hours (Monday)",
-                "Opening hours (Tuesday)",
-                "Opening hours (Wednesday)",
-                "Opening hours (Thursday)",
-                "Opening hours (Friday)",
-                "Opening hours (Saturday)",
-                "Opening hours (Sunday)",
-            ],
-            open: true,
-            labelTransform: (attr) => {
-                // Extract day name from "Opening hours (Monday)" -> "Monday"
-                const match = attr.match(/\(([^)]+)\)/);
-                return match ? match[1] : attr;
-            }
-        };
-
-        this._add_infoPane_details_section(object_json, opening_hours_config, content_div);
-
-        // Wheelchair Accessibility configuration
-        const wheelchair_config = {
-            title: "Wheelchair Accessibility",
-            attributes: [
-                "Wheelchair accessibility (Parking)",
-                "Wheelchair accessibility (Entrances)",
-                "Wheelchair accessibility (Elevators)",
-            ],
-            open: false,
-            labelTransform: (attr) => {
-                // Extract category from "Wheelchair accessibility (Parking)" -> "Parking"
-                const match = attr.match(/\(([^)]+)\)/);
-                return match ? match[1] : attr;
-            }
-        };
-
-        this._add_infoPane_details_section(object_json, wheelchair_config, content_div);
-
-        this._add_infoPane_floorplan_button();
-
-        this._add_infoPane_extra_buttons();
-
+        // Add the extra buttons
+        this._addInfoPaneExtraButtons(title);
     }
 
 
-    _add_infoPane_title(object_json) {
+    /**
+     * Make the title with the space id if there is one.
+     * 
+     * @param {string} key 
+     * @returns 
+     */
+    _makeTitle(key) {
+        const objectType = this.cjHelper.getType(key);
+        const hierarchy = this.hierarchy[objectType];
+
+        var title;
+        const titleOptions = hierarchy["title"];
+        for (const titleOption of titleOptions) {
+            const potentialTitle = titleOption.getValue(this, key);
+            if (potentialTitle) {
+                title = potentialTitle;
+                break;
+            }
+        }
+        const titleNumberOptions = hierarchy["titleNumber"];
+        if (titleNumberOptions) {
+            for (const titleNumberOption of titleNumberOptions) {
+                const potentialTitleNumber = titleNumberOption.getValue(this, key);
+                if (potentialTitleNumber) {
+                    if (title) {
+                        title += ` (${potentialTitleNumber})`;
+                    } else {
+                        title = potentialTitleNumber;
+                    }
+                    break;
+                }
+            }
+        }
+        return title;
+    }
+
+
+    _addTitle(title) {
 
         let div = document.createElement("div");
-
         div.className = "info-pane-header";
 
         let h3 = document.createElement("h3");
-
         h3.className = "info-pane-title";
-
-        const title_text = object_json.attributes["Name (EN)"];
-
-        h3.appendChild(document.createTextNode(title_text));
+        h3.appendChild(document.createTextNode(title));
+        div.appendChild(h3);
 
         let close_button = document.createElement("button");
 
@@ -174,122 +436,15 @@ export class InfoPane {
         close_button.appendChild(document.createTextNode("x"));
 
         close_button.addEventListener('click', () => this.hide());
-
-        div.appendChild(h3);
         div.appendChild(close_button);
 
+
         this.pane.appendChild(div);
-
     }
 
-    _add_infoPane_object(object_json, attribute_name, container = null) {
-
-        let div = document.createElement("div");
-        div.className = "info-pane-row";
-
-
-        let label_span = document.createElement("span");
-        label_span.className = "info-pane-label";
-        label_span.appendChild(document.createTextNode(attribute_name));
-
-
-        let value_span = document.createElement("span");
-        value_span.className = "info-pane-value";
-
-        const attribute_value = object_json.attributes[attribute_name];
-
-        // Check if it's a phone number or email and make it clickable
-        if (attribute_name === "Phone number") {
-            let link = document.createElement("a");
-            link.href = `tel:${attribute_value}`;
-            link.appendChild(document.createTextNode(attribute_value));
-            value_span.appendChild(link);
-        } else if (attribute_name === "Email") {
-            let link = document.createElement("a");
-            link.href = `mailto:${attribute_value}`;
-            link.appendChild(document.createTextNode(attribute_value));
-            value_span.appendChild(link);
-        } else {
-            value_span.appendChild(document.createTextNode(attribute_value));
-        }
-
-
-        div.appendChild(label_span);
-        div.appendChild(value_span);
-
-        const target = container || this.pane;
-        target.appendChild(div);
-
-    }
-
-
-    /**
-     * Add a collapsible details section with configurable options
-     * @param {Object} object_json - The building JSON data
-     * @param {Object} config - Configuration object
-     * @param {string} config.title - Title of the details element
-     * @param {Array<string>} config.attributes - Array of the underlying attributes
-     * @param {boolean} config.open - Whether the details should be open by default, the default is false
-     * @param {Function} config.labelTransform - Optional function to transform attribute names for display
-     * @param {HTMLElement} container - Optional container element to append to
-     */
-    _add_infoPane_details_section(object_json, config, container = null) {
-        const {
-            title,
-            attributes,
-            open = false,
-            labelTransform = null
-        } = config;
-
-        // Check if any of the attributes exist before creating the section, otherwise do not include
-        const hasData = attributes.some(attr => object_json.attributes[attr]);
-        if (!hasData) return;
-
-        let details = document.createElement("details");
-        details.open = open;
-
-        let summary = document.createElement("summary");
-        let summary_span = document.createElement("span");
-        summary_span.className = "info-pane-label";
-        summary_span.appendChild(document.createTextNode(title));
-        summary.appendChild(summary_span);
-
-        details.appendChild(summary);
-
-        attributes.forEach((attribute_name) => {
-            const attribute_value = object_json.attributes[attribute_name];
-
-            // Skip if attribute doesn't exist or is empty
-            if (!attribute_value) return;
-
-            // Transform the label if a transform function is provided, e.g. "Opening hours (Monday)" -> "Monday"
-            const display_label = labelTransform
-                ? labelTransform(attribute_name)
-                : attribute_name;
-
-            let div = document.createElement("div");
-            div.className = "info-pane-row";
-
-            let label_span = document.createElement("span");
-            label_span.className = "info-pane-label";
-            label_span.appendChild(document.createTextNode(display_label));
-
-            let value_span = document.createElement("span");
-            value_span.className = "info-pane-value";
-            value_span.appendChild(document.createTextNode(attribute_value));
-
-            div.appendChild(label_span);
-            div.appendChild(value_span);
-
-            details.appendChild(div);
-        });
-
-        const target = container || this.pane;
-        target.appendChild(details);
-    }
-
-
-    _add_infoPane_floorplan_button() {
+    _addFloorPlanButton(key) {
+        if (!this.cjHelper.isBuilding(key)) { return }
+        if (!this.cjHelper.buildingHasFloorPlan(key)) { return }
 
         let div = document.createElement("div");
         div.className = "info-pane-button-background";
@@ -320,46 +475,43 @@ export class InfoPane {
 
     }
 
-    _add_infoPane_extra_buttons() {
+    _addInfoPaneExtraButtons(feedbackLocation) {
 
+        // Container for the buttons
         let div = document.createElement("div");
         div.className = "info-pane-button-background";
         div.classList.add("info-pane-row");
 
+        // Button to report issues
+        let reportButtonSpan = document.createElement("span");
 
-        let report_button_span = document.createElement("span");
-
-        let report_button = document.createElement("button");
-        report_button.className = "info-pane-button";
-
-        report_button.append(document.createTextNode("Report Issue"));
-
-        report_button.addEventListener('click', () => {
-            console.log("Go to issue page");
+        let reportButton = document.createElement("button");
+        reportButton.className = "info-pane-button";
+        reportButton.append(document.createTextNode("Report an error"));
+        reportButton.addEventListener('click', () => {
+            // Go to the feedback page with the current location value
+            const target = `/feedback.html?location=${feedbackLocation}`;
+            window.location.href = target;
         });
 
-        report_button_span.appendChild(report_button);
+        reportButtonSpan.appendChild(reportButton);
+        div.appendChild(reportButtonSpan);
 
+        /// Button to book a room
+        let bookRoomButtonSpan = document.createElement("span");
 
-        let book_room_button_span = document.createElement("span");
-
-        let book_room_button = document.createElement("button");
-        book_room_button.className = "info-pane-button";
-
-        book_room_button.append(document.createTextNode("Book a room"));
-
-        book_room_button.addEventListener('click', () => {
-            console.log("Go to book room page");
+        let bookRoomButton = document.createElement("button");
+        bookRoomButton.className = "info-pane-button";
+        bookRoomButton.append(document.createTextNode("Book a room"));
+        bookRoomButton.addEventListener('click', () => {
+            const target = `https://spacefinder.tudelft.nl/en/buildings/`;
+            window.location.href = target;
         });
 
-        book_room_button_span.appendChild(book_room_button);
-
-
-        div.appendChild(report_button_span);
-        div.appendChild(book_room_button_span);
+        bookRoomButtonSpan.appendChild(bookRoomButton);
+        div.appendChild(bookRoomButtonSpan);
 
         this.pane.appendChild(div);
-
     }
 
 
