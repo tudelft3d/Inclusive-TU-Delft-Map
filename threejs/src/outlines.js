@@ -20,11 +20,25 @@ export class OutlineManager {
             edgeStrength: 5,
             edgeGlow: 0.25,
             edgeThickness: 0.3,
-            visibleEdgeColor: "#ffffff",
-            hiddenEdgeColor: "#ffffff",
+            visibleEdgeColor: new THREE.Color("#ffffff"),
+            hiddenEdgeColor: new THREE.Color("#ffffff"),
         };
         this._resizeListener = () => this.onResize();
         window.addEventListener("resize", this._resizeListener);
+    }
+
+    initialise(cameraManager) {
+        if (this.composers.length > 0) return;
+
+        const cameras = [
+            cameraManager.mapCamera,
+            cameraManager.orbitCamera,
+            cameraManager.orthographicCamera
+        ];
+
+        for (const cam of cameras) {
+            this._create_outline_pass({ camera: cam });
+        }
     }
 
     // post-processing pipeline - deltaTime is for glow/other effects that animate
@@ -73,6 +87,8 @@ export class OutlineManager {
         outlinePass.visibleEdgeColor.set(this.style.visibleEdgeColor);
         outlinePass.hiddenEdgeColor.set(this.style.hiddenEdgeColor);
 
+        outlinePass.overlayMaterial.blending = THREE.NormalBlending;
+
         composer.addPass(outlinePass);
 
         // // Third pass for the icons
@@ -119,11 +135,17 @@ export class OutlineManager {
                 outline.visibleEdgeColor.set("#0bff02");
                 outline.hiddenEdgeColor.set("#0bff02");
             }
+            if (code == "interior") {
+                outline.edgeStrength = 5;
+                outline.edgeGlow = 0.25;
+                outline.edgeThickness = 0.3;
+                outline.visibleEdgeColor.set("#000000");
+                outline.hiddenEdgeColor.set("#000000");
+            }
         }
     }
 
     setOutline(objectList, lod = 'lod_2', style) {
-
         const outlineObjects = [];
         for (const obj of objectList) {
             let target;

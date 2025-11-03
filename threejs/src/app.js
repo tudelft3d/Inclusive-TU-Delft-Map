@@ -17,7 +17,7 @@ import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { initSearchBar } from "./searchBar";
 import { LayerManager } from "./layerManager";
-import { BuildingColorManager } from "./buildingColorManager";
+import { GeometryColorManager } from "./geometryColorManager";
 import { Searcher } from "./search";
 import { BuildingView } from "./buildingView";
 import { Highlighter } from "./highlighter";
@@ -76,6 +76,7 @@ export class Map {
             this.cameraManager
         );
         this.outlineManager = new OutlineManager(this.scene, this.glRenderer);
+        this.outlineManager.initialise(this.cameraManager);
         this.svgLoader = new SvgLoader();
         this._attachEvents();
 
@@ -91,7 +92,7 @@ export class Map {
         this._initBuildingView();
         this._initPicker();
         this._initSearcher();
-        this._initBuildingColorManager();
+        this._initGeometryColorManager();
 
         this.render = this.render.bind(this);
         requestAnimationFrame(this.render);
@@ -224,19 +225,19 @@ export class Map {
         initSearchBar(this.searcher, search_delay, search_result_count);
     }
 
-    _initBuildingColorManager() {
-        this.buildingColorManager = new BuildingColorManager(
+    _initGeometryColorManager() {
+        this.geometryColorManager = new GeometryColorManager(
             this.scene
         );
     }
 
     _attachEvents() {
         var hasMouseMoved = false;
-        this.hasMouseMovedInFrame = false;
-        window.addEventListener("mousedown", (e) => {
+        // this.hasMouseMovedInFrame = false;
+        this.mainContainer.addEventListener("mousedown", (e) => {
             hasMouseMoved = false;
         });
-        window.addEventListener("mousemove", (e) => {
+        this.mainContainer.addEventListener("mousemove", (e) => {
             hasMouseMoved = true;
 
             // if (this.hasMouseMovedInFrame) return;
@@ -252,7 +253,7 @@ export class Map {
             //     this.picker.hoverPosition(pos);
             // }
         });
-        window.addEventListener("mouseup", (e) => {
+        this.mainContainer.addEventListener("click", (e) => {
             if (hasMouseMoved) return;
 
             const pos = getCanvasRelativePosition(e, this.glContainer);
@@ -265,28 +266,53 @@ export class Map {
             }
         });
 
-        // Touch handling
-        window.addEventListener("touchstart", (e) => {
-            hasMouseMoved = false;
-        });
-        window.addEventListener("touchmove", (e) => {
-            hasMouseMoved = true;
-        });
-        window.addEventListener("touchend", (e) => {
-            if (hasMouseMoved) return;
-            const touch = e.changedTouches[0];
-            const pos = getCanvasRelativePosition(touch, this.glContainer);
-            const clicked_element = document.elementFromPoint(
-                e.changedTouches[0].pageX,
-                e.changedTouches[0].pageY
-            );
+        window.addEventListener("dblclick", (e) => {
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
             if (
                 clicked_element.nodeName &&
-                clicked_element.nodeName == "CANVAS"
+                clicked_element.nodeName === "CANVAS"
             ) {
-                this.picker.pickScreenPosition(pos);
+                const pos = getCanvasRelativePosition(e, this.glContainer);
+                const mesh = this.picker._raycastPosition(pos);
+
+                if (mesh && mesh.name) {
+                    const type = this.picker.cjHelper.getType(mesh.name);
+                    if (type === "Building") {
+                        console.log("Double-clicked on building:", mesh.name);
+                        this.picker.pickMesh(mesh.name, () => {
+                            this.picker.switchBuildingView();
+                        });
+                    }
+                }
             }
         });
+
+        // Touch handling
+        this.mainContainer.addEventListener("touchstart", (e) => {
+            e.stopPropagation();
+            hasMouseMoved = false;
+        });
+        this.mainContainer.addEventListener("touchmove", (e) => {
+            e.stopPropagation();
+            hasMouseMoved = true;
+        });
+        // this.mainContainer.addEventListener("touchend", (e) => {
+        //     console.log("touchend");
+        //     e.stopPropagation();
+        //     if (hasMouseMoved) return;
+        //     const touch = e.changedTouches[0];
+        //     const pos = getCanvasRelativePosition(touch, this.glContainer);
+        //     const clicked_element = document.elementFromPoint(
+        //         e.changedTouches[0].pageX,
+        //         e.changedTouches[0].pageY
+        //     );
+        //     if (
+        //         clicked_element.nodeName &&
+        //         clicked_element.nodeName == "CANVAS"
+        //     ) {
+        //         this.picker.pickScreenPosition(pos);
+        //     }
+        // });
 
         window.addEventListener(
             "resize",
@@ -408,8 +434,3 @@ export class Map {
     }
 }
 
-// sample thematic layers to add:
-// Lactation Room	E1-6
-// Contemplation room	E1-8 - there are none in BK?
-// All-gender restroom	S1-3
-// Accessible toilet	S2

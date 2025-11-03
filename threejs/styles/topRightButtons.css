@@ -324,16 +324,16 @@
   #layers-btn svg,
   #legend-btn img,
   #legend-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 25px;
+    height: 25px;
     display: block;
     object-fit: contain;
   }
 
   #basemap-btn img,
   #basemap-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 25px;
+    height: 25px;
     display: block;
     object-fit: contain;
   }
@@ -364,7 +364,7 @@
   #basemap-dropdown,
   #legend-dropdown,
   #layers-dropdown {
-    display: block !important;   /* override inline/desktop none */
+    display: block;   /* override inline/desktop none */
     position: fixed;
     left: 0;
     right: 0;

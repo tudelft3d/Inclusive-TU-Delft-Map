@@ -150,10 +150,10 @@ export class Searcher {
         const matchItem = obj.item;
         const attr = matchItem.attributes;
         let displayName = "";
-        if (obj.matches) {
-            let nicknameMatch = obj.matches.find(m => m.key === "attributes.Name (EN)");
-            if (nicknameMatch) displayName = nicknameMatch.value;
-        }
+        // if (obj.matches) {
+        //     let nicknameMatch = obj.matches.find(m => m.key === "attributes.Name (EN)");
+        //     if (nicknameMatch) displayName = nicknameMatch.value;
+        // }
         if (!displayName) {
             if (attr["Name"]) displayName = attr["Name"];
             else if (attr["Name (EN)"] && attr["Name (EN)"].trim() !== "")
@@ -162,6 +162,11 @@ export class Searcher {
                 displayName = attr["Nicknames"][0];
             else displayName = "No name found";
         }
+
+        if (matchItem.type == "Building") {
+            displayName = "Building " + attr["space_id"] + " | " + attr["Name (EN)"];
+        }
+
 
         if (matchItem.type === "BuildingRoom" || matchItem.type === "BuildingUnit") {
             let parent = this.raw_json["CityObjects"][matchItem.parents[0]];
@@ -178,7 +183,7 @@ export class Searcher {
                     parent.attributes["Name"] ||
                     "Unknown Building";
 
-                displayName += ` (${buildingName})`;
+                displayName += ` | ${buildingName} `;
             }
         }
         return displayName;

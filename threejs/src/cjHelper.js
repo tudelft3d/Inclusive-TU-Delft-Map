@@ -28,10 +28,6 @@ export class CjHelper {
             meshKey = objectKey + "-lod_0";
         } else if (objectType == "GenericCityObject") {
             meshKey = objectKey + "-lod_0";
-            // } else {
-            //     console.error(
-            //         `Only Building, BuildingRoom, BuildingUnit and GenericCityObject objects can have a mesh, not ${objectType}.`
-            //     );
         }
 
         // if (!this.checkMeshKeyExists(meshKey)) {
@@ -296,5 +292,187 @@ export class CjHelper {
             return;
         }
         return buildingParts.length > 0;
+    }
+
+    /**
+     * Extracts all the buildingUnitContainers for each building on the campus from the cityjson.
+     * 
+     * This function assumes that buildings have a child of type BuildingUnitObject.
+     * If not, the building will be skipped.
+     * 
+     * The end result is:
+     * 
+     * {
+        * building_1: {
+            * code1: b1_code1_key,
+            * code2: b1_code2_key
+        * },
+        * building_2: {
+            * code1: b2_code1_key,
+            * code2: b2_code2_key
+        * }
+     * }
+     *
+     * @returns A dictionary mapping building keys to a dictionary mapping layer codes to buildingUnitContainer keys.
+     */
+    extract_building_buildingUnitContainers() {
+
+        const building_buildingUnitContainers = {};
+
+        for (const [building_key, building_object] of Object.entries(cityjson.CityObjects)) {
+
+            if (building_object.type == "Building") {
+
+                if (!(building_object.children)) {
+                    building_buildingUnitContainers[building_key] = {};
+                    continue;
+                }
+
+                const buildingUnitObject_key = building_object.children.find((element) => element.includes("BuildingUnitObject"));
+
+                if (buildingUnitObject_key == undefined) {
+                    console.error("Building:", building_key, " did not have any BuildingUnitObject");
+                    building_buildingUnitContainers[building_key] = {};
+                    continue;
+                }
+
+                const buildingUnitObject_children_keys = cityjson.CityObjects[buildingUnitObject_key].children;
+
+                let buildingUnitObject_children_dict = {};
+
+                buildingUnitObject_children_keys.forEach((current_unit_key) => {
+
+                    const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
+                    buildingUnitObject_children_dict[current_layer_code] = current_unit_key;
+
+                });
+
+                building_buildingUnitContainers[building_key] = buildingUnitObject_children_dict;
+
+            }
+        }
+        return building_buildingUnitContainers;
+    }
+
+    /**
+     * Extracts all the OutdoorUnitContainers from the cityjson
+     * 
+     * This function assumes that the cityjson file has one object called Outdoor-CityObjectGroup-OutdoorObject.
+     *
+     * The end result is:
+     * 
+     * {
+        * code1: unit1_key,
+        * code2: unit2_key
+     * }
+     * 
+     * @returns An object where layer codes map to their respective OutdoorUnitContainer.
+     */
+    extract_outdoor_unit_containers() {
+
+        const campus_OutdoorUnitContainers = {};
+
+        const outdoor_unit_keys = cityjson.CityObjects["Outdoor-CityObjectGroup-OutdoorObject"].children;
+
+        outdoor_unit_keys.forEach((current_unit_key) => {
+
+            const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
+            campus_OutdoorUnitContainers[current_layer_code] = current_unit_key;
+
+        });
+
+        return campus_OutdoorUnitContainers;
+
+    }
+
+    /**
+     * Extracts all the buildingUnitContainers for each building on the campus from the cityjson.
+     * 
+     * This function assumes that buildings have a child of type BuildingUnitObject.
+     * If not, the building will be skipped.
+     * 
+     * The end result is:
+     * 
+     * {
+        * building_1: {
+            * code1: b1_code1_key,
+            * code2: b1_code2_key
+        * },
+        * building_2: {
+            * code1: b2_code1_key,
+            * code2: b2_code2_key
+        * }
+     * }
+     *
+     * @returns A dictionary mapping building keys to a dictionary mapping layer codes to buildingUnitContainer keys.
+     */
+    extract_building_buildingUnitContainers() {
+
+        const building_buildingUnitContainers = {};
+
+        for (const [building_key, building_object] of Object.entries(cityjson.CityObjects)) {
+
+            if (building_object.type == "Building") {
+
+                if (!(building_object.children)) {
+                    building_buildingUnitContainers[building_key] = {};
+                    continue;
+                }
+
+                const buildingUnitObject_key = building_object.children.find((element) => element.includes("BuildingUnitObject"));
+
+                if (buildingUnitObject_key == undefined) {
+                    // console.error("Building:", building_key, " did not have any BuildingUnitObject");
+                    building_buildingUnitContainers[building_key] = {};
+                    continue;
+                }
+
+                const buildingUnitObject_children_keys = cityjson.CityObjects[buildingUnitObject_key].children;
+
+                let buildingUnitObject_children_dict = {};
+
+                buildingUnitObject_children_keys.forEach((current_unit_key) => {
+
+                    const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
+                    buildingUnitObject_children_dict[current_layer_code] = current_unit_key;
+
+                });
+
+                building_buildingUnitContainers[building_key] = buildingUnitObject_children_dict;
+
+            }
+        }
+        return building_buildingUnitContainers;
+    }
+
+    /**
+     * Extracts all the OutdoorUnitContainers from the cityjson
+     * 
+     * This function assumes that the cityjson file has one object called Outdoor-CityObjectGroup-OutdoorObject.
+     *
+     * The end result is:
+     * 
+     * {
+        * code1: unit1_key,
+        * code2: unit2_key
+     * }
+     * 
+     * @returns An object where layer codes map to their respective OutdoorUnitContainer.
+     */
+    extract_outdoor_unit_containers() {
+
+        const campus_OutdoorUnitContainers = {};
+
+        const outdoor_unit_keys = cityjson.CityObjects["Outdoor-CityObjectGroup-OutdoorObject"].children;
+
+        outdoor_unit_keys.forEach((current_unit_key) => {
+
+            const current_layer_code = cityjson.CityObjects[current_unit_key].attributes["code"];
+            campus_OutdoorUnitContainers[current_layer_code] = current_unit_key;
+
+        });
+
+        return campus_OutdoorUnitContainers;
+
     }
 }

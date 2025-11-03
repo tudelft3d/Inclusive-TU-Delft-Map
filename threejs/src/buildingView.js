@@ -83,6 +83,7 @@ export class BuildingView {
         this.storeyCode = storeyCode;
         if (this._isActivated()) {
             this._updateView();
+            this.storeyManager.setStorey(this.storeyCode);
         }
     }
 
@@ -101,7 +102,7 @@ export class BuildingView {
 
         this.layerManager.add_interior_building_layers(this.buildingObjectKey, this.storeyCode);
 
-        this._applyOutlines(roomsObjects, "lod_0", "default");
+        this._applyOutlines(roomsObjects, "lod_0", "interior");
     }
 
     activate() {

@@ -17,6 +17,8 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
     if (!input || !container || !intermediateResults) return;
 
     let timeout;
+    let lastResults = [];
+    let lastQuery = "";
 
     function debounce(fn, wait) {
         return function (...args) {
@@ -117,13 +119,26 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
         }
         const deb = debounce(() => {
             const results = searcher.search_n_best_matches(value, search_result_count);
+            lastResults = results;
+            lastQuery = value;
             show_intermediate_results(results);
         }, search_delay);
         deb();
     });
 
     input.addEventListener('focusin', () => {
-        if (input.value && input.value.trim()) openPanel();
+        if (input.value && input.value.trim()) {
+            openPanel();
+            if (lastResults.length > 0 && input.value.trim() === lastQuery) {
+                show_intermediate_results(lastResults);
+            } else {
+                // Otherwise re-run the search to refresh
+                const results = searcher.search_n_best_matches(input.value.trim(), search_result_count);
+                lastResults = results;
+                lastQuery = input.value.trim();
+                show_intermediate_results(results);
+            }
+        }
     });
 
     input.addEventListener('focusout', () => {
