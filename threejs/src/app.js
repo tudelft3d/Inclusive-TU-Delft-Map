@@ -231,29 +231,29 @@ export class Map {
     }
 
     _attachEvents() {
-        // var hasMouseMoved = false;
+        var hasMouseMoved = false;
         // this.hasMouseMovedInFrame = false;
-        // this.mainContainer.addEventListener("mousedown", (e) => {
-        //     hasMouseMoved = false;
-        // });
-        // this.mainContainer.addEventListener("mousemove", (e) => {
-        //     hasMouseMoved = true;
+        this.mainContainer.addEventListener("mousedown", (e) => {
+            hasMouseMoved = false;
+        });
+        this.mainContainer.addEventListener("mousemove", (e) => {
+            hasMouseMoved = true;
 
-        //     // if (this.hasMouseMovedInFrame) return;
+            // if (this.hasMouseMovedInFrame) return;
 
-        //     // this.hasMouseMovedInFrame = true;
-        //     // const pos = getCanvasRelativePosition(e, this.glContainer);
-        //     // const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
-        //     // if (
-        //     //     clicked_element.nodeName &&
-        //     //     clicked_element.nodeName == "CANVAS"
-        //     // ) {
-        //     //     console.log("Hovering");
-        //     //     this.picker.hoverPosition(pos);
-        //     // }
-        // });
+            // this.hasMouseMovedInFrame = true;
+            // const pos = getCanvasRelativePosition(e, this.glContainer);
+            // const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+            // if (
+            //     clicked_element.nodeName &&
+            //     clicked_element.nodeName == "CANVAS"
+            // ) {
+            //     console.log("Hovering");
+            //     this.picker.hoverPosition(pos);
+            // }
+        });
         this.mainContainer.addEventListener("click", (e) => {
-            // if (hasMouseMoved) return;
+            if (hasMouseMoved) return;
 
             const pos = getCanvasRelativePosition(e, this.glContainer);
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
@@ -265,15 +265,15 @@ export class Map {
             }
         });
 
-        // // Touch handling
-        // this.mainContainer.addEventListener("touchstart", (e) => {
-        //     e.stopPropagation();
-        //     hasMouseMoved = false;
-        // });
-        // this.mainContainer.addEventListener("touchmove", (e) => {
-        //     e.stopPropagation();
-        //     hasMouseMoved = true;
-        // });
+        // Touch handling
+        this.mainContainer.addEventListener("touchstart", (e) => {
+            e.stopPropagation();
+            hasMouseMoved = false;
+        });
+        this.mainContainer.addEventListener("touchmove", (e) => {
+            e.stopPropagation();
+            hasMouseMoved = true;
+        });
         // this.mainContainer.addEventListener("touchend", (e) => {
         //     console.log("touchend");
         //     e.stopPropagation();
