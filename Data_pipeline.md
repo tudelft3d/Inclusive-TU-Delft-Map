@@ -195,8 +195,8 @@ uv run python cli.py split_cj <cityjson_input> <folder_output>
 
     ```bash
     uv run cjio ../threejs/assets/processing_output/08.city.json \
-        merge ../threejs/assets/processing_output/outdoor.city.json \
         merge ../threejs/assets/processing_output/3dbag.city.json \
+        merge ../threejs/assets/processing_output/outdoor.city.json \
         save  ../threejs/assets/processing_output/all_buildings.city.json
     ```
 

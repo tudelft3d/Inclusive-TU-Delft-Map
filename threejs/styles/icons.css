@@ -43,7 +43,7 @@
 .icons-svg-row {
     display: flex;
     flex-wrap: wrap;
-    width: auto;
+    max-width: 200px;
     gap: 2px;
     justify-content: center;
 }

@@ -43,7 +43,7 @@ export class Map {
         // Cameras and controls
 
         const cameraPosition = new THREE.Vector3(85070, 1170, -445825);
-        const cameraLookAt = new THREE.Vector3(85508, -25, -446006);
+        const cameraLookAt = new THREE.Vector3(85508, 5, -446006);
 
         this.cameraManager = new CamerasControls(
             this.mainContainer,
@@ -131,6 +131,8 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
+        // console.log("this.activeBasemap", this.activeBasemap);
+        // this.activeBasemap.translateY(-5);
 
         // Start preloading other layers in the background (only once)
         if (!this.preloadingStarted) {
@@ -216,7 +218,6 @@ export class Map {
             this.cameraManager,
             this.picker,
             this.scene,
-            this.buildingView
         );
         const search_delay = 250;
         const search_result_count = 5;

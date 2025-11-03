@@ -91,7 +91,7 @@ export class LayerManager {
 				const buildingUnitObject_key = building_object.children.find((element) => element.includes("BuildingUnitObject"));
 
 				if (buildingUnitObject_key == undefined) {
-					console.error("Building:", building_key, " did not have any BuildingUnitObject");
+					// console.error("Building:", building_key, " did not have any BuildingUnitObject");
 					building_buildingUnitContainers[building_key] = {};
 					continue;
 				}
@@ -494,6 +494,10 @@ export class LayerManager {
 		}
 
 		for (const [icon_set_key, icon_set_object] of Object.entries(this.iconsSceneManager.iconSets)) {
+			// Skip outdoor elements
+			if (!this.cjHelper.isBuildingSomething(icon_set_key)) { continue }
+
+			// Remove if key corresponds to something in the current building
 			const building_object_key = this.cjHelper.findParentBuildingObjectKey(icon_set_key);
 			if (building_object_key == this.active_building_object_key) {
 				this.iconsSceneManager.removeIconSet(icon_set_key);

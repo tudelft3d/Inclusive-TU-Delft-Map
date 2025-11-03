@@ -8,15 +8,24 @@ import { ObjectPicker } from "./objectPicker";
 
 class Entry {
 
-    constructor(attributeKey, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+    constructor(keyOrElse = { key: null, value: null, object: null }, displayName, config = { url: false, tel: false, mail: false, code: false, image: false }) {
+        const { key, value, object } = keyOrElse;
         const { url, tel, mail, code, image } = config;
 
-        // The Entry cannot be two of url, tel or mail at the same time
+        // The Entry cannot be two of url, tel, mail, code or image at the same time
         const numberTrue = [url, tel, mail, code, image].filter(Boolean).length;
         if (numberTrue > 1) {
             console.error("Cannot have multiple config properties.")
             return;
         }
+
+        // The Entry cannot be two of key, value or object at the same time
+        const numberTrueKeyValue = [key, value, object].filter(Boolean).length;
+        if (numberTrueKeyValue > 1) {
+            console.error("Cannot have two of key, value and object.")
+            return;
+        }
+
 
         this.url = url;
         this.tel = tel;
@@ -24,11 +33,27 @@ class Entry {
         this.code = code;
         this.image = image;
 
-        this.key = attributeKey;
+        this.key = key;
+        this.value = value;
+        this.object = object;
+
         this.name = displayName;
     }
 
-    getValue(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    getValue(infoPane, key) {
+        if (this.value) {
+            return this.value;
+        } else if (this.object) {
+            return this.object;
+        }
+
+        const attributes = infoPane.cjHelper.getAttributes(key);
         var value = attributes[this.key];
         if (Array.isArray(value) && value.length == 0) {
             return null;
@@ -42,10 +67,81 @@ class Entry {
         return value;
     }
 
-    _formatValueNodeFromAttributes(attributes) {
-        const value = this.getValue(attributes);
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    _formatValueNodeFromAttributes(infoPane, key) {
+        const value = this.getValue(infoPane, key);
         if (!value) {
             return null;
+        } else if (this.object) {
+            var node = null;
+            if (this.object == "ParentBuilding") {
+                const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
+                const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
+                node = document.createElement("button");
+                node.className = "info-pane-button";
+                node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
+                node.appendChild(document.createTextNode(buildingTitle));
+            } else if (this.object == "ChildrenUnits") {
+                if (!infoPane.cjHelper.isBuilding(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for ChildrenUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const unitGroupsKeys = infoPane.cjHelper.getBuildingUnitGroupsObjectKeys(key);
+                const unitCodes = unitGroupsKeys.map((unitGroupKey) => {
+                    const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
+                    return attributes["code"];
+                })
+                const icons = unitCodes.map((unitCode) => {
+                    const iconFile = layersDefinition[unitCode]["Icon name"];
+                    if (!iconFile) { return }
+                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconFile}`;
+                    const img = document.createElement("img");
+                    img.className = "icon";
+                    const iconName = layersDefinition[unitCode]["Name (EN)"];
+                    img.setAttribute("alt", iconName);
+                    img.setAttribute("title", iconName);
+                    img.setAttribute("width", "40px");
+                    img.src = iconPath;
+                    return img;
+                }).filter(Boolean);
+                if (icons.length == 0) {
+                    return null;
+                }
+                node = document.createElement("a");
+                icons.forEach((icon) => {
+                    node.appendChild(icon);
+                })
+            } else if (this.object == "RoomUnits") {
+                if (!infoPane.cjHelper.isBuildingRoom(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for RoomUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const roomAttributes = infoPane.cjHelper.getAttributes(key);
+                const unitsKeys = roomAttributes["parent_units"];
+                if (unitsKeys.length == 0) {
+                    return null;
+                }
+                node = document.createElement("div");
+                node.className = "info-pane-buttons-group";
+                unitsKeys.forEach((unitKey) => {
+                    const unitTitle = infoPane._makeTitle(unitKey);
+                    const unitButton = document.createElement("button");
+                    unitButton.className = "info-pane-button";
+                    unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
+                    unitButton.appendChild(document.createTextNode(unitTitle));
+                    node.appendChild(unitButton);
+                })
+            } else {
+                console.error(`Support for object '${this.object}' is not supported yet.`);
+            }
+            return node;
         }
 
         var node;
@@ -73,9 +169,15 @@ class Entry {
         return node;
     }
 
-    formatNodeFromAttributes(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
         const attributeName = this.name;
-        const attributeValue = this._formatValueNodeFromAttributes(attributes);
+        const attributeValue = this._formatValueNodeFromAttributes(infoPane, key);
 
         // Return nothing if the value is null
         if (!attributeValue) { return }
@@ -83,11 +185,12 @@ class Entry {
         var div = document.createElement("div");
         div.className = "info-pane-row";
 
+        // TODO: fix this
         // make Category and Address rows use a more compact padding
         if (attributeName === "Address" || attributeName === "Category") {
             div.classList.add("info-pane-row--compact");
         }
-        
+
         if (attributeName) {
             var label_span = document.createElement("span");
             label_span.className = "info-pane-label";
@@ -119,7 +222,14 @@ class EntryGroup {
         this.open = open;
     }
 
-    formatNodeFromAttributes(attributes) {
+    /**
+     * 
+     * @param {InfoPane} infoPane 
+     * @param {string} key 
+     * @returns 
+     */
+    formatNodeFromAttributes(infoPane, key) {
+        const attributes = infoPane.cjHelper.getAttributes(key);
         // Check if any of the attributes exist before creating the section, otherwise do not include
         const hasData = this.entries.some(entry => {
             const value = attributes[entry.key];
@@ -147,7 +257,7 @@ class EntryGroup {
         details.appendChild(summary);
 
         this.entries.forEach((entry) => {
-            const formattedEntry = entry.formatNodeFromAttributes(attributes);
+            const formattedEntry = entry.formatNodeFromAttributes(infoPane, key);
             if (!formattedEntry) return;
 
             // keep each entry inside the details block
@@ -157,18 +267,6 @@ class EntryGroup {
         return details;
     }
 
-}
-
-function isValidHttpUrl(string) {
-    let url;
-
-    try {
-        url = new URL(string);
-    } catch (_) {
-        return false;
-    }
-
-    return url.protocol === "http:" || url.protocol === "https:";
 }
 
 
@@ -193,7 +291,7 @@ export class InfoPane {
 
         this._addEventListeners();
 
-       // overlay removed — mobile will use full-screen sheet and doesn't need a dim overlay
+        // overlay removed — mobile will use full-screen sheet and doesn't need a dim overlay
     }
 
     _addEventListeners() {
@@ -213,23 +311,33 @@ export class InfoPane {
             if (this.movedDuringPointer) return;
         });
     }
-    
+
     _loadInfoPaneHierarchy() {
         this.hierarchy = {}
 
         for (const [cjType, hierarchyInfo] of Object.entries(infoPaneHierarchy)) {
             const title = hierarchyInfo["title"].map((titleOption) => {
-                return new Entry(titleOption.key, null, titleOption.options || {});
+                const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
+                return new Entry(keyOrValue, null, titleOption.options || {});
             });
+            var titleNumber = null;
+            if (Object.keys(hierarchyInfo).includes("title_number")) {
+                titleNumber = hierarchyInfo["title_number"].map((titleOption) => {
+                    const keyOrValue = { key: titleOption["key"], value: titleOption["value"], object: titleOption["object"] };
+                    return new Entry(keyOrValue, null, titleOption.options || {});
+                });
+            }
 
             const currentHierarchy = hierarchyInfo["rows"].map((row) => {
                 if (row.type === 'entry') {
-                    return new Entry(row.key, row.label, row.options || {});
+                    const keyOrValue = { key: row["key"], value: row["value"], object: row["object"] };
+                    return new Entry(keyOrValue, row.label, row.options || {});
                 }
                 if (row.type === 'group') {
-                    const entries = row.entries.map(e =>
-                        new Entry(e.key, e.label, e.options || {})
-                    );
+                    const entries = row.entries.map(e => {
+                        const keyOrValue = { key: e["key"], value: e["value"], object: e["object"] };
+                        return new Entry(keyOrValue, e.label, e.options || {});
+                    });
                     return new EntryGroup(row.title, entries, row.expanded);
                 }
                 // Unknown type
@@ -238,20 +346,14 @@ export class InfoPane {
             }).filter(Boolean);
             this.hierarchy[cjType] = {
                 "title": title,
+                "titleNumber": titleNumber,
                 "rows": currentHierarchy
             };
         }
     }
+
     show(key) {
         this.key = key;
-
-        // put pane above other UI
-        if (this.pane) {
-            this.pane.style.zIndex = '2501';
-        }
-
-        const attributes = this.cjHelper.getAttributes(key);
-        const objectType = this.cjHelper.getType(key);
 
         // Reset the info pane
         this.pane.innerHTML = "";
@@ -273,31 +375,19 @@ export class InfoPane {
             this.pane.classList.remove('mobile-open');
         }
 
+        const objectType = this.cjHelper.getType(key);
         if (!Object.keys(this.hierarchy).includes(objectType)) {
             console.error("Unsupported type for the info pane:", objectType)
             this.hide();
             return;
         }
 
-        const hierarchy = this.hierarchy[objectType];
 
-        // Make the title with the space id if there is one
-        const titleOptions = hierarchy["title"];
-        var title;
-        for (const titleOption of titleOptions) {
-            const potentialTitle = titleOption.getValue(attributes);
-            if (potentialTitle) {
-                title = potentialTitle;
-                break;
-            }
-        }
-        const spaceId = this.cjHelper.getSpaceId(key);
-        if (spaceId) {
-            title = title + ` (${spaceId})`
-        }
-        const infoPaneDefinition = hierarchy["rows"]
-
+        const title = this._makeTitle(key);
         this._addTitle(title);
+
+        const hierarchy = this.hierarchy[objectType];
+        const infoPaneDefinition = hierarchy["rows"]
 
         // Create content container
         let content_div = document.createElement("div");
@@ -318,13 +408,50 @@ export class InfoPane {
         }, { passive: true });
 
         for (const row of infoPaneDefinition) {
-            const formattedNode = row.formatNodeFromAttributes(attributes);
+            const formattedNode = row.formatNodeFromAttributes(this, key);
             if (!formattedNode) { continue }
             content_div.appendChild(formattedNode);
         }
 
         this._addFloorPlanButton(key);
         this._addInfoPaneExtraButtons(title);
+    }
+
+
+    /**
+     * Make the title with the space id if there is one.
+     * 
+     * @param {string} key 
+     * @returns 
+     */
+    _makeTitle(key) {
+        const objectType = this.cjHelper.getType(key);
+        const hierarchy = this.hierarchy[objectType];
+
+        var title;
+        const titleOptions = hierarchy["title"];
+        for (const titleOption of titleOptions) {
+            const potentialTitle = titleOption.getValue(this, key);
+            if (potentialTitle) {
+                title = potentialTitle;
+                break;
+            }
+        }
+        const titleNumberOptions = hierarchy["titleNumber"];
+        if (titleNumberOptions) {
+            for (const titleNumberOption of titleNumberOptions) {
+                const potentialTitleNumber = titleNumberOption.getValue(this, key);
+                if (potentialTitleNumber) {
+                    if (title) {
+                        title += ` (${potentialTitleNumber})`;
+                    } else {
+                        title = potentialTitleNumber;
+                    }
+                    break;
+                }
+            }
+        }
+        return title;
     }
 
 
@@ -353,13 +480,14 @@ export class InfoPane {
         closeImg.height = 20;
         close_button.appendChild(closeImg);
 
-        close_button.addEventListener('click', () => this.picker.closeInfoPane());
+        close_button.addEventListener('click', () => this.hide());
         div.appendChild(close_button);
 
         this.pane.appendChild(div);
     }
 
     _addFloorPlanButton(key) {
+        if (!this.cjHelper.isBuilding(key)) { return }
         if (!this.cjHelper.buildingHasFloorPlan(key)) { return }
 
         let div = document.createElement("div");

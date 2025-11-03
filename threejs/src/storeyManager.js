@@ -51,7 +51,7 @@ export class StoreyManager {
         this.available_storeys = {};
         const levels = [];
         for (const [storey_code, storey_object_keys] of Object.entries(available_storeys)) {
-            console.log("storey_object_keys", storey_object_keys);
+            // console.log("storey_object_keys", storey_object_keys);
             const storeys_attributes = storey_object_keys.map((key) => { return this.cjHelper.getAttributes(key) });
 
             // Extract the attributes
@@ -104,20 +104,20 @@ export class StoreyManager {
         this.pane.appendChild(controls_div);
 
 
-        // let exit_span = document.createElement("span");
-        // controls_div.appendChild(exit_span);
+        let exit_span = document.createElement("span");
+        controls_div.appendChild(exit_span);
 
-        // let exit_button = document.createElement("button");
-        // exit_button.append(document.createTextNode("Exit"));
+        let exit_button = document.createElement("button");
+        exit_button.append(document.createTextNode("Exit"));
 
-        // exit_button.addEventListener("click", (event) => {
+        exit_button.addEventListener("click", (event) => {
 
-        //     this.buildingView.deactivate();
-        //     this.deactivate();
+            this.buildingView.picker.switchBuildingView();
+            this.deactivate();
 
-        // });
+        });
 
-        // exit_span.appendChild(exit_button);
+        exit_span.appendChild(exit_button);
 
 
         let drop_down_span = document.createElement("span");

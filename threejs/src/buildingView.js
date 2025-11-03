@@ -127,9 +127,14 @@ export class BuildingView {
         this._unhideMeshChildren(this.buildingObject, true);
         this._hideMeshChildren(this.buildingObject, false);
 
+        // Move the building up so every storey is visible
+        // Translate with Z because the parent is rotated
+        const bbox = new THREE.Box3().setFromObject(this.buildingObject);
+        this.buildingTranslationZ = -bbox.min.y + 1;
+        this.buildingObject.translateZ(this.buildingTranslationZ);
+
         // Populate the buttons to switch between storeys
         this._populateStoreyButtons();
-
 
         const available_storeys = this._getStoreyObjectKeys();
 
@@ -144,6 +149,9 @@ export class BuildingView {
         if (this._isInitialisedNotActivated()) {
             return;
         }
+
+        // Move the building back
+        this.buildingObject.translateZ(-this.buildingTranslationZ);
 
         // Show only the building shell
         this._hideMeshChildren(this.buildingObject, true);
