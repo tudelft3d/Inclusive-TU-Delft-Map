@@ -1,12 +1,13 @@
 #info-pane {
   position: fixed;
   top: calc(var(--height, 64px) + 14px);
-  left: 29px;
+  left: 14px;
   background: #fafafa;
   border-radius: 8px;
   box-shadow: 0 6px 22px rgba(0,0,0,0.15);
   width: 420px;
   max-width: 420px;
+  max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px);
   padding: 12px;
   opacity: 0;
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -16,6 +17,8 @@
   line-height: 1.35;
   overflow: visible;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-pane-header {
@@ -71,7 +74,7 @@
 /* Scrollable content area */
 .info-pane-content {
   padding: 3px 0 0 0; 
-  max-height: 339px;
+  max-height: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;

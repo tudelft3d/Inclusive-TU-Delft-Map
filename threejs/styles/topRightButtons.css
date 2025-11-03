@@ -1,3 +1,9 @@
+:root{
+  --trb-dropdown-right: calc(34px);
+  --trb-dropdown-margin-right: calc(8px);
+}
+
+
 #basemap-btn,
 #layers-btn,
 #legend-btn {
@@ -38,7 +44,7 @@
 #top-right-sidebar-controls {
   position: fixed;
   top: calc(var(--height, 64px) + 14px);
-  right: 28px;
+  right: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -52,13 +58,29 @@
   z-index: 31;
 }
 
-#basemap-dropdown {
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 0;               /* center vertically relative to the button */
+  right: var(--trb-dropdown-right);            /* place left of the control */
+  margin-right: var(--trb-dropdown-margin-right);     /* gap between button and dropdown */
+  background: #fafafa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  z-index: 1000;
+  min-width: 320px;         
+  max-width: 360px;         
+  text-align: left;
+  box-sizing: border-box;
+}
+
+#basemap-dropdown---old {
   display: none;
   position: absolute;
   top: 100%;               /* center vertically relative to the button */
-  right: 85%;            /* place left of the control */
+  right: var(--trb-dropdown-right);            /* place left of the control */
   transform: translateY(-21%);
-  margin-right: 12px;     /* gap between button and dropdown */
+  margin-right: var(--trb-dropdown-margin-right);     /* gap between button and dropdown */
   background: #fafafa;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
@@ -68,6 +90,10 @@
   max-width: 360px;
   z-index: 999;
   box-sizing: border-box;
+}
+
+#basemap-dropdown {
+  padding: 8px 0px;
 }
 
 #basemap-dropdown .basemap-item {
@@ -112,22 +138,26 @@
   line-height: 1.2;
 }
 
-#legend-dropdown {
+#legend-dropdown---old {
   display: none;
   position: absolute;
   top: 100%;               /* center vertically relative to the button */
-  right: 85%;            /* place left of the control */
+  right: var(--trb-dropdown-right);            /* place left of the control */
   transform: translateY(-38.5%);
-  margin-right: 12px;     /* gap between button and dropdown */
+  margin-right: var(--trb-dropdown-margin-right);     /* gap between button and dropdown */
   background: #fafafa;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   text-align: left;
-  padding: 8px 0px;
+  padding: 0px 0px;
   border-radius: 5px;
   min-width: 320px;
   box-sizing: border-box;
   z-index: 10000;
+}
 
+#legend-dropdown {
+  text-align: left;
+  padding: 0px 0px;
 }
 
 #basemap-btn:hover,
@@ -163,12 +193,12 @@
   background: #b0b0b0;
 }
 
-#layers-dropdown {
+#layers-dropdown---old {
   display: none;
-  position: fixed;
-  top: var(--layers-top, calc(var(--height, 64px) + 14px)); 
-  right: 69px;               /* distance from right edge */
-  margin-right: 0;
+  position: absolute;
+  top: 100%; 
+  right: var(--trb-dropdown-right);               /* distance from right edge */
+  margin-right: var(--trb-dropdown-margin-right);
   background: #fafafa;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
   text-align: left;
@@ -183,6 +213,11 @@
   transform: none;          
 }
 
+#layers-dropdown {
+  padding: 10px 0;
+  max-height: 55vh;         
+  overflow-y: auto;
+}
 
 /* Link styles inside the dropdowns */
 #basemap-dropdown a{

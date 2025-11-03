@@ -82,10 +82,17 @@ class Entry {
             if (this.object == "ParentBuilding") {
                 const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
                 const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
-                node = document.createElement("button");
-                node.className = "info-pane-button-building";
-                node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
-                node.appendChild(document.createTextNode(buildingTitle));
+
+                // Group of buttons
+                node = document.createElement("div");
+                node.className = "info-pane-buttons-group";
+
+                // Button
+                const buildingButton = document.createElement("button");
+                buildingButton.className = "info-pane-button";
+                buildingButton.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
+                buildingButton.appendChild(document.createTextNode(buildingTitle));
+                node.appendChild(buildingButton);
             } else if (this.object == "ChildrenUnits") {
                 if (!infoPane.cjHelper.isBuilding(key)) {
                     const objectType = infoPane.cjHelper.getType(key);
@@ -128,8 +135,12 @@ class Entry {
                 if (unitsKeys.length == 0) {
                     return null;
                 }
+
+                // Group of buttons
                 node = document.createElement("div");
                 node.className = "info-pane-buttons-group";
+
+                // Add all unit buttons
                 unitsKeys.forEach((unitKey) => {
                     const unitTitle = infoPane._makeTitle(unitKey);
                     const unitButton = document.createElement("button");
@@ -359,7 +370,7 @@ export class InfoPane {
         this.pane.innerHTML = "";
 
         // Make it visible
-        this.pane.style.display = 'block'; // make it present in layout so transitions can run
+        // this.pane.style.display = 'block'; // make it present in layout so transitions can run
 
         if (window.matchMedia('(max-width: 620px)').matches) {
             // mobile sheet behavior: add body class
@@ -573,7 +584,7 @@ export class InfoPane {
             setTimeout(() => {
                 this.pane.style.opacity = '0';
                 this.pane.innerHTML = '';
-                this.pane.style.display = 'none';
+                // this.pane.style.display = 'none';
             }, 320); // slightly longer than CSS transition (260ms)
             return;
         }
@@ -583,6 +594,6 @@ export class InfoPane {
 
         this.pane.style.opacity = '0';
         this.pane.innerHTML = '';
-        this.pane.style.display = 'none';
+        // this.pane.style.display = 'none';
     }
 }
