@@ -1,5 +1,5 @@
 :root {
-  --info-pane-width: 390px;
+  --info-pane-width: 420px;
 }
 
 #info-pane {
@@ -146,16 +146,6 @@
 }
 
 
-.info-pane-buttons-group {
-  display: flex;
-  justify-content: end;
-  padding: 8px 0;
-  gap: 10px;
-  font-size: 13px;
-  align-items: center;
-}
-
-
 /* Details */
 .info-pane-group {
   border-bottom: 1px solid #e9e9e9;
@@ -218,7 +208,7 @@
   font-weight: 500;        
   color: #484848;      
   font-size: 14px;         
-  flex: 0 0 40%;         
+  flex: 0 0 25%;         
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
@@ -230,11 +220,11 @@
 .info-pane-group > .info-pane-row .info-pane-value {
   color: #000000;
   font-weight: 500;
-  text-align: right;
+  text-align: justify;
 
   /* make the value cell the same proportion as top-level rows
      and ensure it is a flex container so buttons can be pushed to the far right */
-  flex: 1 1 70%;
+  flex: 1 1 75%;
   display: flex;
   align-items: center;
   justify-content: flex-end;

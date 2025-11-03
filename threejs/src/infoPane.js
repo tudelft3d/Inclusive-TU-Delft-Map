@@ -1,6 +1,7 @@
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 import infoPaneHierarchy from "../assets/threejs/buildings/info_pane-hierarchy.json" assert { type: "json" };
 import layersDefinition from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
+import allowedUnitOrder from "../assets/threejs/buildings/children_units-order.json" assert { type: "json" };
 
 import { CjHelper } from "./cjHelper";
 import { ObjectPicker } from "./objectPicker";
@@ -104,19 +105,27 @@ class Entry {
                     const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
                     return attributes["code"];
                 })
-                const icons = unitCodes.map((unitCode) => {
-                    const iconFile = layersDefinition[unitCode]["Icon name"];
-                    if (!iconFile) { return }
-                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconFile}`;
-                    const img = document.createElement("img");
-                    img.className = "icon";
-                    const iconName = layersDefinition[unitCode]["Name (EN)"];
-                    img.setAttribute("alt", iconName);
-                    img.setAttribute("title", iconName);
-                    img.setAttribute("width", "40px");
-                    img.src = iconPath;
-                    return img;
-                }).filter(Boolean);
+
+                // Instead of inserting all icons in arbitrary order, insert only those, in order, that are present in the JSON
+                const icons = [];
+                allowedUnitOrder.forEach((allowedName) => {
+                    unitCodes.forEach((unitCode) => {
+                        const unitDef = layersDefinition[unitCode];
+                        if (!unitDef) return;
+                        const iconName = unitDef["Name (EN)"];
+                        if (iconName !== allowedName) return;
+                        const iconFile = unitDef["Icon name"];
+                        if (!iconFile) return;
+                        const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconFile}`;
+                        const img = document.createElement("img");
+                        img.className = "icon";
+                        img.setAttribute("alt", iconName);
+                        img.setAttribute("title", iconName);
+                        img.setAttribute("width", "35px");
+                        img.src = iconPath;
+                        icons.push(img);
+                    })
+                });
                 if (icons.length == 0) {
                     return null;
                 }
