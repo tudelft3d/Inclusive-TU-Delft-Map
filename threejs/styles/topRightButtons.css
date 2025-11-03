@@ -364,7 +364,7 @@
   #basemap-dropdown,
   #legend-dropdown,
   #layers-dropdown {
-    display: block !important;   /* override inline/desktop none */
+    display: block;   /* override inline/desktop none */
     position: fixed;
     left: 0;
     right: 0;

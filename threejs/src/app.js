@@ -231,29 +231,29 @@ export class Map {
     }
 
     _attachEvents() {
-        var hasMouseMoved = false;
-        this.hasMouseMovedInFrame = false;
-        window.addEventListener("mousedown", (e) => {
-            hasMouseMoved = false;
-        });
-        window.addEventListener("mousemove", (e) => {
-            hasMouseMoved = true;
+        // var hasMouseMoved = false;
+        // this.hasMouseMovedInFrame = false;
+        // this.mainContainer.addEventListener("mousedown", (e) => {
+        //     hasMouseMoved = false;
+        // });
+        // this.mainContainer.addEventListener("mousemove", (e) => {
+        //     hasMouseMoved = true;
 
-            // if (this.hasMouseMovedInFrame) return;
+        //     // if (this.hasMouseMovedInFrame) return;
 
-            // this.hasMouseMovedInFrame = true;
-            // const pos = getCanvasRelativePosition(e, this.glContainer);
-            // const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
-            // if (
-            //     clicked_element.nodeName &&
-            //     clicked_element.nodeName == "CANVAS"
-            // ) {
-            //     console.log("Hovering");
-            //     this.picker.hoverPosition(pos);
-            // }
-        });
-        window.addEventListener("mouseup", (e) => {
-            if (hasMouseMoved) return;
+        //     // this.hasMouseMovedInFrame = true;
+        //     // const pos = getCanvasRelativePosition(e, this.glContainer);
+        //     // const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+        //     // if (
+        //     //     clicked_element.nodeName &&
+        //     //     clicked_element.nodeName == "CANVAS"
+        //     // ) {
+        //     //     console.log("Hovering");
+        //     //     this.picker.hoverPosition(pos);
+        //     // }
+        // });
+        this.mainContainer.addEventListener("click", (e) => {
+            // if (hasMouseMoved) return;
 
             const pos = getCanvasRelativePosition(e, this.glContainer);
             const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
@@ -265,28 +265,32 @@ export class Map {
             }
         });
 
-        // Touch handling
-        window.addEventListener("touchstart", (e) => {
-            hasMouseMoved = false;
-        });
-        window.addEventListener("touchmove", (e) => {
-            hasMouseMoved = true;
-        });
-        window.addEventListener("touchend", (e) => {
-            if (hasMouseMoved) return;
-            const touch = e.changedTouches[0];
-            const pos = getCanvasRelativePosition(touch, this.glContainer);
-            const clicked_element = document.elementFromPoint(
-                e.changedTouches[0].pageX,
-                e.changedTouches[0].pageY
-            );
-            if (
-                clicked_element.nodeName &&
-                clicked_element.nodeName == "CANVAS"
-            ) {
-                this.picker.pickScreenPosition(pos);
-            }
-        });
+        // // Touch handling
+        // this.mainContainer.addEventListener("touchstart", (e) => {
+        //     e.stopPropagation();
+        //     hasMouseMoved = false;
+        // });
+        // this.mainContainer.addEventListener("touchmove", (e) => {
+        //     e.stopPropagation();
+        //     hasMouseMoved = true;
+        // });
+        // this.mainContainer.addEventListener("touchend", (e) => {
+        //     console.log("touchend");
+        //     e.stopPropagation();
+        //     if (hasMouseMoved) return;
+        //     const touch = e.changedTouches[0];
+        //     const pos = getCanvasRelativePosition(touch, this.glContainer);
+        //     const clicked_element = document.elementFromPoint(
+        //         e.changedTouches[0].pageX,
+        //         e.changedTouches[0].pageY
+        //     );
+        //     if (
+        //         clicked_element.nodeName &&
+        //         clicked_element.nodeName == "CANVAS"
+        //     ) {
+        //         this.picker.pickScreenPosition(pos);
+        //     }
+        // });
 
         window.addEventListener(
             "resize",

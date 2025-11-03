@@ -108,8 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         otherDropdowns.splice(i, 1);
 
         button.addEventListener('click', (event) => {
-            console.log("Clicked", event);
-            console.log("button", button);
             event.stopPropagation();
             otherDropdowns.forEach((otherDropdown) => {
                 otherDropdown.style.display = 'none';
@@ -117,6 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         });
     }
+
+    // Clicking on the mobile search button closes the dropdowns
+    const mobileSearchBtn = document.getElementById('mobile-search-btn');
+    mobileSearchBtn.addEventListener("click", (e) => {
+        console.log("Clicked on mobileSearchBtn")
+        topRightDropdowns.forEach((dropdown) => {
+            dropdown.style.display = 'none';
+        });
+    });
 
     // Clicking on the map closes the dropdowns
     var movedDuringPointer = false;
@@ -300,8 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var movedSinceLastBtnPush = true;
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
-            console.log("Pressed button")
-            console.log(movedSinceLastBtnPush);
             event.stopPropagation();
             if (!map.locationManager.initialised) {
                 map.locationManager.initialise(true, () => {
@@ -316,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.locationManager.hide();
             }
             movedSinceLastBtnPush = false;
-            console.log(movedSinceLastBtnPush);
         });
         map.cameraManager.addEventListenerControls("change", (e) => {
             movedSinceLastBtnPush = true;

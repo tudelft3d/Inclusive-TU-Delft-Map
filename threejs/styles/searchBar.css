@@ -187,11 +187,11 @@
 
   /* bottom sheet - start hidden offscreen until .mobile-open */
   #search-bar {
-    left: 0;
+    width: 94vw;
+    left: 3vw;
     right: 0;
     bottom: 0;
-    top: 15%;
-    width: 100%;
+    top: 15vh;
     margin: 0;
     padding: 0px;
     box-sizing: border-box;
