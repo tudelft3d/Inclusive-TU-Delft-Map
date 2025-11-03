@@ -50,7 +50,7 @@
         <div id="basemap-container">
             <button id="basemap-btn" data-tooltip="Change base map"><img
                     src="assets/threejs/graphics/icons/ui-buttons/basemap_white.svg" /></button>
-            <div id="basemap-dropdown">
+            <div id="basemap-dropdown" class="dropdown">
                 <a class="basemap-item" href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
                     data-layer="Actueel_orthoHR" data-satellite="true">
                     <span class="basemap-swatch">
@@ -81,13 +81,19 @@
         <div id="layers-container">
             <button id="layers-btn" data-tooltip="Select layers"><img
                     src="assets/threejs/graphics/icons/ui-buttons/layers_white.svg" /></button>
+            <!-- Layers mobile bottom-sheet -->
+            <div id="layers-dropdown" class="dropdown" aria-hidden="true">
+                <div class="sheet-handle" aria-hidden="true"></div>
+                <!-- content will be populated by layers.js -->
+    </div>
+
         </div>
 
         <div id="legend-container">
             <button id="legend-btn" data-tooltip="Legend" aria-controls="legend-dropdown" aria-expanded="false" title="Legend">
                 <img src="assets/threejs/graphics/icons/ui-buttons/question_mark.svg" alt="Legend" />
             </button>
-            <div id="legend-dropdown" role="menu" aria-hidden="true">
+            <div id="legend-dropdown" class="dropdown" role="menu" aria-hidden="true">
                 <ul class="legend-list" role="list">
                     <li class="legend-item" role="menuitem">
                         <span class="legend-swatch" style="background:#660E60"></span>
@@ -178,12 +184,6 @@
     </div>
 
     <div id="basemap-aerial"></div>
-
-    <!-- Layers mobile bottom-sheet -->
-    <div id="layers-dropdown" aria-hidden="true">
-        <div class="sheet-handle" aria-hidden="true"></div>
-        <!-- content will be populated by layers.js -->
-    </div>
 
     <!-- overlay used to dim background when sheet is open -->
     <div id="layers-overlay" aria-hidden="true"></div>
