@@ -131,7 +131,7 @@ export class ObjectPicker {
      * @param {*} onAnimationComplete
      */
     _pickMesh(pickedKey, paneKey, onAnimationComplete = () => { }) {
-        console.log("pickedKey", pickedKey);
+        // console.log("pickedKey", pickedKey);
         const pickedObjectKey = this.cjHelper.keyToObjectKey(pickedKey);
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
         const paneObjectKey = this.cjHelper.keyToObjectKey(paneKey);
@@ -501,8 +501,6 @@ export class ObjectPicker {
             const unitSpacesObjectKeys =
                 this.cjHelper.getUnitSpaces(pickedObjectKey);
 
-            console.log(unitSpacesObjectKeys);
-
             var unitSpacesMeshes;
             var buildingObjectKey;
             var buildingMesh;
@@ -558,7 +556,6 @@ export class ObjectPicker {
                 // Case where the unit has no spaces
 
                 unitSpacesMeshes = this.cjHelper.getMesh(pickedObjectKey);
-                console.log("unitSpacesMeshes", unitSpacesMeshes);
                 buildingObjectKey =
                     this.cjHelper.findParentBuildingObjectKey(pickedObjectKey);
                 buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
@@ -569,8 +566,14 @@ export class ObjectPicker {
                 }
             }
 
-            const storeyCode =
-                this.cjHelper.getUnitMainStoreyCode(pickedObjectKey);
+            // Get the storey (keep the current if the unit has a space in it, otherwise move to the main storey of the unit)
+            const allUnitStoreyCodes = this.cjHelper.getUnitAllStoreyCodes(pickedObjectKey);
+            const currentStoreyCode = this.buildingView.storeyCode;
+            var storeyCode = currentStoreyCode;
+            if (!allUnitStoreyCodes.includes(storeyCode)) {
+                storeyCode = this.cjHelper.getUnitMainStoreyCode(pickedObjectKey);
+            }
+
 
             // Highlight the meshes
             this.pickHighlighter.highlight(unitSpacesMeshes);
@@ -683,6 +686,7 @@ export class ObjectPicker {
                 pickedObjectType
             );
         }
+        console.log("paneObjectKey", paneObjectKey);
         this.infoPane.show(paneObjectKey);
     }
 
@@ -739,9 +743,13 @@ export class ObjectPicker {
             );
             this.cameraManager.zoomToObject(buildingMesh, onComplete);
         } else if (this.buildingView._isActivated()) {
+            const buildingKey = this.buildingView.buildingObjectKey;
             this.buildingView.deactivate();
             this.cameraManager.switchToInt(this.buildingViewActivationCamera);
-            this.cameraManager.switchToOrbit();
+            const onComplete = () => {
+                this.cameraManager.switchToOrbit();
+            };
+            this.pickMesh(buildingKey, onComplete);
         } else {
             console.error("Unexpected status!");
         }

@@ -131,6 +131,8 @@ export class Map {
             this.scene.remove(this.activeBasemap);
         }
         this.activeBasemap = addBasemap(this.scene, url, layer);
+        // console.log("this.activeBasemap", this.activeBasemap);
+        // this.activeBasemap.translateY(-5);
 
         // Start preloading other layers in the background (only once)
         if (!this.preloadingStarted) {
@@ -216,7 +218,6 @@ export class Map {
             this.cameraManager,
             this.picker,
             this.scene,
-            this.buildingView
         );
         const search_delay = 250;
         const search_result_count = 5;

@@ -63,6 +63,11 @@ export class CjHelper {
         return type == "Building";
     }
 
+    isBuildingRoom(key) {
+        const type = this.getType(key);
+        return type == "BuildingRoom";
+    }
+
     isBuildingUnit(key) {
         const type = this.getType(key);
         return type == "BuildingUnit";
@@ -109,6 +114,16 @@ export class CjHelper {
         }
         console.log("storeyObjectKey", storeyObjectKey);
         return this.getAttributes(storeyObjectKey)["storey_space_id"];
+    }
+
+    getUnitAllStoreyCodes(key) {
+        if (!this.isBuildingUnit(key)) {
+            return;
+        }
+        const attributes = this.getAttributes(key);
+        const allStoreysKeys = attributes["unit_storeys"];
+        const allStoreyCodes = new Set(allStoreysKeys.map((storeyKey) => { return storeyKey.split(".")[2] }));
+        return [...allStoreyCodes];
     }
 
     getUnitMainStoreyCode(key) {
@@ -216,8 +231,9 @@ export class CjHelper {
         const childrenKeys = this.getChildrenObjectKeys(key).filter(
             (childKey) => { return this.isCityObjectGroup(childKey); }
         );
-        console.log("childrenKeys", childrenKeys);
-        if (childrenKeys.length > 1) {
+        if (childrenKeys.length == 0) {
+            return [];
+        } else if (childrenKeys.length > 1) {
             console.error("Expected only one CityObjectGroup child for a building.");
             return null;
         }

@@ -91,7 +91,7 @@ export class LayerManager {
 				const buildingUnitObject_key = building_object.children.find((element) => element.includes("BuildingUnitObject"));
 
 				if (buildingUnitObject_key == undefined) {
-					console.error("Building:", building_key, " did not have any BuildingUnitObject");
+					// console.error("Building:", building_key, " did not have any BuildingUnitObject");
 					building_buildingUnitContainers[building_key] = {};
 					continue;
 				}

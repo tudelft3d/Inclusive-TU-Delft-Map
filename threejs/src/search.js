@@ -15,9 +15,8 @@ export class Searcher {
      * @param {CamerasControls} cameraManager  
      * @param {ObjectPicker} picker 
      * @param {Scene} scene 
-     * @param {BuildingView} buildingView
      */
-    constructor(cameraManager, picker, scene, buildingView) {
+    constructor(cameraManager, picker, scene) {
 
         // what to do when searching for a room type that will have multiple instances?
         // Highlight all bathrooms?
@@ -27,7 +26,6 @@ export class Searcher {
         this.cameraManager = cameraManager;
         this.picker = picker;
         this.scene = scene;
-        this.buildingView = buildingView;
 
         this.raw_json = cityjson;
 

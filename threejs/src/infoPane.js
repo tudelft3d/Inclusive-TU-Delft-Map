@@ -50,27 +50,7 @@ class Entry {
         if (this.value) {
             return this.value;
         } else if (this.object) {
-            if (this.object == "ParentBuilding") {
-                const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
-                const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
-                this.objectTarget = parentBuildingObjectKey;
-                return buildingTitle;
-            } else if (this.object == "ChildrenUnits") {
-                if (!infoPane.cjHelper.isBuilding(key)) {
-                    const objectType = infoPane.cjHelper.getType(key);
-                    console.error(`Support for ChildrenUnits is not supported yet for '${objectType}'.`);
-                    return;
-                }
-                const unitGroupsKeys = infoPane.cjHelper.getBuildingUnitGroupsObjectKeys(key);
-                const unitCodes = unitGroupsKeys.map((unitGroupKey) => {
-                    const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
-                    return attributes["code"];
-                })
-                return unitCodes;
-            } else {
-                console.error(`Support for object '${this.object}' is not supported yet.`);
-                return;
-            }
+            return this.object;
         }
 
         const attributes = infoPane.cjHelper.getAttributes(key);
@@ -100,16 +80,32 @@ class Entry {
         } else if (this.object) {
             var node = null;
             if (this.object == "ParentBuilding") {
+                const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
+                const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
                 node = document.createElement("button");
-                node.onclick = () => { infoPane.picker.pickMesh(this.objectTarget) };
-                node.appendChild(document.createTextNode(value));
+                node.className = "info-pane-button";
+                node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
+                node.appendChild(document.createTextNode(buildingTitle));
             } else if (this.object == "ChildrenUnits") {
-                const icons = value.map((unitCode) => {
-                    const iconName = layersDefinition[unitCode]["Icon name"];
-                    if (!iconName) { return }
-                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconName}`;
+                if (!infoPane.cjHelper.isBuilding(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for ChildrenUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const unitGroupsKeys = infoPane.cjHelper.getBuildingUnitGroupsObjectKeys(key);
+                const unitCodes = unitGroupsKeys.map((unitGroupKey) => {
+                    const attributes = infoPane.cjHelper.getAttributes(unitGroupKey);
+                    return attributes["code"];
+                })
+                const icons = unitCodes.map((unitCode) => {
+                    const iconFile = layersDefinition[unitCode]["Icon name"];
+                    if (!iconFile) { return }
+                    const iconPath = `../assets/threejs/graphics/icons/thematic-layers/${iconFile}`;
                     const img = document.createElement("img");
                     img.className = "icon";
+                    const iconName = layersDefinition[unitCode]["Name (EN)"];
+                    img.setAttribute("alt", iconName);
+                    img.setAttribute("title", iconName);
                     img.setAttribute("width", "40px");
                     img.src = iconPath;
                     return img;
@@ -120,6 +116,27 @@ class Entry {
                 node = document.createElement("a");
                 icons.forEach((icon) => {
                     node.appendChild(icon);
+                })
+            } else if (this.object == "RoomUnits") {
+                if (!infoPane.cjHelper.isBuildingRoom(key)) {
+                    const objectType = infoPane.cjHelper.getType(key);
+                    console.error(`Support for RoomUnits is not supported yet for '${objectType}'.`);
+                    return;
+                }
+                const roomAttributes = infoPane.cjHelper.getAttributes(key);
+                const unitsKeys = roomAttributes["parent_units"];
+                if (unitsKeys.length == 0) {
+                    return null;
+                }
+                node = document.createElement("div");
+                node.className = "info-pane-buttons-group";
+                unitsKeys.forEach((unitKey) => {
+                    const unitTitle = infoPane._makeTitle(unitKey);
+                    const unitButton = document.createElement("button");
+                    unitButton.className = "info-pane-button";
+                    unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
+                    unitButton.appendChild(document.createTextNode(unitTitle));
+                    node.appendChild(unitButton);
                 })
             } else {
                 console.error(`Support for object '${this.object}' is not supported yet.`);
@@ -418,7 +435,7 @@ export class InfoPane {
         close_button.value = "&times";
         close_button.appendChild(document.createTextNode("x"));
 
-        close_button.addEventListener('click', () => this.picker.closeInfoPane());
+        close_button.addEventListener('click', () => this.hide());
         div.appendChild(close_button);
 
 
