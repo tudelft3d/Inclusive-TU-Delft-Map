@@ -83,6 +83,7 @@ export class BuildingView {
         this.storeyCode = storeyCode;
         if (this._isActivated()) {
             this._updateView();
+            this.storeyManager.setStorey(this.storeyCode);
         }
     }
 
