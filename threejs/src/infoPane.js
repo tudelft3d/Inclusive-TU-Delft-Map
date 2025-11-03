@@ -82,10 +82,17 @@ class Entry {
             if (this.object == "ParentBuilding") {
                 const parentBuildingObjectKey = infoPane.cjHelper.findParentBuildingObjectKey(key);
                 const buildingTitle = infoPane._makeTitle(parentBuildingObjectKey);
-                node = document.createElement("button");
-                node.className = "info-pane-button";
-                node.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
-                node.appendChild(document.createTextNode(buildingTitle));
+
+                // Group of buttons
+                node = document.createElement("div");
+                node.className = "info-pane-buttons-group";
+
+                // Button
+                const buildingButton = document.createElement("button");
+                buildingButton.className = "info-pane-button-part";
+                buildingButton.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
+                buildingButton.appendChild(document.createTextNode(buildingTitle));
+                node.appendChild(buildingButton);
             } else if (this.object == "ChildrenUnits") {
                 if (!infoPane.cjHelper.isBuilding(key)) {
                     const objectType = infoPane.cjHelper.getType(key);
@@ -128,12 +135,16 @@ class Entry {
                 if (unitsKeys.length == 0) {
                     return null;
                 }
+
+                // Group of buttons
                 node = document.createElement("div");
                 node.className = "info-pane-buttons-group";
+
+                // Add all unit buttons
                 unitsKeys.forEach((unitKey) => {
                     const unitTitle = infoPane._makeTitle(unitKey);
                     const unitButton = document.createElement("button");
-                    unitButton.className = "info-pane-button";
+                    unitButton.className = "info-pane-button-part";
                     unitButton.onclick = () => { infoPane.picker.pickMesh(unitKey) };
                     unitButton.appendChild(document.createTextNode(unitTitle));
                     node.appendChild(unitButton);
@@ -185,6 +196,12 @@ class Entry {
         var div = document.createElement("div");
         div.className = "info-pane-row";
 
+        // TODO: fix this
+        // make Category and Address rows use a more compact padding
+        if (attributeName === "Address" || attributeName === "Category") {
+            div.classList.add("info-pane-row--compact");
+        }
+
         if (attributeName) {
             var label_span = document.createElement("span");
             label_span.className = "info-pane-label";
@@ -235,10 +252,14 @@ class EntryGroup {
         });
         if (!hasData) return;
 
+        // add a class so we can style the details/summary and chevron
         let details = document.createElement("details");
+        details.className = "info-pane-group";
         details.open = this.open;
 
         let summary = document.createElement("summary");
+        summary.className = "info-pane-group-title";
+
         let summarySpan = document.createElement("span");
         summarySpan.className = "info-pane-label";
         summarySpan.appendChild(document.createTextNode(this.name));
@@ -250,6 +271,7 @@ class EntryGroup {
             const formattedEntry = entry.formatNodeFromAttributes(infoPane, key);
             if (!formattedEntry) return;
 
+            // keep each entry inside the details block
             details.appendChild(formattedEntry);
         });
 
@@ -279,6 +301,8 @@ export class InfoPane {
         this._loadInfoPaneHierarchy();
 
         this._addEventListeners();
+
+        // overlay removed — mobile will use full-screen sheet and doesn't need a dim overlay
     }
 
     _addEventListeners() {
@@ -346,8 +370,21 @@ export class InfoPane {
         this.pane.innerHTML = "";
 
         // Make it visible
-        this.pane.style.opacity = '1';
-        this.pane.style.display = 'block'; // Keep it always visible, even with no info
+        // this.pane.style.display = 'block'; // make it present in layout so transitions can run
+
+        if (window.matchMedia('(max-width: 620px)').matches) {
+            // mobile sheet behavior: add body class
+            document.body.classList.add('info-pane-active-mobile');
+            requestAnimationFrame(() => {
+                this.pane.classList.add('mobile-open');
+                this.pane.style.opacity = '1';
+            });
+        } else {
+            // desktop behavior
+            document.body.classList.remove('info-pane-active-mobile');
+            this.pane.style.opacity = '1';
+            this.pane.classList.remove('mobile-open');
+        }
 
         const objectType = this.cjHelper.getType(key);
         if (!Object.keys(this.hierarchy).includes(objectType)) {
@@ -368,15 +405,26 @@ export class InfoPane {
         content_div.className = "info-pane-content";
         this.pane.appendChild(content_div);
 
+        // Prevent mouse wheel / touch scroll events from bubbling to the map behind the pane.
+        content_div.addEventListener('wheel', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
+        content_div.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
+        content_div.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
         for (const row of infoPaneDefinition) {
             const formattedNode = row.formatNodeFromAttributes(this, key);
             if (!formattedNode) { continue }
-            this.pane.appendChild(formattedNode);
+            content_div.appendChild(formattedNode);
         }
 
         this._addFloorPlanButton(key);
-
-        // Add the extra buttons
         this._addInfoPaneExtraButtons(title);
     }
 
@@ -432,12 +480,19 @@ export class InfoPane {
 
         close_button.className = "info-pane-close"
         close_button["aria-label"] = "Close";
-        close_button.value = "&times";
-        close_button.appendChild(document.createTextNode("x"));
+
+        // Use an SVG icon instead of text for the close button
+        const closeIconUrl = new URL("../assets/threejs/graphics/icons/ui-buttons/close_icon_white.svg", import.meta.url).href;
+        let closeImg = document.createElement("img");
+        closeImg.src = closeIconUrl;
+        closeImg.alt = "Close";
+        closeImg.className = "info-pane-close-icon";
+        closeImg.width = 20;
+        closeImg.height = 20;
+        close_button.appendChild(closeImg);
 
         close_button.addEventListener('click', () => this.hide());
         div.appendChild(close_button);
-
 
         this.pane.appendChild(div);
     }
@@ -519,14 +574,26 @@ export class InfoPane {
      * Hide the info pane
      */
     hide() {
+        // If mobile sheet is open, remove the class so CSS animates it down, then clear after transition
+        if (this.pane.classList.contains('mobile-open')) {
+            this.pane.classList.remove('mobile-open');
+
+            document.body.classList.remove('info-pane-active-mobile');
+
+            // wait for CSS transition to finish before removing content/display
+            setTimeout(() => {
+                this.pane.style.opacity = '0';
+                this.pane.innerHTML = '';
+                // this.pane.style.display = 'none';
+            }, 320); // slightly longer than CSS transition (260ms)
+            return;
+        }
+
+        // desktop: hide immediately
+        document.body.classList.remove('info-pane-active-mobile');
+
         this.pane.style.opacity = '0';
-
         this.pane.innerHTML = '';
-        this.pane.style.display = 'none';
-
-        // setTimeout(() => {
-        //     this.pane.innerHTML = '';
-        //     this.pane.style.display = 'none';
-        // }, 3000);
+        // this.pane.style.display = 'none';
     }
 }

@@ -1,9 +1,9 @@
 import { Map } from "./app";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const container = document.querySelector('#scene-container');
+    const sceneContainer = document.querySelector('#scene-container');
 
-    const map = new Map(container);
+    const map = new Map(sceneContainer);
 
     // Make map globally accessible for debugging preloading
     window.mapInstance = map;
@@ -88,39 +88,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Basemap dropdown wiring
+    const topRightButtons = [
+        document.getElementById('basemap-btn'),
+        document.getElementById('layers-btn'),
+        document.getElementById('legend-btn')
+    ];
+    const topRightDropdowns = [
+        document.getElementById('basemap-dropdown'),
+        document.getElementById('layers-dropdown'),
+        document.getElementById('legend-dropdown')
+    ]
+
+    // Set up events for clicking on the top right buttons
+    for (var i = 0; i < topRightButtons.length; i++) {
+        const button = topRightButtons[i];
+        const dropdown = topRightDropdowns[i];
+
+        const otherDropdowns = [...topRightDropdowns];
+        otherDropdowns.splice(i, 1);
+
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            otherDropdowns.forEach((otherDropdown) => {
+                otherDropdown.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+    }
+
+    // Clicking on the mobile search button closes the dropdowns
+    const mobileSearchBtn = document.getElementById('mobile-search-btn');
+    mobileSearchBtn.addEventListener("click", (e) => {
+        console.log("Clicked on mobileSearchBtn")
+        topRightDropdowns.forEach((dropdown) => {
+            dropdown.style.display = 'none';
+        });
+    });
+
+    // Clicking on the map closes the dropdowns
+    var movedDuringPointer = false;
+    sceneContainer.addEventListener("pointerdown", (e) => {
+        if (!sceneContainer.contains(e.target)) return;
+        movedDuringPointer = false;
+        e.target.setPointerCapture(e.pointerId);
+    });
+    sceneContainer.addEventListener("pointermove", (e) => {
+        if (!sceneContainer.contains(e.target)) return;
+        movedDuringPointer = true;
+    });
+    sceneContainer.addEventListener("pointerup", (e) => {
+        if (!sceneContainer.contains(e.target)) return;
+        if (movedDuringPointer) return;
+        topRightDropdowns.forEach((dropdown) => {
+            dropdown.style.display = 'none';
+        });
+    });
+
+
+    // Basemap selection
     const basemapBtn = document.getElementById('basemap-btn');
     const basemapDropdown = document.getElementById('basemap-dropdown');
     if (basemapBtn && basemapDropdown) {
-        basemapBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            // ensure other top-right dropdowns are closed
-            const other = document.getElementById('layers-dropdown');
-            const legend = document.getElementById('legend-dropdown');
-            const accessibility = document.getElementById('accessibility-dropdown');
-
-            if (other && other !== basemapDropdown) other.style.display = 'none';
-
-            if (legend && legend !== basemapDropdown) {
-                legend.style.display = 'none';
-                const legendBtnEl = document.getElementById('legend-btn');
-                if (legendBtnEl) legendBtnEl.setAttribute('aria-expanded', 'false');
-                legend.setAttribute('aria-hidden', 'true');
-            }
-
-            if (accessibility && accessibility !== basemapDropdown) accessibility.style.display = 'none';
-
-            const open = basemapDropdown.style.display === 'block';
-            basemapDropdown.style.display = open ? 'none' : 'block';
-            basemapBtn.setAttribute('aria-expanded', (!open).toString());
-            basemapDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
-        });
-
-        document.addEventListener('click', () => {
-            basemapDropdown.style.display = 'none';
-            basemapBtn.setAttribute('aria-expanded', 'false');
-            basemapDropdown.setAttribute('aria-hidden', 'true');
-        });
-
         basemapDropdown.querySelectorAll('a').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -141,71 +169,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     (url && url.toString().toLowerCase().includes('ortho'))
                 );
                 document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-
-                basemapDropdown.style.display = 'none';
             });
         });
 
         // Apply satellite class on initial load:
         (function applyInitialBasemapClass() {
-            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
-            if (!selected) return;
-            const url = selected.dataset.url;
-            const layer = selected.dataset.layer;
-            const isSatellite = (
-                (selected.dataset.satellite === 'true') ||
-                (layer && layer.toString().toLowerCase().includes('satellite')) ||
-                (url && url.toString().toLowerCase().includes('satellite')) ||
-                (layer && layer.toString().toLowerCase().includes('ortho')) ||
-                (url && url.toString().toLowerCase().includes('ortho'))
-            );
-            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
-        })();
-    }
-
-    // Legend dropdown wiring (matches other top-right controls)
-    const legendBtn = document.getElementById('legend-btn');
-    const legendDropdown = document.getElementById('legend-dropdown');
-    if (legendBtn && legendDropdown) {
-        legendBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            // close other top-right dropdowns before toggling this one
-            const other = document.getElementById('basemap-dropdown');
-            const layers = document.getElementById('layers-dropdown');
-            const accessibility = document.getElementById('accessibility-dropdown');
-            if (other && other !== legendDropdown) other.style.display = 'none';
-            if (layers && layers !== legendDropdown) layers.style.display = 'none';
-            if (accessibility && accessibility !== legendDropdown) accessibility.style.display = 'none';
-
-            const open = legendDropdown.style.display === 'block';
-            legendDropdown.style.display = open ? 'none' : 'block';
-            legendBtn.setAttribute('aria-expanded', (!open).toString());
-            legendDropdown.setAttribute('aria-hidden', open ? 'true' : 'false');
-        });
-
-        // clicking elsewhere closes the legend
-        document.addEventListener('click', () => {
-            legendDropdown.style.display = 'none';
-            legendBtn.setAttribute('aria-expanded', 'false');
-            legendDropdown.setAttribute('aria-hidden', 'true');
-        });
-    }
-
-    // Layers dropdown wiring
-    const layersBtn = document.getElementById('layers-btn');
-    const layersDropdown = document.getElementById('layers-dropdown');
-
-    if (layersBtn && layersDropdown) {
-        layersBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            // close other top-right dropdowns before toggling this one
-            const other = document.getElementById('basemap-dropdown');
-            const accessibility = document.getElementById('accessibility-dropdown');
-            if (other && other !== layersDropdown) other.style.display = 'none';
-            if (accessibility && accessibility !== layersDropdown) accessibility.style.display = 'none';
-
-            layersDropdown.style.display = (layersDropdown.style.display === 'block') ? 'none' : 'block';
-        });
+            const selected = basemapDropdown.querySelector('a.selected, a[aria-selected="true"], a[data-selected="true"]') || basemapDropdown.querySelector('a');
+            if (!selected) return;
+            const url = selected.dataset.url;
+            const layer = selected.dataset.layer;
+            const isSatellite = (
+                (selected.dataset.satellite === 'true') ||
+                (layer && layer.toString().toLowerCase().includes('satellite')) ||
+                (url && url.toString().toLowerCase().includes('satellite')) ||
+                (layer && layer.toString().toLowerCase().includes('ortho')) ||
+                (url && url.toString().toLowerCase().includes('ortho'))
+            );
+            document.documentElement.classList.toggle('satellite-basemap', !!isSatellite);
+        })();
     }
 
     // Unified mobile bottom-sheet wiring for top-right controls
@@ -326,8 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
     var movedSinceLastBtnPush = true;
     if (locationBtn) {
         locationBtn.addEventListener('click', (event) => {
-            console.log("Pressed button")
-            console.log(movedSinceLastBtnPush);
             event.stopPropagation();
             if (!map.locationManager.initialised) {
                 map.locationManager.initialise(true, () => {
@@ -342,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.locationManager.hide();
             }
             movedSinceLastBtnPush = false;
-            console.log(movedSinceLastBtnPush);
         });
         map.cameraManager.addEventListenerControls("change", (e) => {
             movedSinceLastBtnPush = true;

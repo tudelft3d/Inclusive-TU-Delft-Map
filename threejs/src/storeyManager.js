@@ -108,7 +108,14 @@ export class StoreyManager {
         controls_div.appendChild(exit_span);
 
         let exit_button = document.createElement("button");
-        exit_button.append(document.createTextNode("Exit"));
+        exit_button.className = "storey-exit-btn";
+        exit_button.type = "button";
+        exit_button.setAttribute("aria-label", "Close storey manager");
+        exit_button.title = "Close";
+        let exit_img = document.createElement("img");
+        exit_img.src = "../assets/threejs/graphics/icons/ui-buttons/close_icon_white.svg";
+        exit_img.alt = "";
+        exit_button.appendChild(exit_img);
 
         exit_button.addEventListener("click", (event) => {
 
@@ -123,40 +130,55 @@ export class StoreyManager {
         let drop_down_span = document.createElement("span");
         controls_div.appendChild(drop_down_span);
 
-        let drop_down_button = document.createElement("button");
-        drop_down_button.append(document.createTextNode("Select Storey"));
+        // use a native <select> populated from available storeys (ordered)
+        let select = document.createElement("select");
+        select.id = "storey-select";
+        select.className = "storey-select";
 
-        drop_down_button.addEventListener("click", (event) => {
-
-            this._populate_storey_dropdown();
-
+        // populate options in visual order
+        this.order_to_storey_code.forEach((storey_code) => {
+            const info = this.available_storeys[storey_code];
+            const label = info.name + ` (${info.displayedPrefix})`;
+            let opt = document.createElement("option");
+            opt.value = storey_code;
+            opt.text = label;
+            if (storey_code === this.current_storey_code) opt.selected = true;
+            select.appendChild(opt);
         });
 
-        drop_down_span.appendChild(drop_down_button);
+        select.addEventListener("change", (e) => {
+            const selected = e.target.value;
+            this.current_storey_code = selected;
+            this.buildingView.setStorey(selected);
+        });
+
+        drop_down_span.appendChild(select);
 
 
         let arrow_span = document.createElement("span");
         controls_div.appendChild(arrow_span);
 
+        // vertical split button 
         let arrow_button_div = document.createElement("div");
+        arrow_button_div.className = "storey-vertical-button";
         arrow_span.appendChild(arrow_button_div);
 
-        let up_arrow_button = document.createElement("button");
-        up_arrow_button.append(document.createTextNode("Go Up"));
-
-        up_arrow_button.addEventListener("click", (event) => {
+        let up_half = document.createElement("button");
+        up_half.className = "storey-vertical-half up";
+        up_half.type = "button";
+        up_half.addEventListener("click", (event) => {
             this._go_up_one_storey();
         });
 
-        let down_arrow_button = document.createElement("button");
-        down_arrow_button.append(document.createTextNode("Go Down"));
-
-        down_arrow_button.addEventListener("click", (event) => {
+        let down_half = document.createElement("button");
+        down_half.className = "storey-vertical-half down";
+        down_half.type = "button";
+        down_half.addEventListener("click", (event) => {
             this._go_down_one_storey();
         });
 
-        arrow_button_div.appendChild(up_arrow_button);
-        arrow_button_div.appendChild(down_arrow_button);
+        arrow_button_div.appendChild(up_half);
+        arrow_button_div.appendChild(down_half);
 
 
     }

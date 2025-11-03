@@ -20,8 +20,8 @@ export class OutlineManager {
             edgeStrength: 5,
             edgeGlow: 0.25,
             edgeThickness: 0.3,
-            visibleEdgeColor: "#ffffff",
-            hiddenEdgeColor: "#ffffff",
+            visibleEdgeColor: new THREE.Color("#ffffff"),
+            hiddenEdgeColor: new THREE.Color("#ffffff"),
         };
         this._resizeListener = () => this.onResize();
         window.addEventListener("resize", this._resizeListener);
