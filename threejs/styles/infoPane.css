@@ -1,3 +1,7 @@
+:root {
+  --info-pane-width: 390px;
+}
+
 #info-pane {
   position: fixed;
   top: calc(var(--height, 64px) + 14px);
@@ -5,8 +9,8 @@
   background: #fafafa;
   border-radius: 8px;
   box-shadow: 0 6px 22px rgba(0,0,0,0.15);
-  width: 420px;
-  max-width: 420px;
+  width: var(--info-pane-width);
+  /* max-width: 420px; */
   max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px);
   padding: 12px;
   opacity: 0;
