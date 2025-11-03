@@ -76,6 +76,7 @@ export class Map {
             this.cameraManager
         );
         this.outlineManager = new OutlineManager(this.scene, this.glRenderer);
+        this.outlineManager.initialise(this.cameraManager);
         this.svgLoader = new SvgLoader();
         this._attachEvents();
 

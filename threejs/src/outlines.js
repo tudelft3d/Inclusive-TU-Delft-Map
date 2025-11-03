@@ -27,6 +27,20 @@ export class OutlineManager {
         window.addEventListener("resize", this._resizeListener);
     }
 
+    initialise(cameraManager) {
+        if (this.composers.length > 0) return;
+
+        const cameras = [
+            cameraManager.mapCamera,
+            cameraManager.orbitCamera,
+            cameraManager.orthographicCamera
+        ];
+
+        for (const cam of cameras) {
+            this._create_outline_pass({ camera: cam });
+        }
+    }
+
     // post-processing pipeline - deltaTime is for glow/other effects that animate
     // initial renderer only runs once - use composer instead of WebGL's renderer
     render(deltaTime, cameraManager) {
