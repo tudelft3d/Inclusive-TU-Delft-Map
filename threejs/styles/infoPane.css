@@ -272,9 +272,10 @@
 }
 
 
-.info-pane-button-part, .info-pane-button-building {
+.info-pane-button-part {
   width: 100%;
-  padding: 10px 14px;
+  text-align: right;
+  padding: 0px 0px;
   color: #027dab;
   background: transparent;
   border: none;
@@ -288,7 +289,7 @@
   gap: 8px;
 }
 
-.info-pane-button-part:hover, .info-pane-button-building:hover {
+.info-pane-button-part:hover {
   color: #027eab9d;
 }
 
@@ -328,7 +329,7 @@
 
 .info-pane-row.info-pane-button-background .info-pane-button:hover {
   background: #fff;
-  color: #027eab92;
+  color: #027eab9d;
   border: 2px solid rgba(0, 127, 166, 0.293);
   box-shadow: none;
   font-weight: 600;
@@ -346,7 +347,7 @@
 }
 
 .info-pane-button:hover {
-  background: #027eabad;
+  background: #027eab9d;
 }
 
 

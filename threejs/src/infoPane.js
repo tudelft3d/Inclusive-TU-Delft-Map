@@ -89,7 +89,7 @@ class Entry {
 
                 // Button
                 const buildingButton = document.createElement("button");
-                buildingButton.className = "info-pane-button";
+                buildingButton.className = "info-pane-button-part";
                 buildingButton.onclick = () => { infoPane.picker.pickMesh(parentBuildingObjectKey) };
                 buildingButton.appendChild(document.createTextNode(buildingTitle));
                 node.appendChild(buildingButton);
