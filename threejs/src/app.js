@@ -279,7 +279,7 @@ export class Map {
                     if (type === "Building") {
                         console.log("Double-clicked on building:", mesh.name);
                         this.picker.pickMesh(mesh.name, () => {
-                            this.picker.buildingView.activate();
+                            this.picker.switchBuildingView();
                         });
                     }
                 }
