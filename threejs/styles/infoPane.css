@@ -118,6 +118,7 @@
   color: #323232;
   flex: 1 1 auto;
   white-space: nowrap;
+  /* word-break: break-word; */
   text-wrap: balance;
   text-align: left; 
 }
@@ -128,7 +129,7 @@
   font-weight: 500;
   text-align: right;
   flex: 1 1 auto;
-  word-break: break-word;
+  /* word-break: break-word; */
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -289,7 +290,7 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;     
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
 }
 
