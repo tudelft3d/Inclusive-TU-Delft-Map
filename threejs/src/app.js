@@ -265,6 +265,27 @@ export class Map {
             }
         });
 
+        window.addEventListener("dblclick", (e) => {
+            const clicked_element = document.elementFromPoint(e.pageX, e.pageY);
+            if (
+                clicked_element.nodeName &&
+                clicked_element.nodeName === "CANVAS"
+            ) {
+                const pos = getCanvasRelativePosition(e, this.glContainer);
+                const mesh = this.picker._raycastPosition(pos);
+
+                if (mesh && mesh.name) {
+                    const type = this.picker.cjHelper.getType(mesh.name);
+                    if (type === "Building") {
+                        console.log("Double-clicked on building:", mesh.name);
+                        this.picker.pickMesh(mesh.name, () => {
+                            this.picker.switchBuildingView();
+                        });
+                    }
+                }
+            }
+        });
+
         // Touch handling
         this.mainContainer.addEventListener("touchstart", (e) => {
             e.stopPropagation();
@@ -412,8 +433,3 @@ export class Map {
     }
 }
 
-// sample thematic layers to add:
-// Lactation Room	E1-6
-// Contemplation room	E1-8 - there are none in BK?
-// All-gender restroom	S1-3
-// Accessible toilet	S2
