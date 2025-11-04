@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Get the URL parameters
   const loc = getQueryParam('location');
-  console.log("loc", loc);
   if (loc) refs.location.value = decodeURIComponent(loc);
 
 

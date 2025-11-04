@@ -536,7 +536,7 @@ export class CamerasControls {
         const initDirection = initPosition.clone().sub(target).normalize();
         const finalDirection = finalPosition.clone().sub(target).normalize();
         const rotationAngle = Math.acos(Math.max(-1, Math.min(1, initDirection.dot(finalDirection))));
-        const duration = 300 + rotationAngle * 200; // Scale duration with rotation angle
+        const duration = 300 + rotationAngle * 500; // Scale duration with rotation angle
 
         // Animate to final position
         return this._createAnimation(

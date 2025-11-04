@@ -136,13 +136,17 @@ export class ObjectPicker {
         const pickedObjectType = this.cjHelper.getType(pickedObjectKey);
         const paneObjectKey = this.cjHelper.keyToObjectKey(paneKey);
 
+        // console.log(`Picking a ${pickedObjectType}`);
+
         if (pickedObjectType == "Building") {
             // Pick a Building
-            console.log("Picking a Building");
 
             // Highlight the picked mesh
-            const pickedMesh = this.cjHelper.getMesh(pickedObjectKey);
-            this.pickHighlighter.highlight([pickedMesh]);
+            var pickedMesh = null;
+            if (this.cjHelper.hasMesh(pickedObjectKey)) {
+                pickedMesh = this.cjHelper.getMesh(pickedObjectKey);
+                this.pickHighlighter.highlight([pickedMesh]);
+            }
 
             const buildingObjectKey = pickedObjectKey;
             const buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
@@ -150,48 +154,57 @@ export class ObjectPicker {
             if (this.buildingView._isNotInitialised()) {
                 // Building view not initialised
                 this.buildingView.initialise(buildingObjectKey);
-                this.cameraManager.zoomToObject(
-                    buildingMesh,
-                    onAnimationComplete
-                );
+                if (buildingMesh) {
+                    this.cameraManager.zoomToObject(
+                        buildingMesh,
+                        onAnimationComplete
+                    );
+                }
             } else if (this.buildingView._isInitialisedNotActivated()) {
                 // Building view not activated
                 if (buildingObjectKey == this.buildingView.buildingObjectKey) {
                     // Same building
-                    this.cameraManager.zoomToObject(
-                        buildingMesh,
-                        onAnimationComplete
-                    );
+                    if (buildingMesh) {
+                        this.cameraManager.zoomToObject(
+                            buildingMesh,
+                            onAnimationComplete
+                        );
+                    }
                 } else {
                     // Different building
                     this.buildingView.initialise(buildingObjectKey);
-                    this.cameraManager.zoomToObject(
-                        buildingMesh,
-                        onAnimationComplete
-                    );
+                    if (buildingMesh) {
+                        this.cameraManager.zoomToObject(
+                            buildingMesh,
+                            onAnimationComplete
+                        );
+                    }
                 }
             } else if (this.buildingView._isActivated()) {
                 // Building view actvated
                 if (buildingObjectKey == this.buildingView.buildingObjectKey) {
                     // Same building
                     this.buildingView.deactivate();
-                    this.cameraManager.zoomToObject(
-                        buildingMesh,
-                        onAnimationComplete
-                    );
+                    if (buildingMesh) {
+                        this.cameraManager.zoomToObject(
+                            buildingMesh,
+                            onAnimationComplete
+                        );
+                    }
                 } else {
                     // Different building
                     this.buildingView.deactivate();
                     this.buildingView.initialise(buildingObjectKey);
-                    this.cameraManager.zoomToObject(
-                        buildingMesh,
-                        onAnimationComplete
-                    );
+                    if (buildingMesh) {
+                        this.cameraManager.zoomToObject(
+                            buildingMesh,
+                            onAnimationComplete
+                        );
+                    }
                 }
             }
         } else if (pickedObjectType == "BuildingPart") {
             // Pick a BuildingUnit
-            console.log("Picking a BuildingPart");
 
             // Get the building
             const buildingObjectKey =
@@ -296,7 +309,6 @@ export class ObjectPicker {
             }
         } else if (pickedObjectType == "BuildingStorey") {
             // Pick a BuildingUnit
-            console.log("Picking a BuildingStorey");
 
             // Get the building
             const buildingObjectKey =
@@ -404,7 +416,6 @@ export class ObjectPicker {
             }
         } else if (pickedObjectType == "BuildingRoom") {
             // Pick a BuildingRoom
-            console.log("Picking a BuildingRoom");
 
             // Highlight the picked mesh
             const pickedMesh = this.cjHelper.getMesh(pickedObjectKey);
@@ -495,7 +506,6 @@ export class ObjectPicker {
             }
         } else if (pickedObjectType == "BuildingUnit") {
             // Pick a BuildingUnit
-            console.log("Picking a BuildingUnit");
 
             // Get the spaces of the units
             const unitSpacesObjectKeys =
@@ -658,7 +668,6 @@ export class ObjectPicker {
             }
         } else if (pickedObjectType == "GenericCityObject") {
             // Pick a BuildingUnit
-            console.log("Picking a GenericCityObject");
 
             // Highlight the meshes
             const pickedMesh = this.cjHelper.getMesh(pickedObjectKey);
@@ -686,7 +695,6 @@ export class ObjectPicker {
                 pickedObjectType
             );
         }
-        console.log("paneObjectKey", paneObjectKey);
         this.infoPane.show(paneObjectKey);
     }
 
@@ -745,7 +753,7 @@ export class ObjectPicker {
         } else if (this.buildingView._isActivated()) {
             const buildingKey = this.buildingView.buildingObjectKey;
             this.buildingView.deactivate();
-            this.cameraManager.switchToInt(this.buildingViewActivationCamera);
+            // this.cameraManager.switchToInt(this.buildingViewActivationCamera);
             const onComplete = () => {
                 this.cameraManager.switchToOrbit();
             };

@@ -147,7 +147,8 @@ export class StoreyManager {
         exit_img.alt = "";
         exit_button.appendChild(exit_img);
 
-exit_button.addEventListener("click", (event) => {
+        exit_button.addEventListener("click", (event) => {
+            event.stopPropagation();
             if (this.buildingView && this.buildingView.picker && typeof this.buildingView.picker.switchBuildingView === "function") {
                 this.buildingView.picker.switchBuildingView();
             }
@@ -159,7 +160,7 @@ exit_button.addEventListener("click", (event) => {
 
             this.deactivate();
 
-         });
+        });
 
         exit_span.appendChild(exit_button);
 
