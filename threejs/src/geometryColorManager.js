@@ -41,19 +41,12 @@ export class GeometryColorManager {
 		this._assign_building_colors();
 
 		this._assign_standard_room_colors("#ede4d3");
-		// this._assign_standard_room_colors("#ffffff");
 
 		for (const [layer_code, layer_object] of Object.entries(this.layer_definition)) {
 			if (layer_object["Geometry color"]) {
 				this._assign_geometry_unit_colors(layer_code, layer_object["Geometry color"]);
 			}
 		}
-
-		const hall_way_color = "#bdbdbd";
-
-		this._assign_geometry_unit_colors("Na-Fl-Ha", hall_way_color);
-		this._assign_geometry_unit_colors("Na-Fl-Co", hall_way_color);
-
 	}
 
 	_assign_building_colors() {
