@@ -279,7 +279,7 @@
 
 
 .info-pane-button-part {
-  width: 100%;
+  width: auto;
   text-align: right;
   padding: 0px 0px;
   color: #027dab;
