@@ -635,11 +635,7 @@ export class InfoPane {
         button.appendChild(document.createTextNode("View Floorplan"));
 
         button.addEventListener("click", (event) => {
-            console.log("pressed button");
-
             if (this.picker) {
-                console.log("Button clicked");
-
                 this.picker.switchBuildingView();
             }
         });

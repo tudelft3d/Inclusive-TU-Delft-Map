@@ -85,7 +85,7 @@ export class GeometryColorManager {
 					constant_name = QUINARY_COLOR_3;
 					break;
 				default:
-					console.log("invalid importance code for", building_key, "defaulting to Quinary importance");
+					console.error("invalid importance code for", building_key, "defaulting to Quinary importance");
 					constant_name = QUINARY_COLOR_3;
 			}
 
@@ -134,7 +134,7 @@ export class GeometryColorManager {
 	_assign_geometry_unit_colors(layer_code, color) {
 
 		if (!(this.layer_definition[layer_code])) {
-			console.log(layer_code, "is not a known layer code");
+			console.error(layer_code, "is not a known layer code");
 			return;
 		}
 

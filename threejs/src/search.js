@@ -122,7 +122,7 @@ export class Searcher {
 
     search_and_zoom(pattern) {
         const result = this._search_pattern(pattern, 1);
-        console.log('pattern: ', pattern);
+        // console.log('pattern: ', pattern);
 
         const threejs_objects = this._retrieve_threejs_objects(result, this.scene);
 

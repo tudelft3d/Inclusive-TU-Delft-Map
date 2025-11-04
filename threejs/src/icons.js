@@ -191,7 +191,6 @@ export class IconsSceneManager {
         this.iconContainer = iconContainer;
         this.mainContainer = mainContainer;
         this.iconSets = {};
-        console.log(this.iconContainer);
         this._setUpEventListeners();
     }
 

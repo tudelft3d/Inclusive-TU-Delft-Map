@@ -51,7 +51,7 @@ export class CjHelper {
 
     hasMesh(key) {
         const meshKey = this.keyToMeshKey(key);
-        return checkMeshKeyExists(meshKey);
+        return this.checkMeshKeyExists(meshKey);
     }
 
     isBuilding(key) {
@@ -108,7 +108,6 @@ export class CjHelper {
             );
             return;
         }
-        console.log("storeyObjectKey", storeyObjectKey);
         return this.getAttributes(storeyObjectKey)["storey_space_id"];
     }
 
@@ -281,7 +280,6 @@ export class CjHelper {
                 }
             });
         });
-        console.log(buildingStoreys);
         return buildingStoreys;
     }
 
