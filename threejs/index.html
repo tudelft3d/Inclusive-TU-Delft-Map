@@ -12,6 +12,7 @@
     <link href="./styles/searchBar.css" rel="stylesheet" type="text/css">
     <link href="./styles/main.css" rel="stylesheet" type="text/css">
     <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/tooltips.css" rel="stylesheet" type="text/css">
     <link href="./styles/topRightButtons.css" rel="stylesheet" type="text/css">
     <link href="./styles/bottomRightButtons.css" rel="stylesheet" type="text/css">
     <link href="./styles/icons.css" rel="stylesheet" type="text/css">   
@@ -50,7 +51,7 @@
     <!-- TOP RIGHT SIDEBAR CONTROLS -->
     <div id="top-right-sidebar-controls">
         <div id="basemap-container">
-            <button id="basemap-btn" data-tooltip="Change base map"><img
+            <button id="basemap-btn" data-tooltip-left="Change base map"><img
                     src="assets/threejs/graphics/icons/ui-buttons/basemap_white.svg" /></button>
             <div id="basemap-dropdown" class="dropdown">
                 <a class="basemap-item" href="#" data-url="https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0"
@@ -81,7 +82,7 @@
         </div>
 
         <div id="layers-container">
-            <button id="layers-btn" data-tooltip="Select layers"><img
+            <button id="layers-btn" data-tooltip-left="Select layers"><img
                     src="assets/threejs/graphics/icons/ui-buttons/layers_white.svg" /></button>
             <!-- Layers mobile bottom-sheet -->
             <div id="layers-dropdown" class="dropdown" aria-hidden="true">
@@ -92,7 +93,7 @@
         </div>
 
         <div id="legend-container">
-            <button id="legend-btn" data-tooltip="Legend" aria-controls="legend-dropdown" aria-expanded="false" title="Legend">
+            <button id="legend-btn" data-tooltip-left="Legend" aria-controls="legend-dropdown" aria-expanded="false" title="Legend">
                 <img src="assets/threejs/graphics/icons/ui-buttons/question_mark.svg" alt="Legend" />
             </button>
             <div id="legend-dropdown" class="dropdown" role="menu" aria-hidden="true">
@@ -122,7 +123,7 @@
         </div>
 
         <!-- <div id="accessibility-container">
-            <button id="accessibility-btn" data-tooltip="Accessibility options"><img
+            <button id="accessibility-btn" data-tooltip-left="Accessibility options"><img
                     src="assets/threejs/graphics/icons/ui-buttons/accessibility.svg" /></button>
             <div id="accessibility-dropdown">
                 <a href="#">Red-Green Color Blind</a>
@@ -136,32 +137,32 @@
     <!-- BOTTOM RIGHT SIDEBAR CONTROLS -->
     <div id="bottom-right-sidebar-controls">
         <div id="reset-container">
-            <button id="reset-btn" data-tooltip="Reset view" aria-label="Reset view"><img
+            <button id="reset-btn" data-tooltip-left="Reset view" aria-label="Reset view"><img
                     src="assets/threejs/graphics/icons/ui-buttons/reset_white.svg" /></button>
         </div>
 
         <div id="zoom-btn" role="group" aria-label="Zoom controls">
-            <button class="zoom-half" id="zoom-in-btn" data-tooltip="Zoom-in" aria-label="Zoom in">
+            <button class="zoom-half" id="zoom-in-btn" data-tooltip-left="Zoom-in" aria-label="Zoom in">
                 <img src="assets/threejs/graphics/icons/ui-buttons/plus_white.svg" alt="Zoom in" />
             </button>
-            <button class="zoom-half" id="zoom-out-btn" data-tooltip="Zoom-out" aria-label="Zoom out">
+            <button class="zoom-half" id="zoom-out-btn" data-tooltip-left="Zoom-out" aria-label="Zoom out">
                 <img src="assets/threejs/graphics/icons/ui-buttons/minus_white.svg" alt="Zoom out" />
             </button>
         </div>
 
         <div id="compass-container">
-            <button id="compass-btn" data-tooltip="Reset compass" aria-label="Reset compass"><img
+            <button id="compass-btn" data-tooltip-left="Reset compass" aria-label="Reset compass"><img
                     src="assets/threejs/graphics/icons/ui-buttons/compass_white.svg" /></button>
         </div>
 
         <div id="location-container">
-            <button id="location-btn" data-tooltip="Find my location" aria-label="Find my location"><img
+            <button id="location-btn" data-tooltip-left="Find my location" aria-label="Find my location"><img
                     src="assets/threejs/graphics/icons/ui-buttons/locate_white.svg" /></button>
         </div>
 
         <div id="view-toggle-container">
             <div>
-                <button id="view-toggle-btn" data-tooltip="Toggle 3D/2D view" aria-pressed="false"
+                <button id="view-toggle-btn" data-tooltip-left="Toggle 3D/2D view" aria-pressed="false"
                     title="Toggle 3D/2D view">2D</button>
             </div>
         </div>

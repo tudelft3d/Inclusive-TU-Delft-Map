@@ -1,0 +1,107 @@
+[data-tooltip-left],
+[data-tooltip-right] {
+    z-index: 100000;
+    position: relative;
+}
+
+/* Text block */
+[data-tooltip-left]:before,
+[data-tooltip-right]:before {
+    position: absolute;
+
+    /* Style the text */
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    text-wrap: nowrap;
+    text-align: center;
+
+    /* Center vertically */
+    top: 50%;
+    transform: translateY(-50%);
+
+    /* Style the block */
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.85);
+
+    /* No clicks */
+    pointer-events: none;
+}
+
+[data-tooltip-left]:before {
+    /* Get the content */
+    content: attr(data-tooltip-left);
+
+    /* Position the text block */
+    right: 100%;
+    margin-right: 10px;
+}
+
+[data-tooltip-right]:before {
+    /* Get the content */
+    content: attr(data-tooltip-right);
+
+    /* Position the text block */
+    left: 100%;
+    margin-left: 10px;
+}
+
+/* Arrow */
+[data-tooltip-left]:after,
+[data-tooltip-right]:after {
+    content: "";
+    position: absolute;
+
+    /* Center vertically */
+    top: 50%;
+    transform: translateY(-50%);
+
+    /* Make the arrow */
+    border: 6px solid rgba(0, 0, 0, 0.85);
+
+    /* No clicks */
+    pointer-events: none;
+}
+
+[data-tooltip-left]:after {
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.85);
+
+    /* Position arrow */
+    right: 100%;
+    margin-right: -2px;
+}
+
+[data-tooltip-right]:after {
+    border-color: transparent rgba(0, 0, 0, 0.85) transparent transparent;
+
+    /* Position arrow */
+    left: 100%;
+    margin-left: -2px;
+}
+
+/* Hide by default */
+[data-tooltip-left]:before,
+[data-tooltip-left]:after,
+[data-tooltip-right]:before,
+[data-tooltip-right]:after {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Show on hover */
+[data-tooltip-left]:hover:before,
+[data-tooltip-right]:hover:before,
+[data-tooltip-left]:hover:after,
+[data-tooltip-right]:hover:after {
+    opacity: 1;
+}
+
+/* Hide on click */
+[data-tooltip-left].active:hover:before,
+[data-tooltip-left].active:hover:after,
+[data-tooltip-right].active:hover:before,
+[data-tooltip-right].active:hover:after {
+    opacity: 0;
+    transition: opacity 0s ease-in-out;
+}

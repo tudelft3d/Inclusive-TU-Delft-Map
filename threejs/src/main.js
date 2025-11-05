@@ -345,4 +345,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Make the tooltips disappear on click
+    document.addEventListener('mousedown', (evt) => {
+        // check if the mousedown happened in an element with a tooltip
+        var element = evt.target.closest('[data-tooltip-left]');
+        if (!element) {
+            element = evt.target.closest('[data-tooltip-right]');
+        }
+        if (element) {
+            // if the user already clicked on the element ignore the click
+            if (!element.classList.contains('active')) {
+                // add the active class to the element so that hover won't show the toolip
+                element.classList.add('active');
+
+                function removeActiveOnLeave() {
+                    // remove the active class
+                    element.classList.remove('active');
+
+                    // remove the mouseleave event listener again
+                    element.removeEventListener('mouseleave', removeActiveOnLeave)
+                }
+
+                // add an event listener for mouseleave to remove the active class
+                element.addEventListener('mouseleave', removeActiveOnLeave)
+            }
+        }
+
+    });
+
+
 });

@@ -141,7 +141,7 @@ export class StoreyManager {
         let exit_button = document.createElement("button");
         exit_button.className = "storey-exit-btn";
         exit_button.type = "button";
-        exit_button.title = "Close";
+        exit_button.setAttribute("data-tooltip-right", "Exit the floor plan");
         let exit_img = document.createElement("img");
         exit_img.src = "../assets/threejs/graphics/icons/ui-buttons/close_icon_white.svg";
         exit_img.alt = "";
@@ -206,6 +206,7 @@ export class StoreyManager {
         let up_half = document.createElement("button");
         up_half.className = "storey-vertical-half up";
         up_half.type = "button";
+        up_half.setAttribute("data-tooltip-right", "Move up a floor");
         up_half.addEventListener("click", (event) => {
             this._go_up_one_storey();
         });
@@ -213,6 +214,7 @@ export class StoreyManager {
         let down_half = document.createElement("button");
         down_half.className = "storey-vertical-half down";
         down_half.type = "button";
+        down_half.setAttribute("data-tooltip-right", "Move down a floor");
         down_half.addEventListener("click", (event) => {
             this._go_down_one_storey();
         });
