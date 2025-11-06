@@ -222,8 +222,7 @@
   font-weight: 500;        
   color: #484848;      
   font-size: 14px;         
-  flex: 1 1 auto;       
-  max-width: 100%;
+  flex: 1 1 75px;
   white-space: nowrap;
   text-wrap: balance;
   text-align: left;
@@ -237,7 +236,8 @@
 
   /* make the value cell the same proportion as top-level rows
      and ensure it is a flex container so buttons can be pushed to the far right */
-  flex: 1 1 auto;
+  flex: 2 1 250px;
+  /* max-width: 300px; */
   display: flex;
   align-items: center;
   justify-content: flex-end;

@@ -70,8 +70,8 @@ export class StoreyManager {
             levels.push(level);
         }
 
-        // Order the storeys
-        levels.sort();
+        // Order the storeys (descending: highest floor first)
+        levels.sort((a, b) => b - a);
         this.order_to_storey_code = Array(Object.keys(this.available_storeys).length);
         for (const [storey_code, storey_data] of Object.entries(this.available_storeys)) {
             const level = storey_data.level;
@@ -89,6 +89,11 @@ export class StoreyManager {
 
         this.pane.style.opacity = '0';
         this.pane.style.display = 'none';
+
+        if (this.controlsDiv) {
+            this.controlsDiv.innerHTML = "";
+            this.controlsDiv.style.display = 'none';
+        }
 
         if (this.infoPaneObserver) {
             this.infoPaneObserver.disconnect();
@@ -153,13 +158,7 @@ export class StoreyManager {
                 this.buildingView.picker.switchBuildingView();
             }
 
-            if (this.controlsDiv) {
-                this.controlsDiv.innerHTML = "";
-                this.controlsDiv.style.display = "none";
-            }
-
             this.deactivate();
-
         });
 
         exit_span.appendChild(exit_button);
@@ -228,8 +227,8 @@ export class StoreyManager {
 
     _go_up_one_storey() {
         const current_order = this.available_storeys[this.current_storey_code].order;
-        var next_order = current_order + 1;
-        if (next_order > this.order_to_storey_code.length - 1) {
+        var next_order = current_order - 1;
+        if (next_order < 0) {
             next_order = current_order;
         }
         this.current_storey_code = this.order_to_storey_code[next_order];
@@ -240,8 +239,8 @@ export class StoreyManager {
 
     _go_down_one_storey() {
         const current_order = this.available_storeys[this.current_storey_code].order;
-        var next_order = current_order - 1;
-        if (next_order < 0) {
+        var next_order = current_order + 1;
+        if (next_order > this.order_to_storey_code.length - 1) {
             next_order = current_order;
         }
         this.current_storey_code = this.order_to_storey_code[next_order];
