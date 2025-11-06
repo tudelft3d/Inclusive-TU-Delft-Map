@@ -228,8 +228,8 @@ export class StoreyManager {
 
     _go_up_one_storey() {
         const current_order = this.available_storeys[this.current_storey_code].order;
-        var next_order = current_order + 1;
-        if (next_order > this.order_to_storey_code.length - 1) {
+        var next_order = current_order - 1;
+        if (next_order < 0) {
             next_order = current_order;
         }
         this.current_storey_code = this.order_to_storey_code[next_order];
@@ -240,8 +240,8 @@ export class StoreyManager {
 
     _go_down_one_storey() {
         const current_order = this.available_storeys[this.current_storey_code].order;
-        var next_order = current_order - 1;
-        if (next_order < 0) {
+        var next_order = current_order + 1;
+        if (next_order > this.order_to_storey_code.length - 1) {
             next_order = current_order;
         }
         this.current_storey_code = this.order_to_storey_code[next_order];
