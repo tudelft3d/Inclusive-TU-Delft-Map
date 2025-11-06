@@ -4,7 +4,7 @@
 
 #info-pane {
   position: fixed;
-  top: calc(var(--height, 64px) + 14px);
+  top: calc(var(--height, 64px) + 20px);
   left: 14px;
   background: #fafafa;
   border-radius: 8px;
@@ -377,7 +377,7 @@
     border-radius: 8px 8px 0 0;
     min-width: 100%;
     max-width: 100%;
-    max-height: 70dvh;
+    max-height: 63dvh;
     height: auto;
     overflow-y: hidden;
     padding: 12px;

@@ -21,10 +21,7 @@
   --brb-z-st: 10;
   --brb-z-control-st: 11;
   --brb-z-dropdown-st: 999;
-}
-
-/* add blue-border for non-satellite basemaps (similar to searchBar) */
-:root{
+  
   --storey-border-color: #027dab;
   --storey-border-width: 2px;
   --storey-box-shadow: 0 2px 6px rgba(2,125,171,0.12);
@@ -234,19 +231,74 @@
   height: 18px;
 }
 
-
-/* small-screen tweaks if required */
 @media (max-width: 620px) {
+
+  /* 1. Position the main parent container. */
   .storey-controls {
-    right: 10px;
-    bottom: 10px;
-    gap: 8px;
+    position: fixed;
+    top: calc(var(--height, 64px) + 10px); 
+    left: calc(10px + 34px + 8px); 
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    gap: 12px;
+    z-index: 10001;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    pointer-events: auto;
+    height: fit-content;
   }
+  
+  /* Position the left column (Exit/Arrows) */
+  .storey-controls-left {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 8px;
+    
+    /* Move it (search btn height + gap) relative to the parent's top */
+    top: calc(34px + 8px); 
+
+    left: calc(10px - (10px + 34px + 8px)); 
+  }
+
+  /* 3. The right column (Dropdown). */
+  .storey-controls-right {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 0px;
+  }
+
   #info-pane .storey-controls {
+    /* Reset properties */
+    position: absolute;
     left: calc(100% + 12px);
+    top: auto; /* Reset top */
     bottom: 10px;
     gap: 6px;
+    flex-direction: row; 
+    align-items: start;
   }
-  .storey-controls-left { gap: 6px; }
-  .storey-controls-right { gap: 6px; }
+  
+  #info-pane .storey-controls-left {
+     /* Reset properties for info pane */
+    position: relative; 
+    top: auto;
+    left: auto;
+    gap: 6px;
+  }
+  
+  #info-pane .storey-controls-right {
+    gap: 6px;
+    margin-top: 15px;
+  }
+
+  #info-pane .storey-controls-right
+  /* Remove desktop margin */
+  #info-pane .storey-controls-right .storey-select {
+    margin-bottom:0;
+  }
 }
