@@ -70,8 +70,8 @@ export class StoreyManager {
             levels.push(level);
         }
 
-        // Order the storeys
-        levels.sort();
+        // Order the storeys (descending: highest floor first)
+        levels.sort((a, b) => b - a);
         this.order_to_storey_code = Array(Object.keys(this.available_storeys).length);
         for (const [storey_code, storey_data] of Object.entries(this.available_storeys)) {
             const level = storey_data.level;
