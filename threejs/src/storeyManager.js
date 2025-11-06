@@ -158,13 +158,7 @@ export class StoreyManager {
                 this.buildingView.picker.switchBuildingView();
             }
 
-            if (this.controlsDiv) {
-                this.controlsDiv.innerHTML = "";
-                this.controlsDiv.style.display = "none";
-            }
-
             this.deactivate();
-
         });
 
         exit_span.appendChild(exit_button);
