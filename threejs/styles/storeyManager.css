@@ -159,6 +159,7 @@
   position: absolute;
   /* left: calc(var(--brb-sidebar-right-st) + 450px + var(--brb-sidebar-right-st));  */
   left: calc(var(--brb-sidebar-right-st) - 10px);
+  width: fit-content;
   bottom: var(--brb-sidebar-bottom-st);
   display: flex;
   align-items: flex-end;
