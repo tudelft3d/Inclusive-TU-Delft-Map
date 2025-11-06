@@ -90,6 +90,11 @@ export class StoreyManager {
         this.pane.style.opacity = '0';
         this.pane.style.display = 'none';
 
+        if (this.controlsDiv) {
+            this.controlsDiv.innerHTML = "";
+            this.controlsDiv.style.display = 'none';
+        }
+
         if (this.infoPaneObserver) {
             this.infoPaneObserver.disconnect();
             this.infoPaneObserver = null;
