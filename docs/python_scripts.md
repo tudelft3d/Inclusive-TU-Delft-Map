@@ -1,4 +1,8 @@
-# Python Code
+# Python
+
+## Usage
+
+Python is used in this project for all the data processing that is done to format and agglomerate data from different sources into a single input for the map (or more precisely, one CityJSON and one glTF file).
 
 ## Prerequisites
 

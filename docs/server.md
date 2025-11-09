@@ -89,7 +89,7 @@ To have more information about the Windows equivalent, please check [these instr
 
 ## Web app
 
-If you have not done it yet, please follow the instructions to set up connection to the server in [Server.md](./Server.md).
+If you have not done it yet, please follow the instructions to set up connection to the server in [server.md](./server.md).
 
 ### Installation
 

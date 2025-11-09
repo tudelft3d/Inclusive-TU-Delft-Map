@@ -5,9 +5,9 @@ We call data pipeline the process that starts from the "raw" input data of the m
 
 ## Prerequisites
 
-To be able to run the commands mentioned below, you first need to install the Python environment. Read [Python_scripts.md](./Python_scripts.md) for more information.
+To be able to run the commands mentioned below, you first need to install the Python environment. Read [python_scripts.md](./python_scripts.md) for more information.
 
-To learn more about the data structure and conventions used in this project, please read [Data_structure.md](./Data_structure.md).
+To learn more about the data structure and conventions used in this project, please read [data_structure.md](./data_structure.md).
 
 ## Explanations
 

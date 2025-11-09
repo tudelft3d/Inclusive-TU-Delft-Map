@@ -41,4 +41,4 @@ To run the app locally for development, you can use one of the commands availabl
 
 ## Run the app on the server for deployment
 
-The instructions to run the app on the server are in [the documentation about the server](./Server.md#web-app).
+The instructions to run the app on the server are in [the documentation about the server](./server.md#web-app).

@@ -10,7 +10,7 @@ At the time of writing this (September 2025), many of the tools provided in the 
 
 To fully set up the database, you need to:
 
-1. [Set up connection to the server](../Server.md#server-connection)
+1. [Set up connection to the server](../server.md#server-connection)
 2. [Install PostgreSQL](#postgresql)
 3. [Install 3D City DB and set up an instance](#3dcitydb)
 
@@ -57,7 +57,7 @@ To set up a user from the server:
 ### DBeaver
 
 > [!NOTE]
-> All the commands in this section can be run from the any laptop that followed the [instructions to connect to the server](../Server.md#server-connection).
+> All the commands in this section can be run from the any laptop that followed the [instructions to connect to the server](../server.md#server-connection).
 
 To connect to the database with DBeaver:
 
@@ -77,7 +77,7 @@ To connect to the database with DBeaver:
 5. Click on `Test tunnel configuration`.
     If everything was set up correctly, you should see `Connected!`.
     Otherwise, make sure that everything you entered in the previous steps is correct (especially the paths to the SSH keys).
-    If it still does not work, make sure that you followed properly the [instructions to connect to the server](../Server.md#server-connection).
+    If it still does not work, make sure that you followed properly the [instructions to connect to the server](../server.md#server-connection).
 6. Go back to the tab called `Main` and set:
     - `Host`: `127.0.0.1` instead of `localhost`
     - `Port`: `5432`

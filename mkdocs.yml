@@ -1,5 +1,6 @@
-site_name: Project Documentation
+site_name: Inclusive 3D Campus Map of TU Delft
 
+repo_name: alexandre-bry/Inclusive-TU-Delft-Map
 repo_url: https://github.com/alexandre-bry/Inclusive-TU-Delft-Map
 edit_uri: edit/main/docs/
 
@@ -63,10 +64,11 @@ markdown_extensions:
 nav:
     - Home: index.md
     - Data:
-          - Data Structure: Data_structure.md
-          - Data Pipeline: Data_pipeline.md
+          - Data Structure: data_structure.md
+          - Data Pipeline: data_pipeline.md
     - Python:
-          - Python Scripts: Python_scripts.md
+          - python_scripts.md
           - Code Reference: reference/
-    - JavaScript: JavaScript_app.md
-    - Server: Server.md
+    - JavaScript: javascript_app.md
+    - Server: server.md
+    - License: license.md
