@@ -1,0 +1,17 @@
+[project]
+name = "project-documentation"
+version = "0.1.0"
+description = "Documentation of the whole project."
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Alexandre Bry", email = "abry.pro@proton.me" }]
+
+dependencies = [
+    "mkdocs>=1.6.1",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-glightbox>=0.5.2",
+    "mkdocs-literate-nav>=0.6.2",
+    "mkdocs-material>=9.6.23",
+    "mkdocs-section-index>=0.3.10",
+    "mkdocstrings[python]>=0.30.1",
+]

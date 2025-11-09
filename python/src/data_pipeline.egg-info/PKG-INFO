@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: data-pipeline
+Version: 0.1.0
+Summary: Scripts to process the data into a correct format for the map
+Author-email: Alexandre Bry <abry.pro@proton.me>
+License: MIT
+Requires-Python: >=3.12
+Requires-Dist: cjio>=0.10.1
+Requires-Dist: networkx>=3.5
+Requires-Dist: numpy>=2.3.3
+Requires-Dist: pdoc>=16.0.0
+Requires-Dist: pyglet<2
+Requires-Dist: rtree>=1.4.1
+Requires-Dist: scipy>=1.16.2
+Requires-Dist: shapely>=2.1.1
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: triangle>=20250106
+Requires-Dist: trimesh>=4.8.1
+Requires-Dist: typer>=0.19.2

@@ -13,9 +13,8 @@ You can also find more information about it in the [about page of the website](h
 The documentation of this project is split in multiple parts.
 You can find documentation about:
 
-- General information about the data pipeline used in the project in [./Data_pipeline.md](Data_pipeline.md).
-- General information about the expected structure of data used in the project in [./Data_structure.md](Data_pipeline.md).
-- The Python code that is used to process and format the data is in [./src/README.md](src/README.md).
-- The JavaScript app used to make the map in [./threejs/README.md](threejs/README.md).
-- The choices behind the database and how to set it up in [./database/README.md](database/README.md).
-- The setup of the server that hosts the map in [./server/README.md](server/README.md).
+- General information about the data pipeline used in the project in [Data_pipeline.md](./documentation/Data_pipeline.md).
+- General information about the expected structure of data used in the project in [Data_structure.md](./documentation/Data_structure.md).
+- The Python code that is used to process and format the data is in [Python_scripts.md](./documentation/Python_scripts.md).
+- The JavaScript app used to make the map in [JavaScript_app.md](./documentation/JavaScript_app.md).
+- The setup of the server that hosts the map in [./documentation/Server.md](./documentation/Server.md).

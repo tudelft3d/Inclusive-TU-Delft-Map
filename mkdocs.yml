@@ -1,0 +1,72 @@
+site_name: Project Documentation
+
+repo_url: https://github.com/alexandre-bry/Inclusive-TU-Delft-Map
+edit_uri: edit/main/docs/
+
+theme:
+    name: material
+    language: en
+    features:
+        - content.code.copy
+        - content.action.edit
+        - content.action.view
+    palette:
+        # Palette toggle for automatic mode
+        - media: "(prefers-color-scheme)"
+          toggle:
+              icon: material/brightness-auto
+              name: Switch to light mode
+
+        # Palette toggle for light mode
+        - media: "(prefers-color-scheme: light)"
+          scheme: default
+          toggle:
+              icon: material/brightness-7
+              name: Switch to dark mode
+
+        # Palette toggle for dark mode
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          toggle:
+              icon: material/brightness-4
+              name: Switch to system preference
+
+extra_css:
+- css/mkdocstrings.css
+
+plugins:
+    - mkdocstrings:
+          handlers:
+              python:
+                  paths: [python/src/data_pipeline]
+                  options:
+                      docstring_style: numpy
+                      summary: true
+                      annotations_path: full
+                      show_symbol_type_heading: true
+                      #   show_if_no_docstring: false
+    # For automatic generation of the api
+    # See https://mkdocstrings.github.io/recipes/#automatic-code-reference-pages
+    - gen-files:
+          scripts:
+              - docs/doc_scripts/gen_ref_pages.py
+    - literate-nav:
+          nav_file: SUMMARY.md
+    - search
+    - section-index
+    - glightbox
+
+markdown_extensions:
+    - admonition
+    - pymdownx.superfences
+
+nav:
+    - Home: index.md
+    - Data:
+          - Data Structure: Data_structure.md
+          - Data Pipeline: Data_pipeline.md
+    - Python:
+          - Python Scripts: Python_scripts.md
+          - Code Reference: reference/
+    - JavaScript: JavaScript_app.md
+    - Server: Server.md
