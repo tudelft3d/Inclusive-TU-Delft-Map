@@ -491,23 +491,27 @@ export class CamerasControls {
     //     }
     // }
 
-    // zoomIn(factor = 1.8) {
-    //     if (this.controls._dollyOut) {
-    //         this.controls._dollyOut(factor);
-    //         this.controls.update();
-    //     } else if (this.camera.isPerspectiveCamera) {
-    //         this.camera.position.multiplyScalar(factor);
-    //     }
-    // }
+    zoomIn(factor = 1.8) {
+        // Fix: make our own function instead of using a private one
+        const ctrl = this.controls as any;
+        if (ctrl._dollyOut) {
+            ctrl._dollyOut(factor);
+            ctrl.update();
+        } else {
+            console.error("Cannot zoom in.");
+        }
+    }
 
-    // zoomOut(factor = 1.8) {
-    //     if (this.controls._dollyIn) {
-    //         this.controls._dollyIn(factor);
-    //         this.controls.update();
-    //     } else if (this.camera.isPerspectiveCamera) {
-    //         this.camera.position.multiplyScalar(1 / factor);
-    //     }
-    // }
+    zoomOut(factor = 1.8) {
+        // Fix: make our own function instead of using a private one
+        const ctrl = this.controls as any;
+        if (ctrl._dollyIn) {
+            ctrl._dollyIn(factor);
+            ctrl.update();
+        } else {
+            console.error("Cannot zoom out.");
+        }
+    }
 
     _usesPerspectiveCamera() {
         return (this.camera as any).isPerspectiveCamera === true;
@@ -517,31 +521,31 @@ export class CamerasControls {
         return (this.camera as any).isPerspectiveCamera === true;
     }
 
-    zoom(factor = 1.8) {
-        if (this._usesPerspectiveCamera()) {
-            // Move the camera forward/backward along its view direction.
-            const dir = new THREE.Vector3();
-            this.camera.getWorldDirection(dir);
-            this.camera.position.addScaledVector(
-                dir,
-                (factor - 1) * this.camera.position.length()
-            );
-        } else if (this._usesOrthographicCamera()) {
-            // Orthographic zoom is just scaling the view size.
-            this.camera.zoom *= factor;
-            this.camera.updateProjectionMatrix();
-        }
+    // zoom(factor = 1.8) {
+    //     if (this._usesPerspectiveCamera()) {
+    //         // Move the camera forward/backward along its view direction.
+    //         const dir = new THREE.Vector3();
+    //         this.camera.getWorldDirection(dir);
+    //         this.camera.position.addScaledVector(
+    //             dir,
+    //             (factor - 1) * this.camera.position.length()
+    //         );
+    //     } else if (this._usesOrthographicCamera()) {
+    //         // Orthographic zoom is just scaling the view size.
+    //         this.camera.zoom *= factor;
+    //         this.camera.updateProjectionMatrix();
+    //     }
 
-        // Keep the controls in sync.
-        this.controls.update();
-    }
+    //     // Keep the controls in sync.
+    //     this.controls.update();
+    // }
 
-    zoomIn(factor = 1.8) {
-        this.zoom(factor);
-    }
-    zoomOut(factor = 1.8) {
-        this.zoom(1 / factor);
-    }
+    // zoomIn(factor = 1.8) {
+    //     this.zoom(factor);
+    // }
+    // zoomOut(factor = 1.8) {
+    //     this.zoom(1 / factor);
+    // }
 
     /* Update the home position to initial camera state (after having moved towards GLTF scene) */
     setHomeView() {
