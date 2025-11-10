@@ -129,7 +129,6 @@ export class CamerasControls {
         this.orthographicControls.target.copy(target);
         this.orthographicControls.screenSpacePanning = true;
         this.orthographicControls.maxPolarAngle = 0.0 * Math.PI;
-        this.orthographicControls.enableDamping = true;
         this.orthographicControls.update();
 
         this.controls = this.mapControls;
