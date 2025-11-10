@@ -20,6 +20,7 @@ assets/
 
 # App stuff
 threejs/assets/
+threejs/built/
 threejs/dist/
 threejs/feedback/
 threejs/backend/feedback.log
