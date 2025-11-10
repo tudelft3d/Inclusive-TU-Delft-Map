@@ -188,10 +188,16 @@ export class LayerManager {
 		let building_label;
 
 		if (this._is_importance_sufficient(building_object.attributes["Importance"], this.importance_baseline)) {
-			if (building_object.type == "Building" && building_object.attributes["ShortName (EN)"]) {
-				building_label = `${building_object.attributes["space_id"]} | ${building_object.attributes["ShortName (EN)"]}`;
+			const spaceId = building_object.attributes["space_id"];
+			const shortName = building_object.attributes["ShortName (EN)"];
+			if (spaceId && shortName) {
+				building_label = `${spaceId} | ${shortName}`;
+			} else if (spaceId) {
+				building_label = spaceId;
+			} else if (shortName) {
+				building_label = shortName;
 			} else {
-				building_label = building_object.attributes["space_id"];
+				building_label = null;
 			}
 		} else {
 			building_label = null;

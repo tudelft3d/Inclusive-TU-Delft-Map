@@ -4,7 +4,7 @@
 
 #info-pane {
   position: fixed;
-  top: calc(var(--height, 64px) + 14px);
+  top: calc(var(--height, 64px) + 20px);
   left: 14px;
   background: #fafafa;
   border-radius: 8px;
@@ -13,7 +13,7 @@
   max-width: 420px;
   /* max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px); */
   max-height: calc(100vh - var(--height) - 14px - 12px - 12px - 14px - 125px);
-  padding: 12px;
+  padding: 6px 12px 6px 12px;
   opacity: 0;
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 10000;
@@ -222,8 +222,7 @@
   font-weight: 500;        
   color: #484848;      
   font-size: 14px;         
-  flex: 1 1 auto;       
-  max-width: 100%;
+  flex: 1 1 75px;
   white-space: nowrap;
   text-wrap: balance;
   text-align: left;
@@ -237,7 +236,8 @@
 
   /* make the value cell the same proportion as top-level rows
      and ensure it is a flex container so buttons can be pushed to the far right */
-  flex: 1 1 auto;
+  flex: 2 1 250px;
+  /* max-width: 300px; */
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -252,8 +252,7 @@
 
 /* Footer / primary action */
 .info-pane-button-background {
-  margin: -2px -12px 2px -12px; /* remove top margin that added the gap */
-  padding: 12px 14px;
+  margin: 0px; /* remove top margin that added the gap */
   background: #ffffff;
   border-top: 1px solid #eee;
   border-bottom-left-radius: 8px;
@@ -276,8 +275,8 @@
   justify-content: center;
   gap: 8px;
   box-shadow: 0 2px 6px rgba(0,126,166,0.15);
+  box-sizing: border-box;
 }
-
 
 .info-pane-button-part {
   width: auto;
@@ -320,8 +319,7 @@
 /* two small actions layout */
 .info-pane-row.info-pane-button-background {
   display: flex;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 8px;
 }
 .info-pane-row.info-pane-button-background span {
   flex: 1 1 0;
@@ -353,16 +351,22 @@
   text-align: left;
 }
 
-.info-pane-button:hover {
+.info-pane-button:hover,
+.info-pane-button-bottom-row:hover{
   background: #027eab9d;
 }
 
+.info-pane-button-background.info-pane-footer > .info-pane-row {
+  padding-left: 10px;
+  padding-right: 10px;
+}
 
 /* small responsive tweak */
 @media (max-width: 620px) {
   /* Mobile bottom-sheet behavior */
   #info-pane {
-    display: block !important;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     right: 0;
@@ -373,9 +377,9 @@
     border-radius: 8px 8px 0 0;
     min-width: 100%;
     max-width: 100%;
-    max-height: 75vh;
+    max-height: 63dvh;
     height: auto;
-    overflow-y: auto;
+    overflow-y: hidden;
     padding: 12px;
     box-shadow: 0 -10px 30px rgba(0,0,0,0.14);
     transform: translateY(100%);
@@ -384,8 +388,6 @@
     z-index: 2400;
     box-sizing: border-box;
     pointer-events: none;
-
-   --info-pane-sticky-offset: 1px;
   }
 
   /* open state */
@@ -400,6 +402,7 @@
     padding: 14px 16px;
     border-radius: 8px 8px 0 0;
     gap: 10px;
+    flex-shrink: 0;
   }
   .info-pane-close {
     width: 44px;
@@ -410,8 +413,11 @@
 
   /* adjust content area so it fits inside sheet with footer */
   .info-pane-content {
-    max-height: calc(75vh - 350px);
-    min-height: 50vh;
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
+    min-height: 0;
+    padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -420,39 +426,5 @@
     font-size: 13px;
     padding: 12px 16px;
     border-radius: 10px;
-  }
-
-  .info-pane-button-background .info-pane-row {
-    padding: 6px 5px 8px 5px;
-  }
-
-  /* keep left margin on very narrow screens consistent */
-  #info-pane { left: 0; }
-
-  /* Anchor the footer buttons to the bottom and make them non-scrollable */
-  .info-pane-button-background {
-    position: sticky;
-    bottom: 1px;
-    z-index: 30;
-    margin: 0 -12px;
-    padding: 12px 14px;
-    background: #ffffff;
-    border-top: 1px solid #eee;
-    box-shadow: 0 -6px 20px rgba(0,0,0,0.06);
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-
-  .info-pane-content {
-    padding-bottom: calc(110px + var(--info-pane-sticky-offset));
-    max-height: calc(75vh - 350px);
-    min-height: 50vh;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .info-pane-row.info-pane-button-background {
-    display: flex;
-    gap: 6px;
-    padding: 12px 14px;
   }
 }

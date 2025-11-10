@@ -1,0 +1,12 @@
+cjio>=0.10.1
+networkx>=3.5
+numpy>=2.3.3
+pdoc>=16.0.0
+pyglet<2
+rtree>=1.4.1
+scipy>=1.16.2
+shapely>=2.1.1
+tqdm>=4.67.1
+triangle>=20250106
+trimesh>=4.8.1
+typer>=0.19.2
