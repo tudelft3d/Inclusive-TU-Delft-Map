@@ -95,6 +95,11 @@ export class CjHelper {
         return objectKey;
     }
 
+    /**
+     * @param {string} key: A key representing a room or storey for which they storey code needs to be retrieved.
+     * 
+     * @return {string} The storey code for the object associated with the key.
+     */
     getStoreyCode(key) {
         const roomType = this.getType(key);
         var storeyObjectKey;
@@ -111,6 +116,11 @@ export class CjHelper {
         return this.getAttributes(storeyObjectKey)["storey_space_id"];
     }
 
+    /**
+     * @param {string} key: The key of the object for which all storey codes need to be retrieved.
+     * 
+     * @return {array} An array of all storey codes associated with the unit represented by the key.
+     */
     getUnitAllStoreyCodes(key) {
         if (!this.isBuildingUnit(key)) {
             return;
@@ -121,6 +131,11 @@ export class CjHelper {
         return [...allStoreyCodes];
     }
 
+    /**
+     * @param {string} key: The key of the object for which a storey code needs to be retrieved.
+     * 
+     * @return {string} The storey code with which the key is most strongly associated with.
+     */
     getUnitMainStoreyCode(key) {
         if (!this.isBuildingUnit(key)) {
             return;
@@ -129,16 +144,31 @@ export class CjHelper {
         return attributes["Entrance Storey Code"]
     }
 
+    /**
+     * @param {string} key: The key for which an object needs to be retrieved.
+     * 
+     * @return {object} The object associated with the key.
+     */
     getJson(key) {
         const objectKey = this.keyToObjectKey(key);
         return cityjson.CityObjects[objectKey];
     }
 
+    /**
+     * @param {string} key: The key of the object for which the type needs to be retrieved.
+     * 
+     * @return {string} The type of the object the key is associated with.
+     */
     getType(key) {
         const json = this.getJson(key);
         return json["type"];
     }
 
+    /**
+     * @param {string} key: The key of the object for which the children need to be retrieved.
+     * 
+     * @return {array} The key(s) of the children object(s), if they exist.
+     */
     getChildrenObjectKeys(key) {
         const json = this.getJson(key);
         if (Object.keys(json).includes("children")) {
@@ -148,6 +178,11 @@ export class CjHelper {
         }
     }
 
+    /**
+     * @param {string} key: The key of the object for which the parent needs to be retrieved.
+     * 
+     * @return {object} The key of the parent object, if it exists.
+     */
     getParentObjectKey(key) {
         const json = this.getJson(key);
         if (Object.keys(json).includes("parents")) {
@@ -157,16 +192,31 @@ export class CjHelper {
         }
     }
 
+    /**
+     * @param {string} key: The key of the object for which the attributes need to be retrieved.
+     * 
+     * @return {object} The attributes associated with the key, extracted from the cityjson file.
+     */
     getAttributes(key) {
         const json = this.getJson(key);
         return json["attributes"];
     }
 
+    /**
+     * @param {string} key: The key of the object for which the corresponding mesh needs to be retrieved.
+     * 
+     * @return {threejs mesh object} The mesh object associated with the key, if it exists.
+     */
     getMesh(key) {
         const meshKey = this.keyToMeshKey(key);
         return this.scene.getObjectByName(meshKey);
     }
 
+    /**
+     * @param {string} key: The key of the object from which the unit spaces need to be extracted.
+     * 
+     * @return {array} An array of unit spaces.
+     */
     getUnitSpaces(key) {
         const type = this.getType(key);
         if (type != "BuildingUnit") {
@@ -184,11 +234,19 @@ export class CjHelper {
         return attributes[unitSpacesAttribute];
     }
 
+    /**
+     * @param {string} key: The key of the object from which the space id needs to be extracted.
+     */
     getSpaceId(key) {
         const attributes = this.getAttributes(key);
         return attributes["space_id"];
     }
 
+    /**
+     * @param {string} key: The key of the object from which the icon position needs to be extracted.
+     * 
+     * @return {THREE.Vector3d} A threejs vector of the icon position.
+     */
     getIconPositionVector3(key) {
         const attributes = this.getAttributes(key);
         const iconPosition = attributes["icon_position"];
@@ -219,6 +277,11 @@ export class CjHelper {
         return allObjectKeys;
     }
 
+    /**
+     * @param {key} buildingKey: The cityjson key of the building object from which the keys of the building unit groups need to be extracted.
+     * 
+     * @return {array} An array of building unit group keys.
+     */
     getBuildingUnitGroupsObjectKeys(key) {
         if (!this.isBuilding(key)) {
             return null;
@@ -247,6 +310,11 @@ export class CjHelper {
         ]);
     }
 
+    /**
+     * @param {string} buildingKey: The cityjson key of the building object from which the part keys need to be extracted.
+     * 
+     * @return {array} An array of building part object keys.
+     */
     getBuildingPartsObjectKeys(buildingKey) {
         // Check if the object is a building
         const objectType = this.getType(buildingKey);
@@ -262,6 +330,12 @@ export class CjHelper {
         return buildingPartsObjectKeys;
     }
 
+    /**
+     * @param {string} buildingKey: The cityjson key of the building object from which the storey keys need to be extracted.
+     * @param {string} filteredStoreyCode: The storey code of the storey that is needed. If left null will return objects for all storeys.
+     * 
+     * @param {array} An array of storey object keys.
+     */
     getBuildingStoreysObjectKeys(buildingKey, filteredStoreyCode = null) {
         const buildingParts = this.getBuildingPartsObjectKeys(buildingKey);
         if (!buildingParts) {
@@ -283,6 +357,12 @@ export class CjHelper {
         return buildingStoreys;
     }
 
+    /**
+     * @param {string} buildingKey: The cityjson key of the building object for which needs to be checked
+     * if it has building parts, storeys and rooms.
+     * 
+     * @return {boolean}: A boolean indicating if the building has an interior.
+     */
     buildingHasFloorPlan(buildingKey) {
         // Check if the object is a building
         const buildingParts = this.getBuildingPartsObjectKeys(buildingKey);
