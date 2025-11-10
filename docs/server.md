@@ -126,8 +126,8 @@ Here are the steps to deploy the web page for the first time:
 
 ### Update the map
 
-> [!NOTE]
-> The first commands in this section must be run from your local machine.
+!!! tip
+    The first commands in this section must be run from your local machine.
 
 1. Copy the assets to the server.
     If you have them locally and you followed the setup guide, you can run this by replacing `<NETID>` properly:

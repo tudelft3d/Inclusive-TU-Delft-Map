@@ -7,6 +7,8 @@ edit_uri: edit/main/docs/
 theme:
     name: material
     language: en
+    logo: images/website_icon.svg
+    favicon: images/website_icon.svg
     features:
         - content.code.copy
         - content.action.edit
