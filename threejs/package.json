@@ -2,6 +2,7 @@
     "name": "inclusive-campus-map",
     "version": "0.1.0",
     "dependencies": {
+        "@tweenjs/tween.js": "^25.0.0",
         "express": "^5.1.0",
         "fuse.js": "^7.1.0",
         "joi": "^18.0.1",
