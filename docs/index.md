@@ -3,7 +3,7 @@
 This is the documentation of the GEOIT1501 project called "Inclusive 3D Campus Map of TU Delft" and hosted at <https://inclusivecampusmap.bk.tudelft.nl>.
 
 | Outdoor view | Floor plan of BK |
-| ---------------------- | ---------------------- |
+| :----------------------: | :----------------------: |
 | ![Screenshot of outdoor](./Screenshot_map-outdoor.png) | ![Screenshot of the floor plan of BK](./Screenshot_map-BK.png) |
 
 The documentation of this project is split in multiple parts.
