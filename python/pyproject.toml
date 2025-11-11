@@ -1,0 +1,36 @@
+[project]
+name = "data-pipeline"
+version = "0.1.0"
+description = "Scripts to process the data into a correct format for the map"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Alexandre Bry", email = "abry.pro@proton.me" }]
+
+dependencies = [
+    "cjio>=0.10.1",
+    "networkx>=3.5",
+    "numpy>=2.3.3",
+    "pdoc>=16.0.0",
+    "pyglet<2",
+    "rtree>=1.4.1",       # Necessary for trimesh
+    "scipy>=1.16.2",      # Necessary for trimesh
+    "shapely>=2.1.1",
+    "tqdm>=4.67.1",
+    "triangle>=20250106",
+    "trimesh>=4.8.1",
+    "typer>=0.19.2",
+]
+
+[dependency-groups]
+dev = ["matplotlib>=3.10.7"]
+
+[tool.setuptools]
+packages = ["data_pipeline"]
+package-dir = { "" = "src" }
+
+[project.scripts]
+data-pipeline = "data_pipeline.cli:app"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"

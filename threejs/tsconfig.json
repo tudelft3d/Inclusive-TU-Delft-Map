@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    /* ==== Core output ==== */
+    "target": "ES2017",                     // matches your original config
+    "module": "ESNext",                     // Vite expects native ES modules
+    "moduleResolution": "Bundler",          // works with Vite’s aliasing
+    "outDir": "./built",
+    "sourceMap": true,
+    "declaration": true,                    // optional – useful for libraries
+
+    /* ==== Strictness ==== */
+    "strict": true,                         // enables all strict checks
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "exactOptionalPropertyTypes": true,
+
+    /* ==== JSX / React (if you ever need it) ==== */
+    // "jsx": "preserve",
+
+    /* ==== Path handling ==== */
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"]
+    },
+
+    /* ==== Library definitions ==== */
+    "lib": ["DOM", "ES2020"],               // you use DOM APIs + modern JS
+
+    /* ==== Allow JS files while you migrate ==== */
+    "allowJs": true,
+    "checkJs": false,                       // don’t type‑check the old .js files yet
+
+    /* ==== Incremental builds (speed) ==== */
+    "incremental": true
+  },
+
+  /* ==== What gets compiled ==== */
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "built"]
+}

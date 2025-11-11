@@ -1,27 +1,41 @@
 {
-  "name": "inclusive-campus-map",
-  "version": "0.1.0",
-  "dependencies": {
-    "express": "^5.1.0",
-    "fuse.js": "^7.1.0",
-    "joi": "^18.0.1",
-    "ol": "^10.6.1",
-    "papaparse": "^5.5.3",
-    "pm2": "^6.0.13",
-    "proj4": "^2.19.10",
-    "three": "^0.180.0",
-    "uuid": "^13.0.0"
-  },
-  "devDependencies": {
-    "concurrently": "^9.2.1",
-    "vite": "^7.1.4"
-  },
-  "scripts": {
-    "dev:backend": "node backend/index.js",
-    "dev:frontend": "vite",
-    "dev:frontend:host": "vite --host",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:host": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:host\"",
-    "build": "vite build"
-  }
+    "name": "inclusive-campus-map",
+    "version": "0.1.0",
+    "dependencies": {
+        "@tweenjs/tween.js": "^25.0.0",
+        "express": "^5.1.0",
+        "fuse.js": "^7.1.0",
+        "joi": "^18.0.1",
+        "ol": "^10.6.1",
+        "papaparse": "^5.5.3",
+        "pm2": "^6.0.13",
+        "proj4": "^2.19.10",
+        "three": "^0.180.0",
+        "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.5",
+        "@types/joi": "^17.2.2",
+        "@types/node": "^24.10.0",
+        "@types/ol": "^6.5.3",
+        "@types/papaparse": "^5.5.0",
+        "@types/three": "^0.181.0",
+        "@types/uuid": "^10.0.0",
+        "concurrently": "^9.2.1",
+        "ts-node-dev": "^2.0.0",
+        "typedoc": "^0.28.14",
+        "typedoc-plugin-markdown": "^4.9.0",
+        "typescript": "^5.9.3",
+        "vite": "^7.1.4",
+        "vite-plugin-checker": "^0.11.0"
+    },
+    "scripts": {
+        "dev:backend": "node backend/index.js",
+        "dev:frontend": "vite",
+        "dev:frontend:host": "vite --host",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:host": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:host\"",
+        "build": "vite build && tsc --project tsconfig.json",
+        "type-check": "tsc --noEmit"
+    }
 }
