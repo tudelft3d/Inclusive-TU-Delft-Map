@@ -4,7 +4,6 @@ import { Scene } from "three";
 import { OutlineManager } from "./outlines";
 import { CjHelper } from "./cjHelper";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
-import { LayerManager } from "./layers";
 import { StoreyManager } from "./storeyManager"
 
 const NOT_INITIALISED = 0;

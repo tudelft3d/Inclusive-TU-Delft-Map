@@ -8,6 +8,9 @@ import { BuildingView } from "./buildingView";
 
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
 
+/**
+ * This class manages the functionality of the search bar.
+ */
 export class Searcher {
 
     /**
@@ -17,11 +20,6 @@ export class Searcher {
      * @param {Scene} scene 
      */
     constructor(cameraManager, picker, scene) {
-
-        // what to do when searching for a room type that will have multiple instances?
-        // Highlight all bathrooms?
-
-        // Can also search within arrays <- use for nicknames
 
         this.cameraManager = cameraManager;
         this.picker = picker;
@@ -51,6 +49,13 @@ export class Searcher {
 
     }
 
+    /**
+     * The Fuse searching library is easier to work with if the objects being searched are
+     * available as an array.
+     * This function strips the key from each object and pushes the attributes into an array.
+     * 
+     * @param {object} json: The cityjson file.
+     */
     _process_json(json) {
         json = json["CityObjects"];
 
@@ -64,8 +69,13 @@ export class Searcher {
         return object_attribute_list;
     }
 
-    // Perhaps make lod extractable from the map
-    // Will have to change this if not all searchable objects have a space_id
+    /**
+     * For an array of objects, retrieves all the corresponding threejs mesh objects
+     * 
+     * @param {array | object} object_list: The cityjson objects for which meshes are needed.
+     * @param {object} scene: The threejs scene, which is queried for the mesh objects.
+     * @param {string} lod: Indicates which lod the user expects the desired meshes to be.
+     */
     _retrieve_threejs_objects(object_list, scene, lod = "infer") {
         const threejs_objects = [];
         const all_objects = [];
@@ -108,7 +118,12 @@ export class Searcher {
         return threejs_objects;
     }
 
-
+    /**
+     * Given a pattern, returns the closest n results from the cityjson file, where n = return_count.
+     * 
+     * @param {string} pattern: The string that the user is searching for.
+     * @param {int} return_count: The maximum number of results that are desired.
+     */
     _search_pattern(pattern, return_count) {
 
         const all_results = this.attribute_searcher.search(pattern);
@@ -119,7 +134,14 @@ export class Searcher {
 
     }
 
-
+    /**
+     * Searches for a pattern and then zooms towards the corresponding object.
+     * This function is called when the user clicks on an auto-completed result in the search bar.
+     * We can guarantee that it will result in a valid object, as the pattern has already been tested
+     * against the cityjson file
+     * 
+     * @param {string} pattern: Pattern that when searched will result in object that needs to be zoomed to.
+     */
     search_and_zoom(pattern) {
         const result = this._search_pattern(pattern, 1);
         // console.log('pattern: ', pattern);
@@ -129,7 +151,12 @@ export class Searcher {
         this.picker.pickMesh(result[0].item["attributes"]["key"]);
     }
 
-
+    /**
+     * A wrapper for _search_pattern() that ensures that results have proper names.
+     * 
+     * @param {string} pattern: The string that the user is searching for.
+     * @param {int} n: The maximum number of results that are desired.
+     */
     search_n_best_matches(pattern, n) {
 
         const results = this._search_pattern(pattern, n);
@@ -146,6 +173,12 @@ export class Searcher {
 
     }
 
+    /**
+     * For a given object, determines a suitable display name if the object doesn't have one
+     * as a listed attribute.
+     * 
+     * @param {object} obj: The object for which a name is needed.
+     */
     results_to_name(obj) {
         const matchItem = obj.item;
         const attr = matchItem.attributes;

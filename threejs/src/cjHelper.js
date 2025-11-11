@@ -9,13 +9,19 @@ export class CjHelper {
     /**
      * Transform a key (either geometry or CityJSON key) into the corresponding CityJSON key.
      *
-     * @param {string} key
-     * @returns
+     * @param {string} key:
+     * @returns {string} 
      */
     keyToObjectKey(key) {
         return key.split("-").slice(0, 3).join("-");
     }
 
+    /**
+     * Transform a cityjson key into the corresponding threejs mesh key.
+     *
+     * @param {string} key: The cityjson key
+     * @returns {string} The threejs mesh key
+     */
     keyToMeshKey(key) {
         const objectKey = this.keyToObjectKey(key);
         const objectType = this.getType(key);

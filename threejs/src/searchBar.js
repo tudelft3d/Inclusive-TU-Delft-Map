@@ -20,6 +20,14 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
     let lastResults = [];
     let lastQuery = "";
 
+    /**
+     * Intermediary function that calls a passed function after a set delay.
+     * This is used for the searchbar, where it is desirable for search results to show up shortly after
+     * the user has stopped typing.
+     * 
+     * @param {function} fn: The function to execute after the delay.
+     * @param {int} wait: The delay in miliseconds.
+     */
     function debounce(fn, wait) {
         return function (...args) {
             window.clearTimeout(timeout);
@@ -27,6 +35,10 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
         };
     }
 
+    /**
+     * A function that darkens the screen behind the search bar and search results.
+     * Used if the device has a small screen (read: is mobile).
+     */
     function createOverlayIfNeeded() {
         // Only create the dark full-screen overlay on small screens
         if (!window.matchMedia('(max-width:620px)').matches) return null;
@@ -40,7 +52,7 @@ export function initSearchBar(searcher, search_delay = 250, search_result_count 
         }
         return overlay;
     }
-
+    
     function openPanel() {
         container.classList.add('mobile-open');
         document.body.classList.add('search-active-mobile');

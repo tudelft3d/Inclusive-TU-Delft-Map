@@ -1,5 +1,8 @@
 import { Mesh } from "three/src/Three.Core.js";
 
+/**
+ * This class handles highlighting a mesh, which occurs when selecting a building.
+ */
 export class Highlighter {
 
     constructor(color) {
@@ -10,7 +13,7 @@ export class Highlighter {
 
     /**
      * 
-     * @param {Mesh[] | Mesh} meshes 
+     * @param {Mesh[] | Mesh} meshes: The meshes that need to be highlighted 
      */
     highlight(meshes) {
         if (!Array.isArray(meshes)) meshes = [meshes];
@@ -39,6 +42,9 @@ export class Highlighter {
         }
     }
 
+    /**
+     * Unhighlights all highlighted meshes
+     */
     unhighlight() {
         for (var i = 0; i < this.highlighted.length; i++) {
             this.highlighted[i].material.color.setHex(this.originalColors[i]);

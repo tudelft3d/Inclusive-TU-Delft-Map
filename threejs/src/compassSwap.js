@@ -3,10 +3,16 @@
 const COMPASS_WHITE = 'assets/threejs/graphics/icons/ui-buttons/compass_white.svg';
 const COMPASS_DARK = 'assets/threejs/graphics/icons/ui-buttons/compass_black.svg';
 
+/**
+ * Fetch the compass html img object
+ */
 function getCompassImg() {
     return document.querySelector('#compass-btn img');
 }
 
+/**
+ * Update the img source depending on the current basemap mode
+ */
 function updateCompassSrc() {
     const img = getCompassImg();
     if (!img) return;
@@ -14,6 +20,9 @@ function updateCompassSrc() {
     img.src = isSat ? COMPASS_DARK : COMPASS_WHITE;
 }
 
+/**
+ * Initiate the swap
+ */
 function startCompassSwap() {
     updateCompassSrc();
 
