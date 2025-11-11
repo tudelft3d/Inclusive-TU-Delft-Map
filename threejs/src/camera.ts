@@ -21,20 +21,16 @@ const frustumSize = 1;
 const MIN_AZIMUTH_ANGLE = -Infinity;
 const MAX_AZIMUTH_ANGLE = Infinity;
 
-<<<<<<< HEAD:threejs/src/camera.js
 /**
  * @param {object} camera: The camera for which the frustrum height and width need to be calculated.
  * @param {distance} number: The distance between the camera position and control target
  * 
  * @return {array} An array containing the height and width of the frustrum.
  */
-function frustrumHeightWidth(camera, distance) {
-=======
 function frustrumHeightWidth(
     camera: THREE.PerspectiveCamera,
     distance: number
 ) {
->>>>>>> main:threejs/src/camera.ts
     const field_of_view = (camera.fov * Math.PI) / 180;
     const frustrumHeight = Math.tan(field_of_view / 2) * distance * 2;
     const frustrumWidth = frustrumHeight * camera.aspect;
@@ -96,16 +92,12 @@ export class CamerasControls {
         this.previousNonNorthPosition = null;
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.Vector3d} position: The starting position for the initial camera.
      * 
      * Creates all three cameras (map, orbit and ortho) and initializes the map camera.
      */
-    _initCameras(position) {
-=======
     _initCameras(position: THREE.Vector3) {
->>>>>>> main:threejs/src/camera.ts
         const aspect = window.innerWidth / window.innerHeight;
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -132,16 +124,12 @@ export class CamerasControls {
         ];
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.Vector3d} target: The starting position for the initial target.
      * 
      * Creates all three control schemes.
      */
-    _initControls(target) {
-=======
     _initControls(target: THREE.Vector3) {
->>>>>>> main:threejs/src/camera.ts
         this.mapControls = new MapControls(this.mapCamera, this.container);
         this.mapControls.target.copy(target);
         this.mapControls.maxPolarAngle = 0.5 * Math.PI;
@@ -184,17 +172,13 @@ export class CamerasControls {
         ];
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {int} newCameraInt: The "CameraInt" of the desired camera.
      * 
      * Changes the camera int (which indicates which camera is currently active) and also
      * switches the active camera and control objects.
      */
-    _changeCameraInt(newCameraInt) {
-=======
     _changeCameraInt(newCameraInt: CameraValue) {
->>>>>>> main:threejs/src/camera.ts
         if (
             ![CameraValue.Map, CameraValue.Orbit, CameraValue.Ortho].includes(
                 newCameraInt
@@ -296,17 +280,13 @@ export class CamerasControls {
         this.compassElement.style.transform = `rotate(${degrees}deg)`;
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {number} width: desired camera width.
      * @param {number} heigt: desirec camera height.
      * 
      * Changes the width and height of all three cameras.
      */
-    resizeCameras(width, height) {
-=======
     resizeCameras(width: number, height: number) {
->>>>>>> main:threejs/src/camera.ts
         const aspect = width / height;
 
         this.mapCamera.aspect = aspect;
@@ -530,30 +510,9 @@ export class CamerasControls {
         }
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * Zoom in by the desired degree, or by a factor of 1.8 if unspecified.
      */
-=======
-    // toggleOrthographic() {
-    //     if (this._animating()) {
-    //         return;
-    //     }
-    //     if (this.cameraInt != CameraValue.Ortho) {
-    //         this.switchToOrthographic();
-    //         this.updateCompassRotation();
-    //     } else {
-    //         this.switchToMap();
-    //         if (this.previousCameraInt == CameraValue.Map) {
-    //             this.switchToMap();
-    //         } else {
-    //             this.switchToOrbit();
-    //         }
-    //         this.updateCompassRotation();
-    //     }
-    // }
-
->>>>>>> main:threejs/src/camera.ts
     zoomIn(factor = 1.8) {
         // Fix: make our own function instead of using a private one
         const ctrl = this.controls as any;
@@ -704,18 +663,14 @@ export class CamerasControls {
         );
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * Zoom function for the perspective camera.
      */
-    _zoomPerspective(newTarget, distance, onComplete = () => { }) {
-=======
     _zoomPerspective(
         newTarget: THREE.Vector3,
         distance: number,
         onComplete = () => {}
     ) {
->>>>>>> main:threejs/src/camera.ts
         // Set camera position & orientation
         const initTarget = this.controls.target.clone();
         const initPosition = this.camera.position.clone();
@@ -744,15 +699,11 @@ export class CamerasControls {
         );
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
-    _zoomToObjectPerspective(object, onComplete = () => { }) {
-=======
     _zoomToObjectPerspective(object: THREE.Object3D, onComplete = () => {}) {
->>>>>>> main:threejs/src/camera.ts
         this.switchToOrbit();
         if (this.camera != this.orbitCamera) {
             console.error("Camera is not orbit.");
@@ -771,20 +722,16 @@ export class CamerasControls {
         return this._zoomPerspective(sphere.center, distance, onComplete);
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
      * @param {number} distance: The distance between the current and desired targets
      * @param {function} onComplete: Function to execute when done with the operation.
      */
-    _zoomOrthographic(newTarget, distance, onComplete = () => { }) {
-=======
     _zoomOrthographic(
         newTarget: THREE.Vector3,
         distance: number | null,
         onComplete = () => {}
     ) {
->>>>>>> main:threejs/src/camera.ts
         // Set camera position & orientation
         const initTarget = this.controls.target.clone();
         const initPosition = this.camera.position.clone();
@@ -802,15 +749,11 @@ export class CamerasControls {
         );
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
-    _zoomToObjectOrthographic(object, onComplete = () => { }) {
-=======
     _zoomToObjectOrthographic(object: THREE.Object3D, onComplete = () => {}) {
->>>>>>> main:threejs/src/camera.ts
         if (!object) {
             return;
         }
@@ -835,15 +778,11 @@ export class CamerasControls {
         return this._zoomOrthographic(sphere.center, null, onComplete);
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
-    zoomToObject(object, onComplete = () => { }) {
-=======
     zoomToObject(object: THREE.Object3D, onComplete = () => {}) {
->>>>>>> main:threejs/src/camera.ts
         if (this.usesOrthographicCamera()) {
             return this._zoomToObjectOrthographic(object, onComplete);
         } else {
@@ -851,20 +790,16 @@ export class CamerasControls {
         }
     }
 
-<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
      * @param {number} distance: The distance between the current and desired targets
      * @param {function} onComplete: Function to execute when done with the operation.
      */
-    zoomToCoordinates(newTarget, distance, onComplete = () => { }) {
-=======
     zoomToCoordinates(
         newTarget: THREE.Vector3,
         distance: number,
         onComplete = () => {}
     ) {
->>>>>>> main:threejs/src/camera.ts
         if (this.usesOrthographicCamera()) {
             return this._zoomOrthographic(newTarget, distance, onComplete);
         } else {
