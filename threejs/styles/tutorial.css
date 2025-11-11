@@ -262,6 +262,11 @@ body {
     padding: 2.5rem 0; 
 }
 
+.toggle-exploration {
+    padding: 0rem 0; 
+    padding-bottom: 5px;
+}
+
 #exploration_title {
     font-size: 30px; 
     font-weight: 700;
