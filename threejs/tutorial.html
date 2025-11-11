@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Tutorial TU Delft Inclusive Campus Map</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="icon" type="image/svg" href="./assets/threejs/graphics/website_icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="./styles/header.css" rel="stylesheet" type="text/css">
+    <link href="./styles/tutorial.css" rel="stylesheet" type="text/css">
+
+
+    <script type="module" src="./src/header.js" defer></script>
+    <script src="https://kit.fontawesome.com/82c2fe88aa.js" crossorigin="anonymous" defer></script>
+</head>
+
+<body>
+    <div id="site-header"></div>
+    <main>
+        <section class="tutorial_intro">
+            <div class="tutorial_container">
+                <div class="intro-text">
+                    <h1 id="tutorial_title">How to use the map?</h1>
+                    <p>This quick guide will walk you through the main controls and features of the Inclusive Campus Map. Learn how to find buildings, explore interiors, and use the map's accessibility features.</p>
+                </div>
+                <div class="intro-image"> 
+                    <img src="./assets/threejs/graphics/intro_tutorial_img.png" alt="Image of the Inclusive campus map upon first loading.">
+                </div>
+            </div>
+        </section>
+
+        <section class="general_controls">
+            <div class="container-narrow">
+                <h1 id="controls_title">General Map Controls</h1>
+                
+                <div class="controls-grid" role="list">
+
+                    <article class="control-card" role="listitem" aria-labelledby="c2_title">
+                        <div class="button-preview">
+                            <div class="demo-btn">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/basemap_white.svg" alt="Basemap icon" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c2_title">Change Basemap</h3>
+                            <p>Choose between three different basemaps to view the map: Satellite Imagery, Topographic Map and Grayscale.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c3_title">
+                        <div class="button-preview">
+                            <div class="demo-btn">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/layers_white.svg" alt="Layers icon" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c3_title">Select thematic layers</h3>
+                            <p>Select layers you want to display on the inclusive map, such as: Gender neutral bathroom, Wheelchair accessible parking or Contemplation room.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c4_title">
+                        <div class="button-preview">
+                            <div class="demo-btn">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/reset_white.svg" alt="Reset view icon" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c4_title">Reset View</h3>
+                            <p>Brings you back to initial view as if newly loaded the map.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c5_title">
+                        <div class="button-preview">
+                            <div class="demo-btn">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/question_mark.svg" alt="Legend icon" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c5_title">Legend</h3>
+                            <p>View explanation of the colour-coding for the campus buildings.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c6_title">
+                        <div class="button-preview">
+                            <div class="demo-zoom-stack">
+                                <div class="zoom-half"><img src="assets/threejs/graphics/icons/ui-buttons/plus_white.svg" alt="Zoom in" /></div>
+                                <div class="zoom-half"><img src="assets/threejs/graphics/icons/ui-buttons/minus_white.svg" alt="Zoom out" /></div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c6_title">Zoom-controls</h3>
+                            <p>Zoom-in and zoom-out the view of the map.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c7_title">
+                        <div class="button-preview">
+                            <div class="demo-btn-compass">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/compass_black.svg" alt="Compass icon" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c7_title">Compass</h3>
+                            <p>When clicked first time, it will orient your map towards the North, when clicked again, it will bring you back to the previous view.</p>
+                        </div>
+                    </article>
+
+                    <article class="control-card" role="listitem" aria-labelledby="c8_title">
+                        <div class="button-preview">
+                            <div class="demo-btn">
+                                <img src="assets/threejs/graphics/icons/ui-buttons/locate_white.svg" alt="Switch view button" />
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c8_title">Locate</h3>
+                            <p>Find your location on campus. This will only work if you are on TU Delft Campus.</p>
+                        </div>
+                    </article>
+                    
+                    <article class="control-card" role="listitem" aria-labelledby="c9_title">
+                        <div class="button-preview-toggle-view">
+                            <div class="demo-view-stack">
+                                <div class="view-half">3D</div>
+                                <div class="view-half">2D</div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="c9_title">Toggle 2D/3D view</h3>
+                            <p>Switch between a top-down 2D map and an angled 3D perspective.</p>
+                        </div>
+                    </article>
+
+                    
+                    <article class="control-card" id="search-card" role="listitem">
+                        <div class="search-card-header">
+                            <div class="search-preview">
+                                <img src="../assets/threejs/graphics/search-bar-tutorial.png" alt="Screenshot of the map search bar" />
+                            </div>
+                            <h3 id="c1_title">Search bar</h3>
+                        </div>
+                        <p>With the search bar you can search for a building on campus (either with its official name, number or nickname). You can also search for rooms in specific buildings.</p>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="building-exploration">
+            <div class="container-narrow">
+                <h1 id="exploration_title">Exploring Buildings and Interiors</h1>
+                <div class="step-list">
+                    <article class="step-card" role="listitem" aria-labelledby="step1_title">
+                        <div class="step-content">
+                            <span class="step-badge">Step 1</span>
+                            <h2 id="step1_title">Clicking a Building</h2>
+                            <p>Select any building on the interactive map to reveal more details. A building will be highlighted in yellow, indicating your selection, and an information panel of the building will appear.</p>
+                        </div>
+                        <div class="step-image">
+                            <img src="./assets/threejs/graphics/step1.png" alt="Screenshot of clicking a building on the map.">
+                        </div>
+                    </article>
+
+                    <article class="step-card" role="listitem" aria-labelledby="step2_title">
+                        <div class="step-image">
+                            <img src="./assets/threejs/graphics/step2-edited.png" alt="Screenshot of the information panel for a building.">
+                        </div>
+                        
+                        <div class="step-content">
+                            <span class="step-badge">Step 2</span>
+                            <h2 id="step2_title">Expanding the Information Panel</h2>
+                            <p>For more detailed information, you can expand the tabs, providing essential data such as the building name, address, and quick links.</p>
+                        </div>
+                        
+                    </article>
+
+                    <article class="step-card" role="listitem" aria-labelledby="step3_title">
+                        <div class="step-content">
+                            <span class="step-badge">Step 3</span>
+                            <h2 id="step3_title">View Floorplan</h2>
+                            <p>To see the indoor information of the building, click on "View Floorplan" button to open storey-navigation controls and see the inside.</p>
+                        </div>
+                        <div class="step-image">
+                            <img src="./assets/threejs/graphics/step3-edited.png" alt="Screenshot of the information panel for a building.">
+                        </div>
+                    </article>
+                
+                    <article class="step-card" id="step-4-card" role="listitem" aria-labelledby="step4_title">
+                        <div class="step-main-content">
+                            <div class="step-image-stack">
+                                <img src="./assets/threejs/graphics/step4.1.png" alt="Screenshot of exploring the building interior.">
+                                <img src="./assets/threejs/graphics/step4.2.png" alt="Screenshot of exploring the interior with the info panel closed.">
+                            </div>
+                            <div class="step-content">
+                                <span class="step-badge">Step 4</span>
+                                <h2 id="step4_title">Explore the interior</h2>
+                                <p>Once interior view is activated, the storey controls will appear so you can navigate between different floors of the buildings.</p>
+                                <p>The controls also work if you choose to close the information panel.</p>
+                            </div>
+                        </div>
+                        <div class="storey-controls-explainer">
+                            <h3 id="storey_title">Storey Controls</h3>
+                            <div class="controls-grid" role="list">
+                                <article class="control-card" role="listitem" aria-labelledby="sc1_title">
+                                    <div class="button-preview">
+                                        <div class="demo-btn demo-close-btn">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3 id="sc1_title">Close floorplan view</h3>
+                                        <p>Once clicked the interior pane turns off and an original building information panel will appear again.</p>
+                                    </div>
+                                </article>
+                                <article class="control-card" role="listitem" aria-labelledby="sc2_title">
+                                    <div class="button-preview">
+                                        <div class="demo-zoom-stack"> 
+                                            <div class="zoom-half"><i class="fa-solid fa-chevron-up"></i></div>
+                                            <div class="zoom-half"><i class="fa-solid fa-chevron-down"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3 id="sc2_title">Up-, Down- buttons</h3>
+                                        <p>Move up or down in the floorplan view per each floor.</p>
+                                    </div>
+                                </article>
+                                <article class="control-card" role="listitem" aria-labelledby="sc3_title" id="storey-select-card">
+                                    <div class="button-preview">
+                                        <div class="demo-dropdown">
+                                            <img src="../assets/threejs/graphics/floor_selector_tut.png" alt="Screenshot of the floor selector" />
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <h3 id="sc3_title">Select a Floor</h3>
+                                        <p>Click on this button and select a specific floor from the options in the drop down menu.</p>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="step-card" role="listitem" aria-labelledby="step5_title">
+                        <div class="step-content">
+                            <span class="step-badge">Step 5</span>
+                            <h2 id="step5_title">Explore the Rooms</h2>
+                            <p>In the floor plan view, you can search for a room, or click on a room, upon which a relevant information pane will open.</p>
+                        </div>
+                        <div class="step-image">
+                            <img src="./assets/threejs/graphics/step5.png" alt="Screenshot of the information panel for a building.">
+                        </div>
+                    </article>
+                </div>
+
+            </div>
+
+
+        </section>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,406 @@
+:root {
+  --page-bg-tut: #f5f5f5;
+  --card-bg-tut: #fdfdfdcf;
+  --muted-tut: #4a4e55;
+  --border-tut: #d7d7d7;
+  --accent-tut: #00a6d6;
+  --accent-dark-tut: #027dab;
+  --radius-tut: 10px;
+  --max-width-tut: 1100px;
+  --shadow-tut: 0 6px 20px rgba(0, 0, 0, 0.06);
+  --font-sans-tut: 'Open Sans', system-ui, -apple-system, Arial;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans-tut);
+  background: var(--page-bg-tut) !important;
+}
+
+.tutorial_container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 1.5rem; 
+}
+
+.tutorial_intro {
+    padding: 4rem 0 2rem 0; 
+    border-bottom: none; 
+}
+
+.tutorial_intro .tutorial_container {
+    display: flex;
+    align-items: center; 
+    justify-content: space-between;
+    gap: 3rem; 
+}
+
+.tutorial_intro .intro-text {
+    flex-basis: 45%;
+    flex-shrink: 0;
+}
+
+.tutorial_intro #tutorial_title {
+    font-size: 30px; 
+    font-weight: 700;
+    color: #2b2b2b;
+    margin-bottom: 1rem;
+}
+
+.tutorial_intro p {
+    font-size: 14px; 
+    line-height: 1.6;
+    color: #555;
+}
+
+.tutorial_intro .intro-image {
+    flex-basis: 50%; 
+    flex-shrink: 0;
+}
+
+.tutorial_intro .intro-image img {
+    width: 100%; 
+    height: auto;
+    border-radius: 12px; 
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* General Map Controls */
+
+.general_controls {
+    padding: 15px 0; 
+}
+
+.container-narrow {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 1.5rem; 
+}
+
+#controls_title {
+    font-size: 30px; 
+    font-weight: 700;
+    color: #2b2b2b;
+    text-align: center;
+    margin-bottom: 3rem; 
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem; 
+}
+
+.control-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+}
+
+.control-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem; 
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center; 
+    gap: 1.25rem; 
+}
+
+.button-preview {
+    flex-shrink: 0; 
+}
+
+.card-content {
+    flex: 1; 
+}
+
+.card-content h3 {
+    font-size: 14px; 
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 0.25rem 0; 
+}
+
+.card-content p {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.demo-btn, .demo-btn-compass {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f3f3; 
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.demo-btn img {
+    width: 27px;
+    height: 27px;
+    filter: invert(1);
+}
+
+.demo-btn-compass img {
+    width: 27px;
+    height: 27px; 
+}
+
+.demo-zoom-stack {
+    width: 32px;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    background: #f3f3f3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    overflow: hidden; 
+}
+
+.demo-zoom-stack .zoom-half {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.demo-zoom-stack .zoom-half img {
+    width: 23px;
+    height: 23px;
+    filter: invert(1); 
+}
+
+.demo-zoom-stack .zoom-half:first-child {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.demo-view-stack {
+    width: 32px;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.demo-view-stack .view-half {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Open Sans", sans-serif;
+    font-size: 12px; 
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.demo-view-stack .view-half:first-child {
+    background: #f3f3f3; 
+    color: #000000;
+}
+.demo-view-stack .view-half:last-child {
+    background: #f3f3f3; 
+    color: #000000;
+}
+
+/* Styling for Search Card */
+#search-card {
+    grid-column: 1 / -1; 
+    text-align: left; 
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.search-card-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 1px; 
+    gap: 6px;
+}
+
+#search-card .search-preview img {
+    display: block;
+    max-width: 450px;
+    width: 86%;
+    border-radius: 6px;
+    box-shadow: 2px 1.5px 4px #4040403f;
+}
+
+#search-card #c1_title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+#search-card p {
+    font-size: 14px; 
+    line-height: 1.6;
+    color: #555;
+    margin: 0;
+    max-width: 90%; 
+}
+
+/* Building Exploration */
+
+.building-exploration {
+    padding: 2.5rem 0; 
+}
+
+#exploration_title {
+    font-size: 30px; 
+    font-weight: 700;
+    color: #2b2b2b;
+    text-align: center;
+    margin-bottom: 3rem; 
+}
+
+.step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; 
+}
+
+.step-card {
+    display: flex;
+    align-items: center;
+    gap: 2rem; 
+
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2.5rem; 
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.step-content {
+    flex-basis: 35%; 
+    flex-shrink: 0;
+}
+
+.step-badge {
+    display: inline-block;
+    background-color: var(--accent-dark-tut, #027dab);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 1.25rem;
+}
+
+.step-content h2 {
+    font-size: 20px; 
+    font-weight: 600;
+    color: #2b2b2b;
+    margin: 0 0 0.75rem 0;
+}
+
+.step-content p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.step-image {
+    flex-basis: 65%; 
+}
+
+.step-image img {
+    width: 100%; 
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Special Styles for Step 4 Card */
+
+#step-4-card {
+    flex-direction: column;
+    align-items: stretch; 
+}
+
+.step-main-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.step-image-stack {
+    flex-basis: 65%; 
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; 
+}
+
+.step-image-stack img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+}
+
+.storey-controls-explainer {
+    border-top: 1px solid #e8e8e8;
+    margin-top: 2rem;
+    padding-top: 2rem;
+}
+
+.storey-controls-explainer #storey_title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2b2b2b;
+    text-align: center;
+    margin: 0 0 2rem 0;
+}
+
+.demo-close-btn i.fa-xmark {
+    font-size: 20px;
+    color: #000000; 
+}
+
+.demo-zoom-stack i {
+    font-size: 14px;
+    color: #000000; 
+}
+
+#storey-select-card {
+    flex-direction: column;
+    gap: 0.5rem;          
+    padding: 1.5rem 1rem;  
+}
+
+#storey-select-card .card-content {
+    text-align: left;
+}
+
+#storey-select-card .card-content h3 {
+    margin-top: 1px; 
+    margin-bottom: 1px;
+}
+
+#storey-select-card .demo-dropdown img {
+    max-width: 250px; 
+}
+
+.building-exploration{
+    padding-bottom: 6rem;
+}

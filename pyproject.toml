@@ -13,5 +13,6 @@ dependencies = [
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-material>=9.6.23",
     "mkdocs-section-index>=0.3.10",
+    "mkdocstrings-typescript>=0.1.0",
     "mkdocstrings[python]>=0.30.1",
 ]

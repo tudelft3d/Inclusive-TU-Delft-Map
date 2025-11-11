@@ -17,6 +17,7 @@ qgis/
 
 # App stuff
 threejs/assets/
+threejs/built/
 threejs/dist/
 threejs/backend/feedback.log
 

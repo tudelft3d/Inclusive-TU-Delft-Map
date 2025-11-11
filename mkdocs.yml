@@ -71,6 +71,11 @@ nav:
     - Python:
           - python_scripts.md
           - Code Reference: reference/
-    - JavaScript: javascript_app.md
+    - JavaScript:
+        - javascript_app.md
+        # - Code Reference:
+        #     - Camera:
+        #         - docs_js/camera/README.md
+        #         - CameraControls: docs_js/camera/classes/CamerasControls.md
     - Server: server.md
     - License: license.md
