@@ -2,21 +2,41 @@ import { CamerasControls } from "./camera";
 import {
     CSS2DObject,
     CSS2DRenderer,
-} from "three/addons/renderers/CSS2DRenderer.js";
+} from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import { Scene, Vector3 } from "three";
 
 export class IconSet {
+    key: string;
+    basePos: Vector3;
+    appearanceThreshold: number;
+    svgIcons: Record<string, SvgIcon>;
+    textIcon: TextIcon | null;
+    wrapper: HTMLDivElement;
+    subWrapper: HTMLDivElement;
+    subSubWrapper: HTMLDivElement;
+    iconsArrow: HTMLImageElement;
+    svgIconsRow: HTMLDivElement | null;
+    wrapperObject: CSS2DObject;
+    pointerMoved: boolean;
+
     /**
      * Create a set of icons at the same position.
      *
      * @param {string} key
      * @param {SvgIcon[]} svgIcons
      * @param {TextIcon | null} textIcon
-     * @param {THREE.Vector3} worldPos
+     * @param {Vector3} worldPos
      * @param {*} onClick
      * @param {number} appearanceThreshold
      */
-    constructor(key, svgIcons, textIcon, worldPos, onClick, appearanceThreshold = Infinity) {
+    constructor(
+        key: string,
+        svgIcons: SvgIcon[],
+        textIcon: TextIcon | null,
+        worldPos: Vector3,
+        onClick: (e: PointerEvent) => void,
+        appearanceThreshold = Infinity
+    ) {
         this.key = key;
         this.basePos = worldPos;
         this.appearanceThreshold = appearanceThreshold;
@@ -57,13 +77,15 @@ export class IconSet {
         }
 
         // Build the row of icons
+        this.svgIconsRow = null;
         this._makeIconsRow();
 
         // Pointing arrow
         this.iconsArrow = document.createElement("img");
-        this.iconsArrow.src = '/assets/threejs/graphics/icons/thematic-layers/triangle.svg';
+        this.iconsArrow.src =
+            "/assets/threejs/graphics/icons/thematic-layers/triangle.svg";
         this.iconsArrow.className = "icons-arrow";
-        this.iconsArrow.style.setProperty('--triangle-fill', "white");
+        this.iconsArrow.style.setProperty("--triangle-fill", "white");
         this.subWrapper.appendChild(this.iconsArrow);
 
         // Make the actual three.js object
@@ -76,19 +98,18 @@ export class IconSet {
             this.pointerMoved = true;
         });
         this.wrapper.addEventListener("pointerup", (e) => {
-            if (this.pointerMoved) { return }
+            if (this.pointerMoved) {
+                return;
+            }
             onClick(e);
         });
-
-        // this.wrapper.addEventListener("click", (e) => {
-        // });
     }
 
     hasText() {
-        return (!!this.textIcon);
+        return !!this.textIcon;
     }
 
-    addSvgIcon(svgIcon) {
+    addSvgIcon(svgIcon: SvgIcon) {
         const key = svgIcon.key;
         if (key in this.svgIcons) {
             console.error(
@@ -99,7 +120,7 @@ export class IconSet {
         this._makeIconsRow();
     }
 
-    removeSvgIcon(key) {
+    removeSvgIcon(key: string) {
         if (!(key in this.svgIcons)) {
             console.error(`There is no SvgIcon with this key ('${key}')`);
             return;
@@ -111,7 +132,6 @@ export class IconSet {
     }
 
     _makeIconsRow() {
-
         // Remove the previous row
         if (this.svgIconsRow) {
             this.subSubWrapper.removeChild(this.svgIconsRow);
@@ -120,7 +140,7 @@ export class IconSet {
 
         if (Object.keys(this.svgIcons).length === 0) {
             return;
-        };
+        }
 
         // Build the row of icons
         this.svgIconsRow = document.createElement("div");
@@ -139,7 +159,7 @@ export class IconSet {
      *
      * @param {number} scale
      */
-    _setScale(scale) {
+    _setScale(scale: number) {
         const baseOffset = new Vector3(0, (50 * (1 - scale)) / 2, 0);
         this.subWrapper.style.transform = `scale(${scale}) translate(0, -50%)`;
         this.wrapperObject.position.copy(this.basePos.clone().add(baseOffset));
@@ -150,9 +170,9 @@ export class IconSet {
      *
      * @param {CamerasControls} cameraManager
      */
-    setSizeFromCameraManager(cameraManager) {
+    setSizeFromCameraManager(cameraManager: CamerasControls) {
         // Compute the distance from the camera to the object position
-        var distance;
+        var distance: number;
         if (cameraManager.usesMapCamera() || cameraManager.usesOrbitCamera()) {
             const camToIcon = this.basePos
                 .clone()
@@ -162,6 +182,9 @@ export class IconSet {
             distance = camToIcon.dot(camDirection);
         } else if (cameraManager.usesOrthographicCamera()) {
             distance = cameraManager.orthographicDistance();
+        } else {
+            console.error("Unexpected situation.");
+            return;
         }
 
         // Compute the scale based on the distance
@@ -177,36 +200,60 @@ export class IconSet {
 }
 
 export class IconsSceneManager {
+    scene: Scene;
+    renderer: CSS2DRenderer;
+    iconContainer: HTMLDivElement;
+    mainContainer: HTMLDivElement;
+    iconSets: Record<string, IconSet>;
+    movedDuringPointer: boolean;
+
     /**
      * A class to manage a scene of icons and its specificities.
      *
      * @param {Scene} scene
      * @param {CSS2DRenderer} renderer
-     * @param {HTMLElement} iconContainer
-     * @param {HTMLElement} mainContainer
+     * @param {HTMLDivElement} iconContainer
+     * @param {HTMLDivElement} mainContainer
      */
-    constructor(scene, renderer, iconContainer, mainContainer) {
+    constructor(
+        scene: Scene,
+        renderer: CSS2DRenderer,
+        iconContainer: HTMLDivElement,
+        mainContainer: HTMLDivElement
+    ) {
         this.scene = scene;
         this.renderer = renderer;
         this.iconContainer = iconContainer;
         this.mainContainer = mainContainer;
         this.iconSets = {};
+        this.movedDuringPointer = false;
         this._setUpEventListeners();
     }
 
     _setUpEventListeners() {
         this.movedDuringPointer = false;
         this.mainContainer.addEventListener("pointerdown", (e) => {
-            if (!this.iconContainer.contains(e.target)) return;
+            const tgt = e.target;
+            if (!(tgt instanceof Node) || !this.iconContainer.contains(tgt))
+                return;
             this.movedDuringPointer = false;
-            e.target.setPointerCapture(e.pointerId);
+            if (
+                tgt instanceof Element &&
+                typeof tgt.setPointerCapture === "function"
+            ) {
+                tgt.setPointerCapture(e.pointerId);
+            }
         });
         this.mainContainer.addEventListener("pointermove", (e) => {
-            if (!this.iconContainer.contains(e.target)) return;
+            const tgt = e.target;
+            if (!(tgt instanceof Node) || !this.iconContainer.contains(tgt))
+                return;
             this.movedDuringPointer = true;
         });
         this.mainContainer.addEventListener("pointerup", (e) => {
-            if (!this.iconContainer.contains(e.target)) return;
+            const tgt = e.target;
+            if (!(tgt instanceof Node) || !this.iconContainer.contains(tgt))
+                return;
             if (this.movedDuringPointer) return;
         });
     }
@@ -216,7 +263,7 @@ export class IconsSceneManager {
      *
      * @param {IconSet} iconSet
      */
-    addIconSet(iconSet) {
+    addIconSet(iconSet: IconSet) {
         const key = iconSet.key;
         if (key in this.iconSets) {
             console.error(
@@ -233,7 +280,7 @@ export class IconsSceneManager {
      *
      * @param {string} key
      */
-    removeIconSet(key) {
+    removeIconSet(key: string) {
         if (!(key in this.iconSets)) {
             console.error(`There is no IconSet with this key ('${key}')`);
             return;
@@ -259,7 +306,7 @@ export class IconsSceneManager {
      *
      * @param {CamerasControls} cameraManager
      */
-    beforeRender(cameraManager) {
+    beforeRender(cameraManager: CamerasControls) {
         for (const [key, icon] of Object.entries(this.iconSets)) {
             icon.setSizeFromCameraManager(cameraManager);
         }
@@ -270,13 +317,25 @@ export class IconsSceneManager {
      * @param {number} time
      * @param {CamerasControls} cameraManager
      */
-    render(time, cameraManager) {
+    render(time: number, cameraManager: CamerasControls) {
         this.beforeRender(cameraManager);
         this.renderer.render(this.scene, cameraManager.camera);
     }
 }
 
+export interface TextIconOptions {
+    /** Text colour (CSS value). `null` means “inherit”. */
+    color?: string | null;
+    /** Background colour (CSS value). `null` means “transparent”. */
+    bgColor?: string | null;
+    /** Additional CSS class(es) to apply. */
+    cssClass?: string;
+}
+
 export class TextIcon {
+    container: HTMLDivElement;
+    content: HTMLDivElement;
+
     /**
      * A wrapper for text to put in an icon.
      *
@@ -286,10 +345,9 @@ export class TextIcon {
      * @param {string|null} [options.bgColor=null] Background colour (CSS value). `null` means “transparent”.
      * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
      */
-    constructor(
-        text,
-        { color = undefined, bgColor = undefined, cssClass = "" } = {}
-    ) {
+    constructor(text: string, opts: TextIconOptions = {}) {
+        const { color = undefined, bgColor = undefined, cssClass = "" } = opts;
+
         // Main container that is moved by three.js
         this.container = document.createElement("div");
         this.container.className = "icon-text-container";
@@ -309,7 +367,6 @@ export class TextIcon {
 
         // Assemble the hierarchy
         this.container.appendChild(this.content);
-
     }
 
     // is_populated() {
@@ -318,6 +375,11 @@ export class TextIcon {
 }
 
 export class SvgIcon {
+    key: string;
+    container: HTMLDivElement;
+    bgCircle: HTMLDivElement;
+    content: SVGElement;
+
     /**
      * A wrapper for a SVG element to put in an icon.
      *
@@ -329,8 +391,8 @@ export class SvgIcon {
      * @param {string} [options.cssClass=''] Additional CSS class(es) to apply.
      */
     constructor(
-        key,
-        svgElement,
+        key: string,
+        svgElement: SVGElement,
         { size = null, bgColor = null, cssClass = "" } = {}
     ) {
         this.key = key;
@@ -352,7 +414,7 @@ export class SvgIcon {
 
         // Icon content
         // Clone so we don't move the original node out of its source location
-        this.content = svgElement.cloneNode(true);
+        this.content = svgElement.cloneNode(true) as SVGElement;
         this.content.setAttribute("class", "icon-svg-content");
 
         // Assemble the hierarchy
@@ -362,6 +424,9 @@ export class SvgIcon {
 }
 
 export class SvgLoader {
+    urlToSvg: Record<string, SVGElement>;
+    parser: DOMParser;
+
     constructor() {
         this.urlToSvg = {};
         this.parser = new DOMParser();
@@ -374,7 +439,7 @@ export class SvgLoader {
      * @param {string} url The URL (local or on the web) of the SVG file.
      * @returns {SVGElement} The SVG element.
      */
-    async getSvg(url) {
+    async getSvg(url: string) {
         if (!(url in this.urlToSvg)) {
             // Send the request
             const resp = await fetch(url);

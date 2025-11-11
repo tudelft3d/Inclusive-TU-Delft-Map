@@ -1,15 +1,17 @@
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { MapControls } from "three/addons/controls/MapControls.js";
 import {
-    Tween,
-    Easing,
-} from "https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.esm.js";
+    OrbitControls,
+    OrbitControlsEventMap,
+} from "three/addons/controls/OrbitControls.js";
+import { MapControls } from "three/addons/controls/MapControls.js";
+import { Tween, Easing } from "@tweenjs/tween.js";
 
 import * as THREE from "three";
 
-const MAP_CAMERA = 0;
-const ORBIT_CAMERA = 1;
-const ORTHOGRAPHIC_CAMERA = 2;
+enum CameraValue {
+    Map,
+    Orbit,
+    Ortho,
+}
 
 const fov = 55;
 const near = 0.1;
@@ -19,6 +21,7 @@ const frustumSize = 1;
 const MIN_AZIMUTH_ANGLE = -Infinity;
 const MAX_AZIMUTH_ANGLE = Infinity;
 
+<<<<<<< HEAD:threejs/src/camera.js
 /**
  * @param {object} camera: The camera for which the frustrum height and width need to be calculated.
  * @param {distance} number: The distance between the camera position and control target
@@ -26,6 +29,12 @@ const MAX_AZIMUTH_ANGLE = Infinity;
  * @return {array} An array containing the height and width of the frustrum.
  */
 function frustrumHeightWidth(camera, distance) {
+=======
+function frustrumHeightWidth(
+    camera: THREE.PerspectiveCamera,
+    distance: number
+) {
+>>>>>>> main:threejs/src/camera.ts
     const field_of_view = (camera.fov * Math.PI) / 180;
     const frustrumHeight = Math.tan(field_of_view / 2) * distance * 2;
     const frustrumWidth = frustrumHeight * camera.aspect;
@@ -44,27 +53,59 @@ function frustrumHeightWidth(camera, distance) {
  * 
  */
 export class CamerasControls {
-    constructor(container, position, target) {
+    container: HTMLDivElement;
+    mapCamera!: THREE.PerspectiveCamera;
+    orbitCamera!: THREE.PerspectiveCamera;
+    orthographicCamera!: THREE.OrthographicCamera;
+    camera!: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+    allCameras!: (THREE.PerspectiveCamera | THREE.OrthographicCamera)[];
+    mapControls!: MapControls;
+    orbitControls!: OrbitControls;
+    orthographicControls!: MapControls;
+    controls!: MapControls | OrbitControls;
+    allControls!: (MapControls | OrbitControls)[];
+    cameraInt: CameraValue;
+    // previousCameraInt: CameraValue;
+    initialPosition!: THREE.Vector3;
+    initialTarget!: THREE.Vector3;
+    tweens: Tween[];
+    cameraSwitchEvents: {
+        type: string;
+        element: HTMLElement;
+    }[];
+    compassElement: HTMLButtonElement | null;
+    previousNonNorthPosition: THREE.Vector3 | null;
+
+    constructor(
+        container: HTMLDivElement,
+        position: THREE.Vector3,
+        target: THREE.Vector3
+    ) {
         this.container = container;
 
         this._initCameras(position);
         this._initControls(target);
 
-        this.cameraInt = MAP_CAMERA;
-        this.previousCameraInt = ORTHOGRAPHIC_CAMERA;
+        this.cameraInt = CameraValue.Map;
+        // this.previousCameraInt = CameraValue.Ortho;
         this.tweens = [];
         this.cameraSwitchEvents = [];
 
         // Initial compass rotation
         this.compassElement = null;
+        this.previousNonNorthPosition = null;
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.Vector3d} position: The starting position for the initial camera.
      * 
      * Creates all three cameras (map, orbit and ortho) and initializes the map camera.
      */
     _initCameras(position) {
+=======
+    _initCameras(position: THREE.Vector3) {
+>>>>>>> main:threejs/src/camera.ts
         const aspect = window.innerWidth / window.innerHeight;
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.orbitCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -78,7 +119,7 @@ export class CamerasControls {
         );
 
         this.camera = this.mapCamera;
-        this.previousCamera = this.mapCamera;
+        // this.previousCamera = this.mapCamera;
 
         this.initialPosition = new THREE.Vector3().copy(position);
         this.camera.position.copy(this.initialPosition);
@@ -91,12 +132,16 @@ export class CamerasControls {
         ];
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.Vector3d} target: The starting position for the initial target.
      * 
      * Creates all three control schemes.
      */
     _initControls(target) {
+=======
+    _initControls(target: THREE.Vector3) {
+>>>>>>> main:threejs/src/camera.ts
         this.mapControls = new MapControls(this.mapCamera, this.container);
         this.mapControls.target.copy(target);
         this.mapControls.maxPolarAngle = 0.5 * Math.PI;
@@ -123,11 +168,10 @@ export class CamerasControls {
         this.orthographicControls.target.copy(target);
         this.orthographicControls.screenSpacePanning = true;
         this.orthographicControls.maxPolarAngle = 0.0 * Math.PI;
-        this.orthographicControls.enableDampening = true;
         this.orthographicControls.update();
 
         this.controls = this.mapControls;
-        this.previousControls = this.mapControls;
+        // this.previousControls = this.mapControls;
 
         this.initialTarget = target.clone();
         this.controls.target.copy(this.initialTarget);
@@ -140,6 +184,7 @@ export class CamerasControls {
         ];
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {int} newCameraInt: The "CameraInt" of the desired camera.
      * 
@@ -147,8 +192,11 @@ export class CamerasControls {
      * switches the active camera and control objects.
      */
     _changeCameraInt(newCameraInt) {
+=======
+    _changeCameraInt(newCameraInt: CameraValue) {
+>>>>>>> main:threejs/src/camera.ts
         if (
-            ![MAP_CAMERA, ORBIT_CAMERA, ORTHOGRAPHIC_CAMERA].includes(
+            ![CameraValue.Map, CameraValue.Orbit, CameraValue.Ortho].includes(
                 newCameraInt
             )
         ) {
@@ -159,11 +207,11 @@ export class CamerasControls {
             return;
         }
 
-        this.previousCameraInt = this.cameraInt;
+        // this.previousCameraInt = this.cameraInt;
         this.cameraInt = newCameraInt;
 
-        this.previousCamera = this.camera;
-        this.previousControls = this.controls;
+        // this.previousCamera = this.camera;
+        // this.previousControls = this.controls;
 
         if (this.usesMapCamera()) {
             this.camera = this.mapCamera;
@@ -184,21 +232,24 @@ export class CamerasControls {
     }
 
     usesMapCamera() {
-        return this.cameraInt == MAP_CAMERA;
+        return this.cameraInt == CameraValue.Map;
     }
 
     usesOrbitCamera() {
-        return this.cameraInt == ORBIT_CAMERA;
+        return this.cameraInt == CameraValue.Orbit;
     }
 
     usesOrthographicCamera() {
-        return this.cameraInt == ORTHOGRAPHIC_CAMERA;
+        return this.cameraInt == CameraValue.Ortho;
     }
 
     /**
      * Adds a listener to an event type to all cameras.
      */
-    addEventListenerCameras(type, listener) {
+    addEventListenerCameras(
+        type: keyof THREE.Object3DEventMap,
+        listener: () => void
+    ) {
         for (const camera of this.allCameras) {
             camera.addEventListener(type, listener);
         }
@@ -207,18 +258,21 @@ export class CamerasControls {
     /**
      * Adds a listener to an event type to all controls.
      */
-    addEventListenerControls(type, listener) {
+    addEventListenerControls(
+        type: keyof OrbitControlsEventMap,
+        listener: () => void
+    ) {
         for (const control of this.allControls) {
             control.addEventListener(type, listener);
         }
     }
 
-    createEventCameraSwitch(type, element) {
+    createEventCameraSwitch(type: string, element: HTMLElement) {
         this.cameraSwitchEvents.push({ type, element });
     }
 
     // Method to set the compass element
-    setCompassElement(element) {
+    setCompassElement(element: HTMLButtonElement) {
         this.compassElement = element;
     }
 
@@ -242,6 +296,7 @@ export class CamerasControls {
         this.compassElement.style.transform = `rotate(${degrees}deg)`;
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {number} width: desired camera width.
      * @param {number} heigt: desirec camera height.
@@ -249,6 +304,9 @@ export class CamerasControls {
      * Changes the width and height of all three cameras.
      */
     resizeCameras(width, height) {
+=======
+    resizeCameras(width: number, height: number) {
+>>>>>>> main:threejs/src/camera.ts
         const aspect = width / height;
 
         this.mapCamera.aspect = aspect;
@@ -256,7 +314,7 @@ export class CamerasControls {
         this.orbitCamera.aspect = aspect;
         this.orbitCamera.updateProjectionMatrix();
 
-        this.orthographicCamera.aspect = aspect;
+        // this.orthographicCamera.aspect = aspect;
         const halfHeight = this.orthographicCamera.top;
         const halfWidth = halfHeight * aspect;
 
@@ -287,12 +345,12 @@ export class CamerasControls {
     /**
      * Switch using camera int
      */
-    switchToInt(cameraInt) {
-        if (cameraInt == MAP_CAMERA) {
+    switchToInt(cameraInt: CameraValue) {
+        if (cameraInt == CameraValue.Map) {
             this.switchToMap();
-        } else if (cameraInt == ORBIT_CAMERA) {
+        } else if (cameraInt == CameraValue.Orbit) {
             this.switchToOrbit();
-        } else if (cameraInt == ORTHOGRAPHIC_CAMERA) {
+        } else if (cameraInt == CameraValue.Ortho) {
             this.switchToOrthographic();
         } else {
             console.error(
@@ -305,11 +363,13 @@ export class CamerasControls {
     /**
      * Swith to map view
      */
-    switchToMap(onComplete = () => { }) {
+    switchToMap(onComplete = () => {}) {
         if (this.usesMapCamera()) {
             // Do nothing
         } else if (this.usesOrthographicCamera()) {
             const distance = this.orthographicDistance();
+            // @ts-ignore
+            // Problem with _spherical
             const initTheta = this.orthographicControls._spherical.theta;
             var newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
@@ -341,18 +401,20 @@ export class CamerasControls {
             console.error("Not using any of the expected cameras!");
         }
 
-        this._changeCameraInt(MAP_CAMERA);
+        this._changeCameraInt(CameraValue.Map);
         onComplete();
     }
 
     /**
      * Switch to orbit view
      */
-    switchToOrbit(onComplete = () => { }) {
+    switchToOrbit(onComplete = () => {}) {
         if (this.usesOrbitCamera()) {
             // Do nothing
         } else if (this.usesOrthographicCamera()) {
             const distance = this.orthographicDistance();
+            // @ts-ignore
+            // Problem with _spherical
             const initTheta = this.orthographicControls._spherical.theta;
             var newTarget = this.orthographicControls.target.clone();
             newTarget.y = 0;
@@ -383,13 +445,13 @@ export class CamerasControls {
         } else {
             console.error("Not using any of the expected cameras!");
         }
-        this._changeCameraInt(ORBIT_CAMERA);
+        this._changeCameraInt(CameraValue.Orbit);
         onComplete();
     }
 
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
     /** Switch to orthographic view */
-    switchToOrthographic(onAnimationComplete = () => { }) {
+    switchToOrthographic(onAnimationComplete = () => {}) {
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
             // Compute the animation for the current camera
             const initPosition = this.camera.position;
@@ -403,6 +465,8 @@ export class CamerasControls {
             const finalTarget = initTarget.clone();
 
             // Limit theta to prevent it from being reset
+            // @ts-ignore
+            // Problem with _spherical
             const initTheta = this.controls._spherical.theta;
             const initControls = this.controls;
             initControls.minAzimuthAngle = initTheta;
@@ -411,11 +475,13 @@ export class CamerasControls {
             const onComplete = () => {
                 initControls.minAzimuthAngle = MIN_AZIMUTH_ANGLE;
                 initControls.maxAzimuthAngle = MAX_AZIMUTH_ANGLE;
-                this._changeCameraInt(ORTHOGRAPHIC_CAMERA);
+                this._changeCameraInt(CameraValue.Ortho);
                 onAnimationComplete();
             };
 
             // Animate the transition
+            // @ts-ignore
+            // Problem with _spherical
             const duration = this.controls._spherical.phi * 500;
             this._createAnimation(
                 initPosition,
@@ -436,6 +502,8 @@ export class CamerasControls {
             this.orthographicControls.target.copy(newTarget);
 
             // Compute the new orthographic camera settings
+            // @ts-ignore
+            // Implied by this.usesMapCamera() || this.usesOrbitCamera()
             const [height, width] = frustrumHeightWidth(this.camera, distance);
             const halfHeight = height / 2;
             const halfWidth = width / 2;
@@ -462,15 +530,38 @@ export class CamerasControls {
         }
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * Zoom in by the desired degree, or by a factor of 1.8 if unspecified.
      */
+=======
+    // toggleOrthographic() {
+    //     if (this._animating()) {
+    //         return;
+    //     }
+    //     if (this.cameraInt != CameraValue.Ortho) {
+    //         this.switchToOrthographic();
+    //         this.updateCompassRotation();
+    //     } else {
+    //         this.switchToMap();
+    //         if (this.previousCameraInt == CameraValue.Map) {
+    //             this.switchToMap();
+    //         } else {
+    //             this.switchToOrbit();
+    //         }
+    //         this.updateCompassRotation();
+    //     }
+    // }
+
+>>>>>>> main:threejs/src/camera.ts
     zoomIn(factor = 1.8) {
-        if (this.controls._dollyOut) {
-            this.controls._dollyOut(factor);
-            this.controls.update();
-        } else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(factor);
+        // Fix: make our own function instead of using a private one
+        const ctrl = this.controls as any;
+        if (ctrl._dollyOut) {
+            ctrl._dollyOut(factor);
+            ctrl.update();
+        } else {
+            console.error("Cannot zoom in.");
         }
     }
 
@@ -478,13 +569,49 @@ export class CamerasControls {
      * Zoom out by the desired degree, or by a factor of 1.8 if unspecified.
      */
     zoomOut(factor = 1.8) {
-        if (this.controls._dollyIn) {
-            this.controls._dollyIn(factor);
-            this.controls.update();
-        } else if (this.camera.isPerspectiveCamera) {
-            this.camera.position.multiplyScalar(1 / factor);
+        // Fix: make our own function instead of using a private one
+        const ctrl = this.controls as any;
+        if (ctrl._dollyIn) {
+            ctrl._dollyIn(factor);
+            ctrl.update();
+        } else {
+            console.error("Cannot zoom out.");
         }
     }
+
+    _usesPerspectiveCamera() {
+        return (this.camera as any).isPerspectiveCamera === true;
+    }
+
+    _usesOrthographicCamera() {
+        return (this.camera as any).isPerspectiveCamera === true;
+    }
+
+    // zoom(factor = 1.8) {
+    //     if (this._usesPerspectiveCamera()) {
+    //         // Move the camera forward/backward along its view direction.
+    //         const dir = new THREE.Vector3();
+    //         this.camera.getWorldDirection(dir);
+    //         this.camera.position.addScaledVector(
+    //             dir,
+    //             (factor - 1) * this.camera.position.length()
+    //         );
+    //     } else if (this._usesOrthographicCamera()) {
+    //         // Orthographic zoom is just scaling the view size.
+    //         this.camera.zoom *= factor;
+    //         this.camera.updateProjectionMatrix();
+    //     }
+
+    //     // Keep the controls in sync.
+    //     this.controls.update();
+    // }
+
+    // zoomIn(factor = 1.8) {
+    //     this.zoom(factor);
+    // }
+    // zoomOut(factor = 1.8) {
+    //     this.zoom(1 / factor);
+    // }
 
     /* Update the home position to initial camera state (after having moved towards GLTF scene) */
     setHomeView() {
@@ -514,7 +641,7 @@ export class CamerasControls {
     }
 
     /* Reset camera rotation to point north (align with Z-axis) or return to previous position */
-    resetNorth(onComplete = () => { }) {
+    resetNorth(onComplete = () => {}) {
         // Get current target and position (on click of button)
         const target = this.controls.target.clone();
         const currentPosition = this.camera.position.clone();
@@ -524,11 +651,12 @@ export class CamerasControls {
         currentDirection.y = 0; // Only check horizontal direction
         currentDirection.normalize();
         const northDirection = new THREE.Vector3(0, 0, 1);
-        const angle = Math.acos(Math.max(-1, Math.min(1, currentDirection.dot(northDirection))));
+        const angle = Math.acos(
+            Math.max(-1, Math.min(1, currentDirection.dot(northDirection)))
+        );
         const isCurrentlyNorth = angle < 0.05; // ~3 degrees threshold
 
         let finalPosition;
-
 
         if (isCurrentlyNorth && this.previousNonNorthPosition) {
             // We're at north and have a previous position -> return to it
@@ -546,7 +674,6 @@ export class CamerasControls {
                 Math.max(0, distance * distance - heightDiff * heightDiff)
             );
 
-
             finalPosition = new THREE.Vector3(
                 target.x,
                 currentPosition.y,
@@ -561,7 +688,9 @@ export class CamerasControls {
         // Calculate duration based on angular distance
         const initDirection = initPosition.clone().sub(target).normalize();
         const finalDirection = finalPosition.clone().sub(target).normalize();
-        const rotationAngle = Math.acos(Math.max(-1, Math.min(1, initDirection.dot(finalDirection))));
+        const rotationAngle = Math.acos(
+            Math.max(-1, Math.min(1, initDirection.dot(finalDirection)))
+        );
         const duration = 300 + rotationAngle * 500; // Scale duration with rotation angle
 
         // Animate to final position
@@ -575,10 +704,18 @@ export class CamerasControls {
         );
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * Zoom function for the perspective camera.
      */
     _zoomPerspective(newTarget, distance, onComplete = () => { }) {
+=======
+    _zoomPerspective(
+        newTarget: THREE.Vector3,
+        distance: number,
+        onComplete = () => {}
+    ) {
+>>>>>>> main:threejs/src/camera.ts
         // Set camera position & orientation
         const initTarget = this.controls.target.clone();
         const initPosition = this.camera.position.clone();
@@ -607,12 +744,20 @@ export class CamerasControls {
         );
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
     _zoomToObjectPerspective(object, onComplete = () => { }) {
+=======
+    _zoomToObjectPerspective(object: THREE.Object3D, onComplete = () => {}) {
+>>>>>>> main:threejs/src/camera.ts
         this.switchToOrbit();
+        if (this.camera != this.orbitCamera) {
+            console.error("Camera is not orbit.");
+            return;
+        }
 
         // Compute final target and distance to the building with its bounding sphere
         const sphere = new THREE.Sphere();
@@ -626,12 +771,20 @@ export class CamerasControls {
         return this._zoomPerspective(sphere.center, distance, onComplete);
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
      * @param {number} distance: The distance between the current and desired targets
      * @param {function} onComplete: Function to execute when done with the operation.
      */
     _zoomOrthographic(newTarget, distance, onComplete = () => { }) {
+=======
+    _zoomOrthographic(
+        newTarget: THREE.Vector3,
+        distance: number | null,
+        onComplete = () => {}
+    ) {
+>>>>>>> main:threejs/src/camera.ts
         // Set camera position & orientation
         const initTarget = this.controls.target.clone();
         const initPosition = this.camera.position.clone();
@@ -649,11 +802,15 @@ export class CamerasControls {
         );
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
     _zoomToObjectOrthographic(object, onComplete = () => { }) {
+=======
+    _zoomToObjectOrthographic(object: THREE.Object3D, onComplete = () => {}) {
+>>>>>>> main:threejs/src/camera.ts
         if (!object) {
             return;
         }
@@ -678,11 +835,15 @@ export class CamerasControls {
         return this._zoomOrthographic(sphere.center, null, onComplete);
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {object} object: The object that needs to be zoomed towards.
      * @param {function} onComplete: Function to execute when done with the operation.
      */
     zoomToObject(object, onComplete = () => { }) {
+=======
+    zoomToObject(object: THREE.Object3D, onComplete = () => {}) {
+>>>>>>> main:threejs/src/camera.ts
         if (this.usesOrthographicCamera()) {
             return this._zoomToObjectOrthographic(object, onComplete);
         } else {
@@ -690,12 +851,20 @@ export class CamerasControls {
         }
     }
 
+<<<<<<< HEAD:threejs/src/camera.js
     /**
      * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
      * @param {number} distance: The distance between the current and desired targets
      * @param {function} onComplete: Function to execute when done with the operation.
      */
     zoomToCoordinates(newTarget, distance, onComplete = () => { }) {
+=======
+    zoomToCoordinates(
+        newTarget: THREE.Vector3,
+        distance: number,
+        onComplete = () => {}
+    ) {
+>>>>>>> main:threejs/src/camera.ts
         if (this.usesOrthographicCamera()) {
             return this._zoomOrthographic(newTarget, distance, onComplete);
         } else {
@@ -724,19 +893,19 @@ export class CamerasControls {
      * @return {tween object}: object that is used by the tween library to guide the camera between two states.
      */
     _createAnimation(
-        initPosition,
-        initTarget,
-        finalPosition,
-        finalTarget,
+        initPosition: THREE.Vector3,
+        initTarget: THREE.Vector3,
+        finalPosition: THREE.Vector3,
+        finalTarget: THREE.Vector3,
         duration = 1000,
-        onComplete = () => { }
+        onComplete = () => {}
     ) {
         const current_values = {
             position: initPosition,
             target: initTarget,
         };
 
-        const tweenCamera = new Tween(current_values, false)
+        const tweenCamera = new Tween(current_values)
             .to(
                 {
                     position: {

@@ -12,10 +12,9 @@ import { CjHelper } from "./cjHelper";
 export class ObjectPicker {
     /**
      *
-     * @param {HTMLElement} infoPaneElement
      * @param {Highlighter} pickHighlighter
      * @param {Scene} scene
-     * @param {CamerasControls} cameraManager
+     * @param {*} cameraManager
      * @param {BuildingView} buildingView
      */
     constructor(pickHighlighter, scene, cameraManager, buildingView) {

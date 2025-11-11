@@ -1,0 +1,13 @@
+{
+    "extends": ["./typedoc.base.json"],
+    "entryPointStrategy": "expand",
+    "entryPoints": ["src/*"],
+	"plugin": ["typedoc-plugin-markdown"],
+    "outputs": [
+        {
+            // requires typedoc-plugin-markdown
+            "name": "markdown",
+            "path": "./docs_markdown"
+        }
+    ]
+}
