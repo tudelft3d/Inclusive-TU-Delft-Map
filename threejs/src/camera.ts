@@ -21,6 +21,12 @@ const frustumSize = 1;
 const MIN_AZIMUTH_ANGLE = -Infinity;
 const MAX_AZIMUTH_ANGLE = Infinity;
 
+/**
+ * @param {object} camera: The camera for which the frustrum height and width need to be calculated.
+ * @param {distance} number: The distance between the camera position and control target
+ * 
+ * @return {array} An array containing the height and width of the frustrum.
+ */
 function frustrumHeightWidth(
     camera: THREE.PerspectiveCamera,
     distance: number
@@ -31,6 +37,17 @@ function frustrumHeightWidth(
     return [frustrumHeight, frustrumWidth];
 }
 
+
+/**
+ * @param {html object} container: The scene-container.
+ * @param {THREE.Vector3d} position: The starting position of the camera.
+ * @param {object} target: The starting position of the controls.
+ * 
+ * This function initializes and maintains the variety of cameras and controls used throughout the map.
+ * To fascilitate the map features, this class switches between three separate cameras, each of which
+ * have their own controls object.
+ * 
+ */
 export class CamerasControls {
     container: HTMLDivElement;
     mapCamera!: THREE.PerspectiveCamera;
@@ -75,6 +92,11 @@ export class CamerasControls {
         this.previousNonNorthPosition = null;
     }
 
+    /**
+     * @param {THREE.Vector3d} position: The starting position for the initial camera.
+     * 
+     * Creates all three cameras (map, orbit and ortho) and initializes the map camera.
+     */
     _initCameras(position: THREE.Vector3) {
         const aspect = window.innerWidth / window.innerHeight;
         this.mapCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -102,6 +124,11 @@ export class CamerasControls {
         ];
     }
 
+    /**
+     * @param {THREE.Vector3d} target: The starting position for the initial target.
+     * 
+     * Creates all three control schemes.
+     */
     _initControls(target: THREE.Vector3) {
         this.mapControls = new MapControls(this.mapCamera, this.container);
         this.mapControls.target.copy(target);
@@ -145,6 +172,12 @@ export class CamerasControls {
         ];
     }
 
+    /**
+     * @param {int} newCameraInt: The "CameraInt" of the desired camera.
+     * 
+     * Changes the camera int (which indicates which camera is currently active) and also
+     * switches the active camera and control objects.
+     */
     _changeCameraInt(newCameraInt: CameraValue) {
         if (
             ![CameraValue.Map, CameraValue.Orbit, CameraValue.Ortho].includes(
@@ -247,6 +280,12 @@ export class CamerasControls {
         this.compassElement.style.transform = `rotate(${degrees}deg)`;
     }
 
+    /**
+     * @param {number} width: desired camera width.
+     * @param {number} heigt: desirec camera height.
+     * 
+     * Changes the width and height of all three cameras.
+     */
     resizeCameras(width: number, height: number) {
         const aspect = width / height;
 
@@ -391,7 +430,6 @@ export class CamerasControls {
     }
 
     // Largely influenced by: https://gist.github.com/nickyvanurk/9ac33a6aff7dd7bd5cd5b8a20d4db0dc
-
     /** Switch to orthographic view */
     switchToOrthographic(onAnimationComplete = () => {}) {
         if (this.usesMapCamera() || this.usesOrbitCamera()) {
@@ -472,24 +510,9 @@ export class CamerasControls {
         }
     }
 
-    // toggleOrthographic() {
-    //     if (this._animating()) {
-    //         return;
-    //     }
-    //     if (this.cameraInt != CameraValue.Ortho) {
-    //         this.switchToOrthographic();
-    //         this.updateCompassRotation();
-    //     } else {
-    //         this.switchToMap();
-    //         if (this.previousCameraInt == CameraValue.Map) {
-    //             this.switchToMap();
-    //         } else {
-    //             this.switchToOrbit();
-    //         }
-    //         this.updateCompassRotation();
-    //     }
-    // }
-
+    /**
+     * Zoom in by the desired degree, or by a factor of 1.8 if unspecified.
+     */
     zoomIn(factor = 1.8) {
         // Fix: make our own function instead of using a private one
         const ctrl = this.controls as any;
@@ -501,6 +524,9 @@ export class CamerasControls {
         }
     }
 
+    /**
+     * Zoom out by the desired degree, or by a factor of 1.8 if unspecified.
+     */
     zoomOut(factor = 1.8) {
         // Fix: make our own function instead of using a private one
         const ctrl = this.controls as any;
@@ -637,6 +663,9 @@ export class CamerasControls {
         );
     }
 
+    /**
+     * Zoom function for the perspective camera.
+     */
     _zoomPerspective(
         newTarget: THREE.Vector3,
         distance: number,
@@ -670,6 +699,10 @@ export class CamerasControls {
         );
     }
 
+    /**
+     * @param {object} object: The object that needs to be zoomed towards.
+     * @param {function} onComplete: Function to execute when done with the operation.
+     */
     _zoomToObjectPerspective(object: THREE.Object3D, onComplete = () => {}) {
         this.switchToOrbit();
         if (this.camera != this.orbitCamera) {
@@ -689,6 +722,11 @@ export class CamerasControls {
         return this._zoomPerspective(sphere.center, distance, onComplete);
     }
 
+    /**
+     * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
+     * @param {number} distance: The distance between the current and desired targets
+     * @param {function} onComplete: Function to execute when done with the operation.
+     */
     _zoomOrthographic(
         newTarget: THREE.Vector3,
         distance: number | null,
@@ -711,6 +749,10 @@ export class CamerasControls {
         );
     }
 
+    /**
+     * @param {object} object: The object that needs to be zoomed towards.
+     * @param {function} onComplete: Function to execute when done with the operation.
+     */
     _zoomToObjectOrthographic(object: THREE.Object3D, onComplete = () => {}) {
         if (!object) {
             return;
@@ -736,6 +778,10 @@ export class CamerasControls {
         return this._zoomOrthographic(sphere.center, null, onComplete);
     }
 
+    /**
+     * @param {object} object: The object that needs to be zoomed towards.
+     * @param {function} onComplete: Function to execute when done with the operation.
+     */
     zoomToObject(object: THREE.Object3D, onComplete = () => {}) {
         if (this.usesOrthographicCamera()) {
             return this._zoomToObjectOrthographic(object, onComplete);
@@ -744,6 +790,11 @@ export class CamerasControls {
         }
     }
 
+    /**
+     * @param {THREE.vector3d} newTarget: The position that needs to be zoomed towards.
+     * @param {number} distance: The distance between the current and desired targets
+     * @param {function} onComplete: Function to execute when done with the operation.
+     */
     zoomToCoordinates(
         newTarget: THREE.Vector3,
         distance: number,
@@ -756,10 +807,26 @@ export class CamerasControls {
         }
     }
 
+    /**
+     * @return {boolean}: Whether or not an animation is currently happening.
+     */
     _animating() {
         return this.tweens.length != 0;
     }
 
+    /**
+     * @param {THREE.vector3d} initPosition: Initial position of the current camera.
+     * @param {THREE.vector3d} initTarget: Initial target of the current camera.
+     * @param {THREE.vector3d} finalPosition: Desired position of the current camera.
+     * @param {THREE.vector3d} finalTarget: Desired target of the current camera.
+     * @param {number} duration: How long the animation should take, in miliseconds.
+     * @param {function} onComplete: Function to execute when done with the animation.
+     * 
+     * This function creates and animation that allows a given camera to smoothly move between two
+     * positions and targets.
+     * 
+     * @return {tween object}: object that is used by the tween library to guide the camera between two states.
+     */
     _createAnimation(
         initPosition: THREE.Vector3,
         initTarget: THREE.Vector3,

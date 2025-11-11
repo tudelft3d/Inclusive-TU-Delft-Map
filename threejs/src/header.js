@@ -1,3 +1,7 @@
+/**
+ * This file contains the code that manages the header element.
+ */
+
 const headerContainer = document.getElementById('site-header');
 function initHeaderToggle() {
   const toggle = document.querySelector('.menu-toggle');

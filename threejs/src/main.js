@@ -1,5 +1,8 @@
 import { Map } from "./app";
 
+/**
+ * Main JS file and entry point for all the other script files.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const sceneContainer = document.querySelector('#scene-container');
 
@@ -325,24 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         map.cameraManager.addEventListenerControls("change", (e) => {
             movedSinceLastBtnPush = true;
         })
-    }
-
-    // BV (streetview) button
-    const bvBtn = document.getElementById("bv-btn");
-    if (bvBtn) {
-        bvBtn.addEventListener("click", () => {
-            map.buildingView.initialiseBuildingView();
-        });
-    }
-
-    // BV storey dropdown
-    const bvDropdown_button = document.getElementById("bv-storey-btn");
-    const bvDropdown_dropdown = document.getElementById("bv-dropdown");
-    if (bvDropdown_button && bvDropdown_dropdown) {
-        bvDropdown_button.addEventListener("click", (event) => {
-            event.stopPropagation();
-            bvDropdown_dropdown.style.display = (bvDropdown_dropdown.style.display === 'block') ? 'none' : 'block';
-        });
     }
 
     // Make the tooltips disappear on click

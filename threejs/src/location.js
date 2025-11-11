@@ -6,7 +6,9 @@ import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRe
 import { v4 as uuidv4 } from 'uuid';
 import { BASEMAP_MIN_X, BASEMAP_MIN_Y, BASEMAP_MAX_X, BASEMAP_MAX_Y } from "./basemap";
 
-
+/**
+ * Manages the location indiator logic and visualization.
+ */
 export class LocationManager {
 
     /**
@@ -119,6 +121,9 @@ export class LocationManager {
         );
     }
 
+    /**
+     * Checks if the user postion is within the map bounds.
+     */
     _inBoundaries() {
         const x = this.position.x;
         const y = -this.position.z;
@@ -131,6 +136,9 @@ export class LocationManager {
         return true;
     }
 
+    /**
+     * Hides the location indicator
+     */
     hide() {
         if (!this.hidden) {
             this.locationSceneManager.removeObject(this.key);
@@ -139,6 +147,9 @@ export class LocationManager {
 
     }
 
+    /**
+     * Unhides the location indicator
+     */
     unhide() {
         if (this.hidden) {
             this.locationSceneManager.addObject(this, this.key);
@@ -146,6 +157,9 @@ export class LocationManager {
         }
     }
 
+    /**
+     * Sends a notification to the user if they are out of bounds of the map.
+     */
     alertIfOutsideBoundaries() {
         if (!this._inBoundaries()) {
             alert("Position not shown because it is outside of the boundaries of the map.");
@@ -154,6 +168,9 @@ export class LocationManager {
         return false;
     }
 
+    /**
+     * Moves the active camera to the user location.
+     */
     moveToLocation(zoomIn, onComplete) {
         if (this.alertIfOutsideBoundaries()) { return }
         var distance = null;
@@ -179,6 +196,9 @@ export class LocationManager {
         return [this.accuracyWrapperObject, this.positionWrapperObject];
     }
 
+    /**
+     * Create the marker visualization.
+     */
     createMarker() {
         ///// Accuracy circle
 

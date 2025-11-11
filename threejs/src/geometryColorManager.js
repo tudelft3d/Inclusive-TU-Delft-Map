@@ -3,7 +3,17 @@ import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {
 import layer_definition_json from "../assets/threejs/buildings/thematic_codelist-definition.json" assert {type: "json"};
 import { CjHelper } from "./cjHelper";
 
-import { PRIMARY_COLOR_3, SECONDARY_COLOR_3, TERTIARY_COLOR_3, QUATERNARY_COLOR_3, QUINARY_COLOR_3 } from "./constants";
+import {
+	PRIMARY_COLOR,
+	SECONDARY_COLOR,
+	TERTIARY_COLOR,
+	QUATERNARY_COLOR,
+	QUINARY_COLOR,
+	STANDARD_ROOM_COLOR} from "./constants";
+
+/**
+ * This class handles coloring the variety of geometry used in creating the map.
+ */
 
 export class GeometryColorManager {
 
@@ -27,6 +37,10 @@ export class GeometryColorManager {
 
 	}
 
+	/**
+	 * This function maintains all the additional function calls that color specific elements.
+	 * It will repeatedly call itself until the threejs geometry has been loaded.
+	 */
 	_initiate_colors() {
 
 		const threejs_world_object = this.scene.getObjectByName("world");
@@ -40,7 +54,11 @@ export class GeometryColorManager {
 
 		this._assign_building_colors();
 
-		this._assign_standard_room_colors("#ede4d3");
+		/**
+		 * The hex code in this function determines what color rooms will be given if they do not
+		 * have a color defined in thematic_codelist-definition.json
+		 */
+		this._assign_standard_room_colors(STANDARD_ROOM_COLOR);
 
 		for (const [layer_code, layer_object] of Object.entries(this.layer_definition)) {
 			if (layer_object["Geometry color"]) {
@@ -49,6 +67,10 @@ export class GeometryColorManager {
 		}
 	}
 
+	/**
+	 * Assigns colors to buildings based on the important value that is encoded in the cityjson object
+	 * of each building. Which color corresponds with which importance value is determined in constants.js.
+	 */
 	_assign_building_colors() {
 
 		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
@@ -63,23 +85,23 @@ export class GeometryColorManager {
 
 			switch (color_class) {
 				case "Primary":
-					constant_name = PRIMARY_COLOR_3;
+					constant_name = PRIMARY_COLOR;
 					break;
 				case "Secondary":
-					constant_name = SECONDARY_COLOR_3;
+					constant_name = SECONDARY_COLOR;
 					break;
 				case "Tertiary":
-					constant_name = TERTIARY_COLOR_3;
+					constant_name = TERTIARY_COLOR;
 					break;
 				case "Quaternary":
-					constant_name = QUATERNARY_COLOR_3;
+					constant_name = QUATERNARY_COLOR;
 					break;
 				case "Quinary":
-					constant_name = QUINARY_COLOR_3;
+					constant_name = QUINARY_COLOR;
 					break;
 				default:
 					console.error("invalid importance code for", building_key, "defaulting to Quinary importance");
-					constant_name = QUINARY_COLOR_3;
+					constant_name = QUINARY_COLOR;
 			}
 
 			let mesh_key = this.cjHelper.keyToMeshKey(building_key)
@@ -98,6 +120,11 @@ export class GeometryColorManager {
 
 	}
 
+	/**
+	 * Assigns the standard room color to all known rooms.
+	 * Rooms that need to be colored differently (such as stairs) have this value overwritten in
+	 * a different function call.
+	 */
 	_assign_standard_room_colors(color) {
 
 		for (const [building_key, building_json] of Object.entries(cityjson.CityObjects)) {
@@ -116,25 +143,28 @@ export class GeometryColorManager {
 
 			mesh_object.material = mesh_object.material.clone();
 
-			const threejs_color = this._hex_to_threejs_hex(color);
-
-			mesh_object.material.color.setHex(threejs_color);
+			mesh_object.material.color.setHex(color);
 
 		}
 
 	}
 
+	/**
+	 * @param {string} layer_code: The code of the layer that needs to be assigned a color.
+	 * @param {string} color: The color that the geometry needs to receive.
+	 * 
+	 * Assigns colors to units that are associated with geometry.
+	 * This is used both for rooms AND for things such as ramps, mini stairs etc.
+	 * 
+	 * Whether something is assigned a color is determined by if its corresponding entry in
+	 * thematic_codelist-definition.json has a value for the geometry color attribute.
+	 */
 	_assign_geometry_unit_colors(layer_code, color) {
 
 		if (!(this.layer_definition[layer_code])) {
 			console.error(layer_code, "is not a known layer code");
 			return;
 		}
-
-		// if (!(this.layer_definition[layer_code]["Geometry"])) {
-		// 	console.log("Layer:", layer_code, "does not have any geometry.");
-		// 	return;
-		// }
 
 		for (const [building_key, layer_code_unit_key_dict] of Object.entries(this.building_BuildingUnitContainers)) {
 
@@ -170,6 +200,13 @@ export class GeometryColorManager {
 
 	}
 
+	/**
+	 * @param {string} object_key: The cityjson object key that is connected to the geometry that needs to be colored.
+	 * @param {string} color: The color that the geometry needs to receive.
+	 * 
+	 * Assigns a color to a mesh object based on the corresponding cityjson object key.
+	 * 
+	 */
 	_color_mesh_with_key(object_key, color) {
 
 		const mesh_key = this.cjHelper.keyToMeshKey(object_key);
@@ -188,6 +225,12 @@ export class GeometryColorManager {
 
 	}
 
+	/**
+	 * @param {string} hex_color: The color that needs to be converted.
+	 * 
+	 * Converts a standard hex color code (starting with #) to one usable by threejs (starting with 0x)
+	 * 
+	 */
 	_hex_to_threejs_hex(hex_color) {
 		return hex_color.toUpperCase().replace("#", "0x");
 	}

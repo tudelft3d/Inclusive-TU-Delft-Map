@@ -8,6 +8,9 @@ import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
 import { GammaCorrectionShader } from "three/examples/jsm/shaders/GammaCorrectionShader.js";
 import { LocationSceneManager } from "./location";
 
+/**
+ * Manages the different outlines used throughout the map.
+ */
 export class OutlineManager {
     constructor(scene, renderer) {
         this.scene = scene;
@@ -27,6 +30,9 @@ export class OutlineManager {
         window.addEventListener("resize", this._resizeListener);
     }
 
+    /**
+     * Creates a separate outline_pass for each of the three cameras used in the scene.
+     */
     initialise(cameraManager) {
         if (this.composers.length > 0) return;
 
@@ -66,6 +72,9 @@ export class OutlineManager {
         composer.render(deltaTime);
     }
 
+    /**
+     * Creates a single outline_pass for a given camera
+     */
     _create_outline_pass(cameraManager) {
         const composer = new EffectComposer(this.renderer);
 
@@ -111,6 +120,10 @@ export class OutlineManager {
         this.outlinePasses.push(outlinePass);
         return composer;
     }
+
+    /**
+     * For each of the outline composers, set it to one of the defined styles.
+     */
     setStyle(code = "default") {
         for (const composer of this.composers) {
             const outline = composer.passes[1];
@@ -145,6 +158,10 @@ export class OutlineManager {
         }
     }
 
+    /**
+     * Given an array of objects, fetches the corresponding meshes.
+     * These are then passed to a function to initiate outlining.
+     */
     setOutline(objectList, lod = 'lod_2', style) {
         const outlineObjects = [];
         for (const obj of objectList) {
@@ -159,13 +176,19 @@ export class OutlineManager {
         this.outlineObjects(outlineObjects, style);
     }
 
-
+    /**
+     * Updates the array of selected objects based on the array of object meshes that is passed.
+     * This array of selected objects is used in the render function.
+     */
     outlineObjects(objects, code = "default") {
         this.setStyle(code);
         if (!Array.isArray(objects)) objects = [objects];
         this.selectedObjects = objects;
     }
 
+    /**
+     * Empties the array of selected objects, causing all meshes to lose any outlines they may have.
+     */
     clearOutline() {
         this.selectedObjects = [];
     }

@@ -27,6 +27,11 @@ import { LocationManager, LocationSceneManager } from "./location";
 import { BASEMAP_BOUNDARIES } from "./basemap";
 import { CjHelper } from "./cjHelper";
 
+
+/**
+ * This class acts as a collection point for the instances of most other map functionality classes.
+ * Additionally this is where the loading and rendering of the gltf file occurs.
+ */
 export class Map {
     /**
      *
@@ -98,6 +103,9 @@ export class Map {
         requestAnimationFrame(this.render);
     }
 
+    /**
+     * Create the threejs scenes and initialize the skybox.
+     */
     _initScenes() {
         this.scene = new THREE.Scene();
         const loader = new THREE.CubeTextureLoader();
@@ -116,6 +124,9 @@ export class Map {
         this.iconsScene = new THREE.Scene();
     }
 
+    /**
+     * Define the lights used in the scene.
+     */
     _initLights() {
         const color = 0xffffff;
 
@@ -127,6 +138,9 @@ export class Map {
         this.scene.add(this.light.target);
     }
 
+    /**
+     * Begin the loading of the basemap layers.
+     */
     setBasemap(url, layer) {
         if (this.activeBasemap) {
             this.scene.remove(this.activeBasemap);
@@ -155,6 +169,12 @@ export class Map {
         return getTileCacheStats();
     }
 
+    /**
+     * Create the three renderers:
+     * 1. glRenderer for the 3D objects
+     * 2. css3D renderer for the position market
+     * 3. css2D renderer for the icons and text objects
+     */
     _initRenderers() {
         // WebGL renderer for 3D objects
         this.glRenderer = new THREE.WebGLRenderer({
@@ -165,7 +185,7 @@ export class Map {
         this.glContainer = this.glRenderer.domElement;
         this.mainContainer.appendChild(this.glContainer);
 
-        // CSS3D renderer for location
+        // CSS3D renderer for position
         this.css3dRenderer = new CSS3DRenderer();
         this.css3dContainer = this.css3dRenderer.domElement;
         this.css3dContainer.style.position = "absolute";
@@ -185,6 +205,9 @@ export class Map {
         this._resizeWindow();
     }
 
+    /**
+     * Create the layerManager object
+     */
     _initLayerManager() {
         this.layerManager = new LayerManager(
             this.scene,
@@ -193,6 +216,9 @@ export class Map {
         );
     }
 
+    /**
+     * Create the buildingView object
+     */
     _initBuildingView() {
         this.buildingView = new BuildingView(
             this.cameraManager,
@@ -202,6 +228,9 @@ export class Map {
         );
     }
 
+    /**
+     * Create the picker object
+     */
     _initPicker() {
         this.pickHighlighter = new Highlighter(PICKED_COLOR);
         this.picker = new ObjectPicker(
@@ -214,6 +243,9 @@ export class Map {
         this.layerManager.picker = this.picker;
     }
 
+    /**
+     * Create the searcher object
+     */
     _initSearcher() {
         this.searcher = new Searcher(
             this.cameraManager,
@@ -225,12 +257,18 @@ export class Map {
         initSearchBar(this.searcher, search_delay, search_result_count);
     }
 
+    /**
+     * Create the geometryColorManager object
+     */
     _initGeometryColorManager() {
         this.geometryColorManager = new GeometryColorManager(
             this.scene
         );
     }
 
+    /**
+     * Create a variety of eventListeners
+     */
     _attachEvents() {
         var hasMouseMoved = false;
         // this.hasMouseMovedInFrame = false;
@@ -323,6 +361,9 @@ export class Map {
         );
     }
 
+    /**
+     * Handles resizing of the window
+     */
     _resizeWindow() {
         const { clientWidth: width, clientHeight: height } = this.glContainer;
         this.cameraManager.resizeCameras(width, height);
@@ -331,6 +372,9 @@ export class Map {
         this.css3dRenderer.setSize(width, height);
     }
 
+    /**
+     * Loads the gltf file containing all scene geometry
+     */
     loadGLTF(path) {
         // const allBuildingsObjectKeys = this.cjHelper.getAllBuildingsObjectKeys();
         const loader = new GLTFLoader();
@@ -395,6 +439,9 @@ export class Map {
         );
     }
 
+    /**
+     * Handles operations that require being updated every frame.
+     */
     render(time) {
         setTimeout(() => {
             requestAnimationFrame(this.render);
@@ -408,6 +455,9 @@ export class Map {
         this.light.target.position.copy(this.cameraManager.controls.target);
     }
 
+    /**
+     * Enables visibility of lod_2 objects (the buildings)
+     */
     lodVis(lod = "lod_2") {
         this.model.traverse((child) => {
             child.visible = false;

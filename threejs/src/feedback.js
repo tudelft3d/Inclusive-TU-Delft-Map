@@ -1,3 +1,7 @@
+/**
+ * This file contains the code necessary for running the feedback page.
+ */
+
 const CONFIG = {
   endpoint: '/api/feedback',
   successHideDelay: 6000

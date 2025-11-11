@@ -456,6 +456,11 @@ export class InfoPane {
         }
     }
 
+    /**
+     * @param {string} key: Key of a cityjson object.
+     * 
+     * Creates the infopane for the object associated with the key.
+     */
     show(key) {
         this.key = key;
 

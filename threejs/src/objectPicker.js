@@ -6,6 +6,9 @@ import { CamerasControls } from "./camera";
 import { HOVERED_COLOR } from "./constants";
 import { CjHelper } from "./cjHelper";
 
+/**
+ * This class defines the behaviour when selecting objects on the map.
+ */
 export class ObjectPicker {
     /**
      *
@@ -33,6 +36,11 @@ export class ObjectPicker {
         this.buildingViewActivateCamera = null;
     }
 
+    /**
+     * Determines which mesh was selected when a click was made.
+     * 
+     * @param {position} normalizedPosition: The position of a click on the canvas.
+     */
     _raycastPosition(normalizedPosition) {
         // Cast a ray through the frustum
         this.raycaster.setFromCamera(
@@ -125,6 +133,12 @@ export class ObjectPicker {
 
     /**
      * Pick the mesh corresponding to the given key.
+     * 
+     * This function ended up extremely complex due to the number of states that the map can be in
+     * and the number of actions that can be taken when in these states.
+     * 
+     * This ends up having a multiplicative effect on the number of scenarios that need to be
+     * accounted for.
      *
      * @param {string} pickedKey (object or mesh key)
      * @param {*} onAnimationComplete
@@ -697,6 +711,9 @@ export class ObjectPicker {
         this.infoPane.show(paneObjectKey);
     }
 
+    /**
+     * Unselects the current selection
+     */
     unpick(onAnimationComplete) {
         // Unhighlight
         this.pickHighlighter.unhighlight();
@@ -716,6 +733,9 @@ export class ObjectPicker {
         }
     }
 
+    /**
+     * Closes the infoPane
+     */
     closeInfoPane() {
         // Unhighlight
         this.pickHighlighter.unhighlight();
@@ -736,6 +756,9 @@ export class ObjectPicker {
         }
     }
 
+    /**
+     * Called from outside this class, switches to building view.
+     */
     switchBuildingView() {
         if (this.buildingView._isNotInitialised()) {
             console.error("The BuildingView is not initialised.");
@@ -762,6 +785,9 @@ export class ObjectPicker {
         }
     }
 
+    /**
+     * Called from outside this class, toggles between 2D and 3D viewing modes.
+     */
     switch2D3D(onComplete = () => { }) {
         if (this.cameraManager.usesOrthographicCamera()) {
             if (this.buildingView._isNotInitialised()) {

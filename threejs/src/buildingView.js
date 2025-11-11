@@ -4,13 +4,25 @@ import { Scene } from "three";
 import { OutlineManager } from "./outlines";
 import { CjHelper } from "./cjHelper";
 import cityjson from "../assets/threejs/buildings/attributes.city.json" assert { type: "json" };
-import { LayerManager } from "./layers";
 import { StoreyManager } from "./storeyManager"
 
 const NOT_INITIALISED = 0;
 const INITIALISED = 1;
 const ACTIVATED = 2;
 
+
+/**
+ * This function handles all operations related to "building view".
+ * With "building view" is meant the state that the map enters when viewing the floor plan of a building.
+ * In this state the camera is locked to orthographic mode, the exterior of the building being view disappears,
+ * and the interior of this building becomes visible.
+ * 
+ * Building view can be one of three states:
+ * 1. Not initialized: when no building is selected and the map is not in building view.
+ * 2. Initialized: when a building is selected, but building has not be activated yet.
+ * 3. Activated: when building view has been activated.
+ * 
+ */
 export class BuildingView {
     /**
      *
@@ -55,6 +67,12 @@ export class BuildingView {
         this._updateStatus(INITIALISED);
     }
 
+    /**
+     * @param {string} buildingObjectKey: The cityjson key of the building object that building view 
+     * should be activated for.
+     * 
+     * Set the current building.
+     */
     setBuilding(buildingObjectKey) {
         if (this._isActivated()) {
             console.error("Cannot update the building without deactivating.");
@@ -76,6 +94,11 @@ export class BuildingView {
         );
     }
 
+    /**
+     * @param {string} storeyCode: The code of the new storey that needs to be switched to.
+     * 
+     * Sets the new storey, and calls the necessary update functions.
+     */
     setStorey(storeyCode) {
         if (this.storeyCode == storeyCode) {
             return;
@@ -87,6 +110,9 @@ export class BuildingView {
         }
     }
 
+    /**
+     * Enables the viewing of the current storey.
+     */
     _updateView() {
         // Get the storeys
         const roomsObjectKeys = this._getRoomsObjectKeys();
@@ -105,6 +131,9 @@ export class BuildingView {
         this._applyOutlines(roomsObjects, "lod_0", "interior");
     }
 
+    /**
+     * Makes all changes necessary when enabling building view.
+     */
     activate() {
         if (this._isActivated()) {
             return;
@@ -134,9 +163,6 @@ export class BuildingView {
         this.buildingTranslationZ = -bbox.min.y + 1;
         this.buildingObject.translateZ(this.buildingTranslationZ);
 
-        // Populate the buttons to switch between storeys
-        this._populateStoreyButtons();
-
         const available_storeys = this._getStoreyObjectKeys();
 
         this.storeyManager.activate(this.buildingObjectKey, this.storeyCode, available_storeys);
@@ -146,6 +172,9 @@ export class BuildingView {
         this._updateStatus(ACTIVATED);
     }
 
+    /**
+     * Resets everything necessary to leave building view.
+     */
     deactivate() {
         if (this._isInitialisedNotActivated()) {
             return;
@@ -179,6 +208,9 @@ export class BuildingView {
         this._updateStatus(INITIALISED);
     }
 
+    /**
+     * Clears building data when uninitializing a building
+     */
     uninitialise() {
         if (this._isNotInitialised()) {
             return;
@@ -191,7 +223,7 @@ export class BuildingView {
 
         this.buildingObjectKey = null;
         this.buildingMeshKey = null;
-        this.floor = null;
+        // this.floor = null;
         this._updateStatus(NOT_INITIALISED);
     }
 
@@ -251,6 +283,11 @@ export class BuildingView {
         return sortedStoreyObjectKeys;
     }
 
+    /**
+     * Returns the keys for all room objects of the current storey
+     *
+     * @return {array}: An array containing all objects keys of the rooms of the current storey.
+     */
     _getRoomsObjectKeys() {
         // Get the keys of the storeys
         const storeysObjectKeys = this._getStoreyObjectKeys();
@@ -309,28 +346,5 @@ export class BuildingView {
                 this._hideMeshChildren(currentChild, recursive);
             }
         });
-    }
-
-    _populateStoreyButtons() {
-        const storey_dropdown = document.getElementById("bv-dropdown");
-        storey_dropdown.innerHTML = "";
-
-        const storeysObjectKeys = this._getStoreyObjectKeys();
-        for (var storeyCode of Object.keys(storeysObjectKeys)) {
-            var a = document.createElement("a");
-            a.appendChild(document.createTextNode(storeyCode));
-            a.addEventListener("click", (event) => {
-                this.setStorey(storeyCode);
-
-                // Close the dropdown after selecting a storey
-                const bvDropdown = document.getElementById("bv-dropdown");
-                if (bvDropdown) {
-                    bvDropdown.style.display = "none";
-                }
-            });
-
-            a.href = "#";
-            storey_dropdown.appendChild(a);
-        }
     }
 }
