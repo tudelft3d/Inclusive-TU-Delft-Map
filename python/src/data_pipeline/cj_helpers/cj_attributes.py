@@ -246,7 +246,10 @@ class BdgUnitAttr(Attr):
         if len(self.unit_storeys) == 0:
             unit_storeys_set: set[str] = set()
             for space in self.unit_spaces:
-                storey = ".".join(space.split(".")[:-1])
+                space_split = space.split(".")
+                if len(space.split(".")) < 3:
+                    continue
+                storey = ".".join(space_split[:3])
                 unit_storeys_set.add(storey)
             self.unit_storeys = list(unit_storeys_set)
 

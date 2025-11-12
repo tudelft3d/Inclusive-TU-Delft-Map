@@ -207,8 +207,6 @@ class Bag2Cityjson(CityjsonLoader):
             ):
                 space_id = bdg_attributes.space_id
                 obj_key = Building.key_to_cj_key(key=bdg_attributes.cj_key)
-                print(f"{space_id = }")
-                print(f"{bdg_attributes.bag_ids = }")
 
                 geoms = _process_bag_element(
                     obj_key=obj_key,
@@ -255,11 +253,11 @@ class Bag2Cityjson(CityjsonLoader):
                 CityJSONObject.add_parent_child(parent=bdg_obj, child=main_container)
 
             z_container_id = BuildingUnitContainer.unit_code_to_cj_key(
-                code="BS", prefix=prefix
+                code="BS-SP", prefix=prefix
             )
             if z_container_id not in all_objects_cj:
                 z_container = BuildingUnitContainer(
-                    cj_key=z_container_id, unit_code="BS"
+                    cj_key=z_container_id, unit_code="BS-SP"
                 )
                 all_objects_cj[z_container_id] = z_container
                 CityJSONObject.add_parent_child(
@@ -272,12 +270,12 @@ class Bag2Cityjson(CityjsonLoader):
             units_same_code = len(z_container.children_ids)
 
             obj_key = BuildingUnit.unit_code_to_cj_key(
-                code="BS", prefix=prefix, index=units_same_code
+                code="BS-SP", prefix=prefix, index=units_same_code
             )
 
             unit = BuildingUnit(
                 cj_key=obj_key,
-                unit_code="BS",
+                unit_code="BS-SP",
                 unit_storeys=[],
                 icon_position=bdgs_sub_attributes.icon_position,
             )
@@ -292,7 +290,6 @@ class Bag2Cityjson(CityjsonLoader):
         for bag_2d_id in tqdm(
             unprocessed_bag_ids, desc="Processing the remaining buildings"
         ):
-            print(bag_2d_id)
             # Skip the children
             if bag_2d_id[-2] == "-":
                 continue

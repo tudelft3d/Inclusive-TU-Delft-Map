@@ -65,6 +65,11 @@ export class CjHelper {
         return type == "Building";
     }
 
+    isBuildingStorey(key) {
+        const type = this.getType(key);
+        return type == "BuildingStorey";
+    }
+
     isBuildingRoom(key) {
         const type = this.getType(key);
         return type == "BuildingRoom";
@@ -265,25 +270,6 @@ export class CjHelper {
     }
 
     /**
-     * Get the object keys of all the objects of one of the given types.
-     *
-     * @param {string[]} objectTypes
-     * @returns
-     */
-    _getAllObjectKeysFilter(objectTypes) {
-        const allObjectKeys = [];
-        for (const [objectKey, object] of Object.entries(
-            cityjson.CityObjects
-        )) {
-            const objectType = this.getType(objectKey);
-            if (objectTypes.includes(objectType)) {
-                allObjectKeys.push(objectKey);
-            }
-        }
-        return allObjectKeys;
-    }
-
-    /**
      * @param {key} buildingKey: The cityjson key of the building object from which the keys of the building unit groups need to be extracted.
      * 
      * @return {array} An array of building unit group keys.
@@ -303,6 +289,32 @@ export class CjHelper {
         }
         const buildingUnitMainGroup = childrenKeys[0];
         return this.getChildrenObjectKeys(buildingUnitMainGroup);
+    }
+
+    /**
+     * Get the object keys of all the objects of one of the given types.
+     * Returns all objects if the list is empty.
+     *
+     * @param {string[]} objectTypes
+     * @returns
+     */
+    _getAllObjectKeysFilter(objectTypes) {
+        const allObjectKeys = [];
+        for (const [objectKey, object] of Object.entries(
+            cityjson.CityObjects
+        )) {
+            const objectType = this.getType(objectKey);
+            if (objectTypes.length == 0) {
+                allObjectKeys.push(objectKey);
+            } else if (objectTypes.includes(objectType)) {
+                allObjectKeys.push(objectKey);
+            }
+        }
+        return allObjectKeys;
+    }
+
+    getAllObjectKeys() {
+        return this._getAllObjectKeysFilter([]);
     }
 
     getAllBuildingsObjectKeys() {

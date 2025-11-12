@@ -519,7 +519,9 @@ def format_codelist(
             f"There is already a file at {output_json_path.absolute()}. Set `overwrite` to True to overwrite it."
         )
 
-    format_codelist(input_csv_path=input_csv_path, output_json_path=output_json_path)
+    format_codelist_json(
+        input_csv_path=input_csv_path, output_json_path=output_json_path
+    )
 
 
 def setup_logging(verbose: int):
