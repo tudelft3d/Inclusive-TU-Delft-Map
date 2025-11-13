@@ -78,4 +78,5 @@ nav:
         #         - docs_js/camera/README.md
         #         - CameraControls: docs_js/camera/classes/CamerasControls.md
     - Server: server.md
+    - Blender: blender_docs.md
     - License: license.md
