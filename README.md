@@ -4,7 +4,7 @@ This is the repository of the GEOIT1501 project called "Inclusive 3D Campus Map 
 
 | Outdoor view | Floor plan of BK |
 | ---------------------- | ---------------------- |
-| ![Screenshot of outdoor](./docs/Screenshot_map-outdoor.png) | ![Screenshot of the floor plan of BK](./docs/Screenshot_map-BK.png) |
+| ![Screenshot of outdoor](./docs/images/Screenshot_map-outdoor.png) | ![Screenshot of the floor plan of BK](./docs/images/Screenshot_map-BK.png) |
 
 You can also find more information about it in the [about page of the website](https://inclusivecampusmap.bk.tudelft.nl/about.html).
 
