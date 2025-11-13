@@ -531,21 +531,54 @@ export class ObjectPicker {
             if (unitSpacesObjectKeys.length != 0) {
                 // Case where the unit links to spaces
 
-                unitSpacesMeshes = unitSpacesObjectKeys.map((objectKey) => {
-                    return this.cjHelper.getMesh(objectKey);
-                });
-                const unitSpacesBuildingObjectKeys = unitSpacesObjectKeys.map(
-                    (objectKey) => {
-                        return this.cjHelper.findParentBuildingObjectKey(
+                // unitSpacesMeshes = unitSpacesObjectKeys.map((objectKey) => {
+                //     if (this.cjHelper.isBuildingRoom(objectKey)) {
+                //         return this.cjHelper.getMesh(objectKey);
+                //     } else if (this.cjHelper.isBuildingStorey(objectKey)) {
+                //         const rooms = this.cjHelper.getChildrenObjectKeys(objectKey);
+                //         return rooms.map((roomKey) => {
+                //             return this.cjHelper.getMesh(roomKey);
+                //         });
+                //     } else {
+                //         console.error("The specified object is not a BuildingRoom or BuildingStorey.")
+                //     }
+                // });
+
+                // Find the spaces of the unit and their parent building
+                unitSpacesMeshes = [];
+                const unitSpacesBuildingKeys = [];
+                for (const objectKey of unitSpacesObjectKeys) {
+                    if (this.cjHelper.isBuildingRoom(objectKey)) {
+                        unitSpacesMeshes.push(this.cjHelper.getMesh(objectKey));
+                        unitSpacesBuildingKeys.push(this.cjHelper.findParentBuildingObjectKey(
                             objectKey
-                        );
+                        ));
+                    } else if (this.cjHelper.isBuildingStorey(objectKey)) {
+                        const rooms = this.cjHelper.getChildrenObjectKeys(objectKey);
+                        rooms.forEach((roomKey) => {
+                            unitSpacesMeshes.push(this.cjHelper.getMesh(roomKey));
+                            unitSpacesBuildingKeys.push(this.cjHelper.findParentBuildingObjectKey(
+                                roomKey
+                            ));
+
+                        });
+                    } else {
+                        console.error("The specified object is not a BuildingRoom or BuildingStorey.")
                     }
-                );
+                }
+
+                // const unitSpacesBuildingKeys = unitSpacesObjectKeys.map(
+                //     (objectKey) => {
+                //         return this.cjHelper.findParentBuildingObjectKey(
+                //             objectKey
+                //         );
+                //     }
+                // );
 
                 // Check if all the unit spaces are in the same building
                 if (
-                    !unitSpacesBuildingObjectKeys.every(
-                        (v) => v === unitSpacesBuildingObjectKeys[0]
+                    !unitSpacesBuildingKeys.every(
+                        (v) => v === unitSpacesBuildingKeys[0]
                     )
                 ) {
                     console.error(
@@ -553,28 +586,9 @@ export class ObjectPicker {
                     );
                     return;
                 }
-                buildingObjectKey = unitSpacesBuildingObjectKeys[0];
+                buildingObjectKey = unitSpacesBuildingKeys[0];
                 buildingMesh = this.cjHelper.getMesh(buildingObjectKey);
 
-                // // Find the most frequent storey code
-                // const unitSpacesStoreyCodes = unitSpacesObjectKeys.map(
-                //     (objectKey) => {
-                //         return this.cjHelper.getStoreyCode(objectKey);
-                //     }
-                // );
-                // var counts = {};
-                // var compare = 0;
-                // for (const spaceStoreyCode of unitSpacesStoreyCodes) {
-                //     if (counts[spaceStoreyCode] === undefined) {
-                //         counts[spaceStoreyCode] = 1;
-                //     } else {
-                //         counts[spaceStoreyCode] += 1;
-                //     }
-                //     if (counts[spaceStoreyCode] > compare) {
-                //         compare = counts[spaceStoreyCode];
-                //         storeyCode = spaceStoreyCode;
-                //     }
-                // }
             } else {
                 // Case where the unit has no spaces
 
@@ -596,7 +610,6 @@ export class ObjectPicker {
             if (!allUnitStoreyCodes.includes(storeyCode)) {
                 storeyCode = this.cjHelper.getUnitMainStoreyCode(pickedObjectKey);
             }
-
 
             // Highlight the meshes
             this.pickHighlighter.highlight(unitSpacesMeshes);

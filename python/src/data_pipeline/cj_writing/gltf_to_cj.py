@@ -231,13 +231,16 @@ def load_units_from_csv(
             cj_file_pos = spaces_ids_to_pos[space_id]
             space = cj_file.city_objects[cj_file_pos]
             assert isinstance(space, CityJSONSpaceSubclass)
-            if space.geometries is None:
+            if space.geometries is None or len(space.geometries) == 0:
                 continue
-            best_idx = 0
-            for idx in range(1, len(space.geometries)):
-                if space.geometries[idx].lod > space.geometries[best_idx].lod:
+            best_idx = -1
+            best_lod = -1
+            for idx in range(0, len(space.geometries)):
+                if space.geometries[idx].lod > best_lod:
                     best_idx = idx
-            meshes.append(space.geometries[best_idx].to_trimesh())
+                    best_lod = space.geometries[best_idx].lod
+            if best_idx >= 0:
+                meshes.append(space.geometries[best_idx].to_trimesh())
 
         if len(meshes) == 0:
             continue

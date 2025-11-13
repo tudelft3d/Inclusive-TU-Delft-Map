@@ -1,7 +1,7 @@
 site_name: Inclusive 3D Campus Map of TU Delft
 
-repo_name: alexandre-bry/Inclusive-TU-Delft-Map
-repo_url: https://github.com/alexandre-bry/Inclusive-TU-Delft-Map
+repo_name: tudelft3d/Inclusive-TU-Delft-Map
+repo_url: https://github.com/tudelft3d/Inclusive-TU-Delft-Map
 edit_uri: edit/main/docs/
 
 theme:

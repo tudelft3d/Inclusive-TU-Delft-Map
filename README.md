@@ -10,4 +10,4 @@ You can also find more information about it in the [about page of the website](h
 
 ## Documentation
 
-The documentation is hosted at: <https://alexandre-bry.github.io/Inclusive-TU-Delft-Map/>.
+The documentation is hosted at: <https://tudelft3d.github.io/Inclusive-TU-Delft-Map/>.

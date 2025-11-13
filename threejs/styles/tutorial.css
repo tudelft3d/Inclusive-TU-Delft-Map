@@ -119,6 +119,7 @@ body {
 
 .card-content {
     flex: 1; 
+    min-width: none;
 }
 
 .card-content h3 {
@@ -186,8 +187,8 @@ body {
 }
 
 .demo-view-stack {
-    width: 32px;
-    height: 70px;
+    width: 35px;
+    height: 75px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -259,6 +260,11 @@ body {
 
 .building-exploration {
     padding: 2.5rem 0; 
+}
+
+.toggle-exploration {
+    padding: 0rem 0; 
+    padding-bottom: 5px;
 }
 
 #exploration_title {
@@ -403,4 +409,98 @@ body {
 
 .building-exploration{
     padding-bottom: 6rem;
+}
+
+@media (max-width: 620px) {
+    .tutorial_intro {
+        padding-top: 0px;
+        padding-bottom: 3px;
+    }
+
+    .tutorial_intro .tutorial_container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .tutorial_intro .intro-text,
+    .tutorial_intro .intro-image {
+        flex-basis: 100%; 
+    }
+    
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .control-card {
+        flex-direction: column;    
+        align-items: flex-start;   
+        gap: 1rem;                 
+    }
+
+    .search-card-header {
+        flex-direction: column;   
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 15px;
+        padding-bottom: 0px;
+        margin-bottom: 0%;               
+    }
+
+    #search-card .search-preview img {
+         width: 100%;
+         max-width: 100%;
+    }
+
+    .step-card {
+        flex-direction: column;
+        padding: 1.5rem; 
+    }
+
+    /* Change the order of elements in the step card */
+    .step-card > .step-content {
+        order: 1;
+    }
+    .step-card > .step-image {
+        order: 2;
+    }
+
+    #step-4-card .step-main-content > .step-content {
+         order: 1;
+    }
+    #step-4-card .step-main-content > .step-image-stack {
+         order: 2;
+    }
+
+    .step-content,
+    .step-image {
+        flex-basis: 100%; 
+    }
+
+    #step-4-card .step-main-content {
+        flex-direction: column;
+    }
+
+    .storey-controls-explainer .controls-grid {
+         grid-template-columns: 1fr;
+    }
+
+    .control-card {
+        padding: 1rem;
+        overflow: hidden;
+    }
+    
+    #controls_title,
+    #exploration_title {
+        font-size: 26px; 
+        margin-bottom: 2rem;
+    }
+
+    .tutorial_intro #tutorial_title{
+        font-size: 28px; 
+        margin-bottom: 1rem;
+    }
+    
+    .step-content h2 {
+        font-size: 18px; 
+    }
 }

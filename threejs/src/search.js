@@ -6,7 +6,7 @@ import { CamerasControls } from "./camera";
 import { Scene } from "three";
 import { BuildingView } from "./buildingView";
 
-import cityjson from "../assets/threejs/buildings/attributes.city.json" assert {type: "json"};
+import { CjHelper } from "./cjHelper";
 
 /**
  * This class manages the functionality of the search bar.
@@ -24,10 +24,9 @@ export class Searcher {
         this.cameraManager = cameraManager;
         this.picker = picker;
         this.scene = scene;
+        this.cjHelper = new CjHelper(this.scene);
 
-        this.raw_json = cityjson;
-
-        this.processed_json = this._process_json(cityjson);
+        this.processed_json = this._process_json();
 
         this.searches = [];
 
@@ -53,70 +52,22 @@ export class Searcher {
      * The Fuse searching library is easier to work with if the objects being searched are
      * available as an array.
      * This function strips the key from each object and pushes the attributes into an array.
-     * 
-     * @param {object} json: The cityjson file.
      */
-    _process_json(json) {
-        json = json["CityObjects"];
-
+    _process_json() {
+        const objectKeys = this.cjHelper.getAllObjectKeys();
         var object_attribute_list = [];
 
-        for (const [key, value] of Object.entries(json)) {
-
-            object_attribute_list.push(value);
+        for (const objectKey of objectKeys) {
+            if (this.cjHelper.isBuildingStorey(objectKey)) {
+                continue;
+            }
+            const attributes = this.cjHelper.getJson(objectKey);
+            object_attribute_list.push(attributes);
         }
 
         return object_attribute_list;
     }
 
-    /**
-     * For an array of objects, retrieves all the corresponding threejs mesh objects
-     * 
-     * @param {array | object} object_list: The cityjson objects for which meshes are needed.
-     * @param {object} scene: The threejs scene, which is queried for the mesh objects.
-     * @param {string} lod: Indicates which lod the user expects the desired meshes to be.
-     */
-    _retrieve_threejs_objects(object_list, scene, lod = "infer") {
-        const threejs_objects = [];
-        const all_objects = [];
-        object_list.forEach(object => {
-            if (object.item.type == "BuildingUnit") {
-                if (object.item.attributes["unit_spaces"].length == 0) {
-                    var parent = this.raw_json["CityObjects"][object.item.parents[0]];
-                    while (parent.type != "Building") {
-                        parent = this.raw_json["CityObjects"][parent.parents[0]];
-                    }
-                    all_objects.push({ item: parent });
-                }
-                else {
-                    let unitRoom = object.item.attributes["unit_spaces"];
-                    for (var i = 0; i < unitRoom.length; i++) {
-                        all_objects.push({ item: this.raw_json["CityObjects"][unitRoom[i]] });
-                    }
-                }
-            } else all_objects.push(object);
-        });
-        // console.log('retrieve_threejs_objects, all_objects: ', all_objects);
-        for (let i = 0; i < all_objects.length; i++) {
-
-            const current_object = all_objects[i];
-
-            if (lod == "infer") {
-                if (current_object.item.type == "Building") {
-                    lod = "-lod_2";
-                } else if (current_object.item.type == "BuildingRoom") {
-                    lod = "-lod_0";
-                }
-            }
-
-            const threejs_object_name = current_object.item.attributes["key"].concat(lod);
-
-            threejs_objects.push(scene.getObjectByName(threejs_object_name));
-
-        }
-        // console.log('all objects: ', threejs_objects);
-        return threejs_objects;
-    }
 
     /**
      * Given a pattern, returns the closest n results from the cityjson file, where n = return_count.
@@ -146,7 +97,7 @@ export class Searcher {
         const result = this._search_pattern(pattern, 1);
         // console.log('pattern: ', pattern);
 
-        const threejs_objects = this._retrieve_threejs_objects(result, this.scene);
+        // const threejs_objects = this._retrieve_threejs_objects(result, this.scene);
 
         this.picker.pickMesh(result[0].item["attributes"]["key"]);
     }
@@ -201,12 +152,14 @@ export class Searcher {
         }
 
 
-        if (matchItem.type === "BuildingRoom" || matchItem.type === "BuildingUnit") {
-            let parent = this.raw_json["CityObjects"][matchItem.parents[0]];
+        if (matchItem.type === "BuildingRoom" || matchItem.type === "BuildingPart" || matchItem.type === "BuildingUnit") {
+            let parentKey = this.cjHelper.getParentObjectKey(matchItem.attributes.key)
+            let parent = this.cjHelper.getJson(parentKey);
 
             // Traverse upward until we find the Building
             while (parent.type !== "Building") {
-                parent = this.raw_json["CityObjects"][parent.parents[0]];
+                parentKey = this.cjHelper.getParentObjectKey(parent.attributes.key)
+                parent = this.cjHelper.getJson(parentKey);
             }
 
             if (parent && parent.attributes) {
