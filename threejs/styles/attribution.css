@@ -1,0 +1,17 @@
+#attribution {
+    position: absolute;
+    padding: 0 0.1rem;
+    font-size: 13px;
+    line-height: 15px;
+    right: 0;
+    bottom: 0;
+    opacity: 0.8;
+    color: #363636;
+    background-color: #ffffff;
+    text-align: right;
+}
+
+#attribution > p {
+    padding: 0;
+    margin: 0;
+}
